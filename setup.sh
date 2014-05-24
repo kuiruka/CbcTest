@@ -66,3 +66,10 @@ export LD_LIBRARY_PATH=/opt/cactus/lib:${LD_LIBRARY_PATH}
 export PATH=./bin:$PATH
 export LD_LIBRARY_PATH=./lib:${LD_LIBRARY_PATH}
 
+for dir in lib bin
+do
+if [ ! -d $dir ];then
+mkdir $dir
+fi
+done
+
