@@ -302,6 +302,7 @@ namespace CbcDaq{
 		else {
 			fCbcConfigFileMap.insert( CbcConfigFilePair( cName, pName ) );
 		}
+		fHwController->SetCbcRegSettingFileName( pFeId, pCbcId, pName );
 	}
 
 	void DAQController::AddCbcRegUpdateItem( const CbcRegItem *pCbcRegItem, UInt_t pValue ){
