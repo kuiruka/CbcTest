@@ -140,7 +140,6 @@ namespace CbcDaq {
 	void CbcRegRWFileCommandFrame::Save(){
 
 		const char *cName = fTextEntry->GetText();	
-
 		DAQController *pController = fGUIFrame->GetDAQController();
 		pController->SetCbcRegSettingFileName( fFeId, fCbcId, cName ); 
 		pController->SaveCbcRegInfo( fFeId, fCbcId );
