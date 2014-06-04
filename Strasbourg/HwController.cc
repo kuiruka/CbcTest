@@ -82,7 +82,8 @@ namespace Strasbourg{
 		fNFe = fGlibSetting.find( "FE_expected" )->second;
 		fNFe = fNFe == 1 ? 1 : 2;	
 		unsigned int cExpectedCbc = fGlibSetting.find( "CBC_expected" )->second;	
-		fNCbc = cExpectedCbc == 1 ? 1 : 2;	
+//		fNCbc = cExpectedCbc == 1 ? 1 : 2;	
+		fNCbc = 8;
 		fNeventPerAcq = fGlibSetting.find( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" )->second;
 
 		//Preparing CBC register setting and update list map
