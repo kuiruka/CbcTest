@@ -35,7 +35,7 @@ namespace Strasbourg{
 	const std::string BeController::fStrI2cCommand = I2C_COMMAND;
 	const std::string BeController::fStrI2cReply = I2C_REPLY;
 	const uint32_t BeController::fI2cSlave = I2C_SLAVE;
-	const unsigned int BeController::fI2cSramSize = 64; 
+	const unsigned int BeController::fI2cSramSize = 128; 
 
 	void BeController::DecodeRegInfo( uint32_t vecReq, uint32_t &uCBC, uint32_t &uPage, uint32_t &uAddr, uint32_t &uWrite){
 		uint32_t cMask(0x00000000);
@@ -86,6 +86,7 @@ namespace Strasbourg{
 
 		GlibSetting::iterator cIt = fGlibSetting.begin();
 		for(; cIt != fGlibSetting.end(); cIt++ ){
+                        //std::cout << cIt->first << " " << cIt->second << std::endl;
 			fBoard->getNode( cIt->first ).write( (uint32_t) cIt->second );
 		}
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.SPURIOUS_FRAME").write(0);
@@ -201,6 +202,8 @@ namespace Strasbourg{
 		}
 #endif
 		//Read SRAM
+                //std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
+                //Block size = 42 * ( packet # + 1 )
 		uhal::ValVector<uint32_t> cData = fBoard->getNode(fStrSram).readBlock(cBlockSize);
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -213,6 +216,7 @@ namespace Strasbourg{
 		fBoard->dispatch();//Mandatory or else sramX_full remains to 1
 		fBoard->getNode(fStrReadout).write(1);
 		fBoard->dispatch();
+                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
 
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -279,14 +283,14 @@ namespace Strasbourg{
 		fNTotalAcq++;
 	}
 	void BeController::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq ){
-
+                
 		boost::posix_time::milliseconds cPause(200);
 
 		unsigned int cSize( pVecReq.size() );
 		if( cSize > fI2cSramSize ){
 			std::vector<uint32_t>::iterator cIt = pVecReq.begin();
 			unsigned int i(0);
-			uint32_t c,p,a,w;
+			//uint32_t c,p,a,w;
 			while( i < cSize ){
 				unsigned int j = i + fI2cSramSize < cSize ? i + fI2cSramSize : cSize;
 				std::vector<uint32_t> cVecReq ( cIt + i, cIt + j );
@@ -299,7 +303,7 @@ namespace Strasbourg{
 				try{
 					WriteCbcRegValues( pFe, cVecReq );
 					ReadCbcRegValues( pFe, cVecReq );
-					boost::this_thread::sleep(cPause);
+//					boost::this_thread::sleep(cPause);
 				}
 				catch( Exception &e ){
 					throw e;
@@ -388,12 +392,12 @@ namespace Strasbourg{
 	}
 	void BeController::SendBlockCbcI2cRequest( uint32_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite){
 
+		pVecReq.push_back(0xFFFFFFFF);
+
 		SelectSramForI2C( pFe );
 
 		fBoard->getNode(fStrSramUserLogic).write(1);
 		fBoard->dispatch();
-
-		pVecReq.push_back(0xFFFFFFFF);
 
 		fBoard->getNode(fStrSramUserLogic).write(0);
 		fBoard->dispatch();
@@ -488,7 +492,7 @@ namespace Strasbourg{
 		//}
 		uhal::ValVector<uint32_t> cData = fBoard->getNode(fStrSram).readBlock( pVecReq.size() );
 		fBoard->dispatch();
-
+                if( cData.size() > 255 ) std::cout << "Reading I2C readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
 		fBoard->getNode(fStrSramUserLogic).write(1);
 		fBoard->getNode("cbc_i2c_cmd_rq").write(0);
 		fBoard->dispatch();

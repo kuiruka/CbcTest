@@ -43,6 +43,7 @@ int main( int argc, char *argv[] ){
 	cDaq.ConfigureGlib();
 
 	cDaq.ConfigureCbc();
+	cDaq.ConfigureCbc();
 
 	cDaq.ConfigureAnalyser();
 

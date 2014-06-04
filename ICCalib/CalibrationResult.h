@@ -6,6 +6,7 @@
 #include <TH1F.h>
 #include <TROOT.h>
 #include <TGraphErrors.h>
+#include <TCanvas.h>
 
 class TPad;
 namespace ICCalib{
@@ -72,7 +73,8 @@ namespace ICCalib{
 			UInt_t Vplus()const{ return fVplus; }
 			TPad *GetVplusVsVCth0GraphDisplayPad(){ return fVplusVsVCth0GraphDisplayPad; }
 			TPad *GetScurveHistogramDisplayPad( UInt_t pGroupId ){ return fScurveHistogramDisplayPad.find( pGroupId )->second; }
-			TPad *GetDummyPad(){ return fDummyPad; }
+			TPad *GetDummyPad(){ if( fDummyPad == 0 ) fDummyPad =
+                        new TCanvas( Form( "cFE%dCBC%d", fFeId, fCbcId ), Form( "cFE%dCBC%d", fFeId, fCbcId ), 100, 100 ); return fDummyPad; }
 
 			void AddChannel( UInt_t pChannelId, Channel * pChannel );
 			void AddGraphVplusVCth0( UInt_t pGroup, TGraphErrors *pGraph );

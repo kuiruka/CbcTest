@@ -15,7 +15,7 @@ namespace Strasbourg {
 		The Id should corresponds to the order of in the stream data starting from 0
 		 */
 		public:
-			static const UInt_t NCHAR = 9*4;
+			static const UInt_t NCHAR = 9*4; // 9 uint32_t
 			static const UInt_t NSENSOR;
 			static const UInt_t NERROR;
 			

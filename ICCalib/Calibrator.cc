@@ -193,8 +193,10 @@ namespace ICCalib{
 			if( fStop ) return;
 
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
-			fScurveAnalyser->DrawHists();
-			fScurveAnalyser->PrintScurveHistogramDisplayPads();
+			if( fGUIFrame ){
+				fScurveAnalyser->DrawHists();
+				fScurveAnalyser->PrintScurveHistogramDisplayPads();
+			}
 			Emit( "Message( const char * )", Form( "\tVCthScan for TestGroup = %d finished.", cTestGroup ) );
 		}
 		SetCalibratedOffsets();
@@ -397,9 +399,9 @@ namespace ICCalib{
 
 		if( !fStop ){
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
-			fScurveAnalyser->DrawHists();
+			if( fGUIFrame ) fScurveAnalyser->DrawHists();
 			fScurveAnalyser->FillGraphVplusVCth0();
-			DrawVplusVCthScanResult();
+			if( fGUIFrame ) DrawVplusVCthScanResult();
 		}
 
 #ifdef __CBCDAQ_DEV__
@@ -426,8 +428,10 @@ namespace ICCalib{
 
 		if( !fStop ){
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
-			fScurveAnalyser->DrawHists();
-			fScurveAnalyser->PrintScurveHistogramDisplayPads();
+			if( fGUIFrame ){
+				fScurveAnalyser->DrawHists();
+				fScurveAnalyser->PrintScurveHistogramDisplayPads();
+			}
 		}
 
 		return;
@@ -477,13 +481,13 @@ namespace ICCalib{
 				cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
 				cEvent = fHwController->GetNextEvent();
 			}
-			fScurveAnalyser->Analyser::DrawHists();	
+			if( fGUIFrame )fScurveAnalyser->Analyser::DrawHists();	
 
 			if( !(cVCth % 20) ){
 #ifdef __CBCDAQ_DEV__
 				gettimeofday(&start1, 0);
 #endif
-				fScurveAnalyser->DrawHists();
+				if( fGUIFrame )fScurveAnalyser->DrawHists();
 #ifdef __CBCDAQ_DEV__
 				mtime = getTimeTook( start1, 1 );
 				Emit( "Message( const char * )", Form( "\tTime took for drawing data: %ld ms.", mtime ) ); 

@@ -7,7 +7,14 @@ namespace Cbc{
 
 	void CbcRegItem::SetValue( UInt_t pValue ){ 
 		fValue = pValue; 
+                /*
+                if( fAddress == 0xCC ) {
+                        std::cout << "Value0 = " << fValue0 << std::endl;
+                        std::cout << "Value = " << fValue << std::endl;
+                }
+                */
 		if( fValue != fValue0 ){ 
+                        std::cout << "Name = " << fName << " Value = " << fValue << std::endl;
 			if( fPage == 0 && fAddress == 0 ){
 				unsigned int cMask(0x00000000);
 				for( int i = 0; i < 7; i++ ) cMask |= (unsigned int) 1 << i;

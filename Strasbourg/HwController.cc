@@ -335,7 +335,7 @@ namespace Strasbourg{
 	}
 
 	std::vector< const CbcRegItem *> HwController::setCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
-
+                
 		std::vector<const CbcRegItem *> cRegList(0);
 		for( unsigned int i=0; i < pVecReq.size(); i++ ){
 			unsigned int cCbc(0), cPage(0), cAddr(0), cVal(0);
