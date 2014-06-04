@@ -121,7 +121,8 @@ namespace CbcDaq{
 		fNFe = fHwController->GetGlibSetting( "FE_expected" );
 		fNFe = fNFe == 1 ? 1 : 2;	
 		UInt_t cExpectedCBC = fHwController->GetGlibSetting( "CBC_expected" );	
-		fNCbc = cExpectedCBC == 1 ? 1 : 2;	
+//		fNCbc = cExpectedCBC == 1 ? 1 : 2;	
+		fNCbc = 8;
 		fNegativeLogicCBC = (bool)fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC" );
 		fNeventPerAcq = fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" );
 
