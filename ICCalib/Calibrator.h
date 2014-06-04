@@ -115,6 +115,7 @@ namespace ICCalib{
 			Int_t                           fCurrentTestPulseGroup;
 			
 			UInt_t                          fNonTestGroupOffset;
+			UInt_t							fNAcq;
 	};
 }
 #endif
