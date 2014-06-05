@@ -12,7 +12,7 @@ GlibReg_cbc_stubdata_latency_adjust_fe1                         :          1
 GlibReg_cbc_stubdata_latency_adjust_fe2                         :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE               :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_GENE          :          1
-GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER :        100
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER :          5 
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.INT_TRIGGER_FREQ       :          4
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.TRIGGER_SEL            :          0
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.clock_shift           :          0

@@ -38,7 +38,8 @@ namespace ICCalib{
 		fTestGroupMap(0),
 		fGroupList(),
 		fCurrentTestPulseGroup(-1),
-		fNonTestGroupOffset(0xFF)
+		fNonTestGroupOffset(0xFF),
+		fNAcq(3)
 	{
 
 		//TestPulseGroupMap initialisation.
@@ -463,23 +464,25 @@ namespace ICCalib{
 			fHwController->AddCbcRegUpdateItemsForNewVCth( cVCth );
 			UpdateCbcRegValues();
 
-			fHwController->StartAcquisition();
-			fHwController->ReadDataInSRAM( cNthAcq, true );
-			fHwController->EndAcquisition( cNthAcq );
-
-			bool cFillDataStream( true );
-
 			int cNHits(0);
-			int cNevent(0);	
-			const Event *cEvent = fHwController->GetNextEvent();
-			while( cEvent ){
-				cNevent++;
-				//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
-				//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
-				fAnalyser->Analyse( cEvent, cFillDataStream );	
-				cFillDataStream = false;
-				cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
-				cEvent = fHwController->GetNextEvent();
+			for( int i=0; i< fNAcq; i++ ){
+				fHwController->StartAcquisition();
+				fHwController->ReadDataInSRAM( cNthAcq, true );
+				fHwController->EndAcquisition( cNthAcq );
+
+				bool cFillDataStream( true );
+
+				int cNevent(0);	
+				const Event *cEvent = fHwController->GetNextEvent();
+				while( cEvent ){
+					cNevent++;
+					//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
+					//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
+					fAnalyser->Analyse( cEvent, cFillDataStream );	
+					cFillDataStream = false;
+					cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
+					cEvent = fHwController->GetNextEvent();
+				}
 			}
 			if( fGUIFrame )fScurveAnalyser->Analyser::DrawHists();	
 
@@ -511,7 +514,7 @@ namespace ICCalib{
 			//std::cout << cAllOneCount << std::endl;
 			//std::cout << fNeventPerAcq << std::endl;
 #endif
-			if( cNHits == (int) ( fNeventPerAcq * cNChannels ) ) cAllOneCount++;	
+			if( cNHits == (int) ( fNAcq * fNeventPerAcq * cNChannels ) ) cAllOneCount++;	
 			if( cAllOneCount == 10 ) break;
 
 			cVCth += cStep;
