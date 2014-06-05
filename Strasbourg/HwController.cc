@@ -41,6 +41,7 @@ namespace Strasbourg{
 	HwController::HwController( const char *pName ):
 		fName( pName ),
 		fData(0),
+		fPacketSize(0),
 		fGlibSetting(), 
 		fCbcRegSetting(), 
 		fCbcRegUpdateList(),
@@ -90,10 +91,11 @@ namespace Strasbourg{
 		fCbcRegUpdateList.Reset( fNFe );	
 
 		//Initialising Data object
-		fData->Initialise( fNeventPerAcq );
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 			fData->AddFe( cFe );
 		}
+		fData->Initialise( fNeventPerAcq );
+		fPacketSize = fData->GetEventSize32();
 	}
 	void HwController::ConfigureCbc(){
 
@@ -141,7 +143,12 @@ namespace Strasbourg{
 			std::vector<uint32_t> &cSentVecReq = cIt->second;
 			std::vector<uint32_t> cReadVecReq = cSentVecReq;
 			if( cSentVecReq.size() == 0 ) continue;
-			WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq );
+			try{
+				WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq );
+			}
+			catch( Exception &e ){
+				throw e;
+			}
 			if( cSentVecReq.size() != cReadVecReq.size() ) {
 				std::cout << "CBC registers are not written correctly." << std::endl;
 			}
@@ -177,7 +184,7 @@ namespace Strasbourg{
 	void HwController::AddCbcRegUpdateItem( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pVal ){
 
 		fCbcRegSetting.SetValue0( pFe, pCbc, pPage, pAddr, pVal );
-//		std::cout << pVal << std::endl;
+		//		std::cout << pVal << std::endl;
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
 		if( cIt == fCbcRegUpdateList.end() ){
 			std::cerr << "Inconsistent FE id " << pFe << std::endl;
@@ -335,7 +342,7 @@ namespace Strasbourg{
 	}
 
 	std::vector< const CbcRegItem *> HwController::setCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
-                
+
 		std::vector<const CbcRegItem *> cRegList(0);
 		for( unsigned int i=0; i < pVecReq.size(); i++ ){
 			unsigned int cCbc(0), cPage(0), cAddr(0), cVal(0);

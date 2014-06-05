@@ -14,7 +14,7 @@ namespace Strasbourg {
 	   single event data size(/uint32_t) from GLIB board for strusburg BE firmware.
 	   fixed size for 2 FE(FMC) x 2CBC (4*9) and  header (5) + 1
 	 */
-	const UInt_t Event::EVENT_SIZE_32 = 4*9+6;
+//	const UInt_t Event::EVENT_SIZE_32 = 4*9+6;
 	const UInt_t Event::OFFSET_BUNCH = 8; 
 	const UInt_t Event::WIDTH_BUNCH = 24; 
 	const UInt_t Event::OFFSET_ORBIT = 1 * 32 + 8; 
@@ -33,6 +33,7 @@ namespace Strasbourg {
 	void Event::AddFe( UInt_t pFE ){ 
 		AddCbc( pFE, 0 );
 		AddCbc( pFE, 1 );
+		fSize32 += ( 2 * 9 ); 
 	}
 	void Event::AddCbc( UInt_t pFE, UInt_t pCBC ){ 
 		FeEvent *cFeEvent = findFeEvent( pFE );
@@ -80,7 +81,7 @@ namespace Strasbourg {
 		std::ostream os(&tmp);
 
 		os <<std::hex;
-		for( UInt_t i=0; i<EVENT_SIZE_32; i++){
+		for( UInt_t i=0; i< fSize32; i++){
 			os <<std::uppercase<<std::setw(2)<<std::setfill('0')<< (fBuf[i]&0xFF);
 		}
 		os << std::endl;

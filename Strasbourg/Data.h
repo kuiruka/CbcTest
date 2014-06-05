@@ -35,6 +35,7 @@ namespace Strasbourg {
 
 			void Initialise( UInt_t pNevents ); //pNevents : # of events in one acquisition. Memory is allocated to fBuf for pNevents. 
 			void AddFe( UInt_t pFe ){ fEvent.AddFe( pFe ); } //Add one FE with id pFe with two CBC.
+			UInt_t GetEventSize32(){ return fEvent.Size32(); }
 			void Set( void *Data ); 
 
 			void Reset();  //reset the components of the char array fBuf to be 0.

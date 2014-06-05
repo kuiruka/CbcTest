@@ -30,7 +30,6 @@ using namespace CbcDaq;
 namespace Strasbourg{
 
 
-	const unsigned int BeController::fPacketSize = Strasbourg::Event::EVENT_SIZE_32;//single event data size in 32 bits words
 	const std::string BeController::fStrI2cSettings = "user_wb_ttc_fmc_regs.cbc_reg_i2c_settings";
 	const std::string BeController::fStrI2cCommand = I2C_COMMAND;
 	const std::string BeController::fStrI2cReply = I2C_REPLY;

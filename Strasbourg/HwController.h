@@ -77,6 +77,7 @@ namespace Strasbourg{
 			std::string fName;
 
 			Data *fData;
+			unsigned int fPacketSize;
 
 			GlibSetting fGlibSetting; 
 			CbcRegMap fCbcRegSetting;

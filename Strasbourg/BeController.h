@@ -23,7 +23,6 @@ namespace Strasbourg{
 			static void AddCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite);
 
 		public:
-			static const unsigned int fPacketSize;
 			static const std::string fStrI2cSettings; 
 			static const std::string fStrI2cCommand;
 			static const std::string fStrI2cReply;
