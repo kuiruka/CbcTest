@@ -1,12 +1,13 @@
 CbcTest
 =======
 
-Raw code in master. Most stable version for the current 2CBC2 setup found in branch "CbcTestForIPbus2.2". Includes firmware versions for both polarities. 
+Most stable version for the current 2CBC2 setup found in branch "CbcTestForIPbus2.2". Includes firmware versions for both polarities. 
 
-Code to test CBC2
+Please check the folder doc/ for more info.
 
 Tested in the beamtest virtual machine for two versions with single GLIB, single old FMC, one and two CBC2 chips.
 
+Should work in any of the newer versions of the VM.
 
 Known problem
 -------
