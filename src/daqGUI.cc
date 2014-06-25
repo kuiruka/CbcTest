@@ -16,7 +16,7 @@ int main( int argc, char *argv[] ){
 
 //	std::string cAnalyserName = "Analyser";
 	std::string cAnalyserName = "ErrorAnalyser";
-	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), "settings/CbcDaqElectron.txt" );
+	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), "settings/SEUElectron.txt" );
 
 	cDaq->Initialise();
 
