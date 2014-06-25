@@ -216,7 +216,7 @@ namespace Strasbourg{
 		fBoard->dispatch();//Mandatory or else sramX_full remains to 1
 		fBoard->getNode(fStrReadout).write(1);
 		fBoard->dispatch();
-                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
+//                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
 
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
