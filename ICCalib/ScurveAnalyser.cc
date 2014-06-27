@@ -91,12 +91,11 @@ namespace ICCalib{
 			}
 		}
 		TString cHistName( "hDummyHist" );
-		if( ! gROOT->FindObject( cHistName )  ) {
-			fDummyHist = new TH1F( cHistName, "Fit; VCth; Rate", 256, -0.5, 255.5 );
-			fDummyHist->SetMinimum(0);
-			fDummyHist->SetMaximum(1);
-		}
-
+		cObj = gROOT->FindObject( cHistName );
+		if( cObj ) delete cObj;
+		fDummyHist = new TH1F( cHistName, "Fit; VCth; Rate", 256, -0.5, 255.5 );
+		fDummyHist->SetMinimum(0);
+		fDummyHist->SetMaximum(1);
 #ifdef __CBCDAQ_DEV__
 		std::cout << "ScurveAnalyser::Initialise() done" << std::endl;
 #endif
