@@ -1,0 +1,84 @@
+#include <iostream>
+
+namespace ICCalib{
+	template <class T>
+		void _TestGroup<T>::AddChannel( Channel<T> *pChannel ){ 
+
+			fChannelList.push_back( pChannel ); 
+		}
+	template <class T>
+		bool _TestGroup<T>::Has( UInt_t pChannel )const{ 
+			for( UInt_t i=0; i < size(); i++ ) {
+				if( at(i) == pChannel ) return true;
+			}
+			return false;
+		}
+	template <class T> _TestGroupMap<T>::_TestGroupMap( TestGroupMap &pTestGroupMap ){ 
+
+			TestGroupMap::const_iterator cIt = pTestGroupMap.begin();
+			for( ; cIt != pTestGroupMap.end(); cIt++ ){
+				TestGroup cTG = cIt->second;
+				_TestGroup<T> cTestGroup;
+				for( UInt_t i=0; i < cTG.size(); i++ ){
+					cTestGroup.push_back( cTG.at(i) );
+				}
+				( (Map *) this )->insert( std::pair<UInt_t, _TestGroup<T> >( cIt->first, cTestGroup ) );
+			}
+	}
+	template <class T>
+		_TestGroup<T> *_TestGroupMap<T>::GetGroup( UInt_t pGroupId ){
+
+			iterator cIt = find( pGroupId );
+			if( cIt != end() ) return &cIt->second;
+			else return 0;
+		}
+	template <class T>
+		UInt_t _TestGroupMap<T>::GetGroupId( UInt_t pChannel )const{
+
+			const_iterator cIt = begin();
+			for( ; cIt != end(); cIt++ ){
+				_TestGroup<T> cTG = cIt->second;
+				for( UInt_t i=0; i < cTG.size(); i++ ){
+					if( cTG[i] == pChannel ) return cIt->first;
+				}
+			}
+			std::cout << "The channel is not found in the _TestGroupMap." << std::endl;
+			return 0;
+		}
+	template <class T>
+		_TestGroup<T> *_TestGroupMap<T>::GetActivatedGroup(){
+
+			if( fActivatedGroup != -1 ){
+				return GetGroup( fActivatedGroup );
+			}
+			else return 0;
+		}
+	template <class T>
+		_TestGroup<T> *_TestGroupMap<T>::GetActivatedGroup(UInt_t &pGroupId ){
+
+			if( fActivatedGroup != -1 ){
+				pGroupId = fActivatedGroup;
+				return GetGroup( fActivatedGroup );
+			}
+			else return 0;
+		}
+	template <class T>
+		Int_t _TestGroupMap<T>::Activate( UInt_t pGroupId ){
+
+			if( fActivatedGroup == (Int_t) pGroupId ) return fActivatedGroup;
+			else if( fActivatedGroup != -1 ){
+				iterator cIt = find( pGroupId );
+				cIt->second.Activate(0);
+				fActivatedGroup = -1;
+			}
+
+			iterator cIt = find( pGroupId );
+			if( cIt == end() ){
+				return fActivatedGroup;
+			}
+			cIt->second.Activate(1);
+			fActivatedGroup = pGroupId;
+			return fActivatedGroup;
+		}
+}
+

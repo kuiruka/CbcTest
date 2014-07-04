@@ -36,6 +36,9 @@
 #include <map>
 #include "Cbc/CbcRegInfo.h"
 #include "CbcDaq/DAQController.h"
+#include "AnalysedData.h"
+#include "GUIData.h"
+//#include "TestGroup.h"
 
 class TPad;
 
@@ -51,8 +54,14 @@ using namespace CbcDaq;
 namespace ICCalib{
 
 	class ScurveAnalyser;
-	class CalibrationResult;
-	class TestGroupMap;
+	class CalibrationChannelData;
+	class CalibrationCbcData;
+	template <class T> class _TestGroup;
+	template <class T> class _TestGroupMap;
+	typedef _TestGroup<UInt_t>                    TestGroup;
+	typedef _TestGroupMap<UInt_t>                 TestGroupMap;
+	typedef _TestGroup<CalibrationChannelData>    CalibrationTestGroup;
+	typedef _TestGroupMap<CalibrationChannelData> CalibrationTestGroupMap;
 
 	typedef std::pair< std::string, UInt_t > CalibItem;
 	typedef std::map< std::string, UInt_t > CalibSetting; 
@@ -75,7 +84,7 @@ namespace ICCalib{
 			const CalibSetting &GetCalibSetting()const{ return fCalibSetting; }
 			UInt_t GetCalibSetting( const char *pNode ) const { return fCalibSetting.find(pNode )->second; }
 			const TestGroupMap *GetTestPulseGroupMap()const{ return fTestPulseGroupMap; }
-			const TestGroupMap *GetTestGroupMap()const{ return fTestGroupMap; }
+			const CalibrationTestGroupMap *GetTestGroupMap()const{ return fTestGroupMap; }
 			const std::vector<UInt_t> &GetGroupList()const{ return fGroupList; }
 			UInt_t GetCurrentTestPulseGroup()const{ return fCurrentTestPulseGroup; }
 			const CalibrationResult *GetCalibrationResult()const;
@@ -107,13 +116,13 @@ namespace ICCalib{
 
 			CalibSetting                    fCalibSetting;
 
-			ScurveAnalyser                  *fScurveAnalyser;
-			TestGroupMap                    *fTestPulseGroupMap;
-			TestGroupMap                    *fTestGroupMap;
+			ScurveAnalyser                       *fScurveAnalyser;
+			TestGroupMap                         *fTestPulseGroupMap;
+			CalibrationTestGroupMap              *fTestGroupMap;
 
 			std::vector<UInt_t>             fGroupList;
 			Int_t                           fCurrentTestPulseGroup;
-			
+
 			UInt_t                          fNonTestGroupOffset;
 	};
 }

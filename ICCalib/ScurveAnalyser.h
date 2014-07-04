@@ -1,6 +1,7 @@
 #ifndef __SCURVEANALYSER_H__
 #define __SCURVEANALYSER_H__
-#include "CalibrationResult.h"
+#include "AnalysedData.h"
+#include "GUIData.h"
 #include "../Strasbourg/Data.h"
 #include "TH1F.h"
 #include <vector>
@@ -19,13 +20,16 @@ using namespace CbcDaq;
 
 namespace ICCalib{
 
+	typedef _TestGroup<CalibrationChannelData>    CalibrationTestGroup;
+	typedef _TestGroupMap<CalibrationChannelData> CalibrationTestGroupMap;
+
 	class ScurveAnalyser : public Analyser{
 
 		public:
 			enum { OFFSETCALIB, VPLUSSEARCH, SINGLEVCTHSCAN };
 		public:
 			ScurveAnalyser( UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
-					TestGroupMap *pGroupMap, const CbcRegMap *pMap,
+					CalibrationTestGroupMap *pGroupMap, const CbcRegMap *pMap,
 					Bool_t pNegativeLogicCbc, UInt_t pTargetVCth, const char *pOutputDir, GUIFrame *pGUIFrame ); 
 			virtual ~ScurveAnalyser(){}
 			void   Initialise();
@@ -45,7 +49,7 @@ namespace ICCalib{
 			UInt_t GetMaxVCth0(){ return fMaxVCth0; }
 			void   DumpResult();
 			const  CalibrationResult &GetResult()const{ return fResult; }
-			std::vector<Channel *>   *GetChannelList(){ return &fChannelList; }
+			std::vector<CalibrationChannelInfo *>   *GetChannelList(){ return &fChannelList; }
 			void   SetVplus();
 			void   SetScurveHistogramDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );
 			void   SetVplusVsVCth0GraphDisplayPad( UInt_t pFeId, TPad *pPad );
@@ -58,13 +62,14 @@ namespace ICCalib{
 			TString getScanType();
 			void  setNextOffsets();
 
-			TestGroupMap           *fGroupMap;
+			CalibrationTestGroupMap           *fGroupMap;
 			UInt_t                 fTargetVCth;
 			Int_t                  fScanType;
 			Int_t                  fCurrentTargetBit;
 			Int_t                  fNthVplusPoint;
-			std::vector<Channel *> fChannelList;
+			std::vector<CalibrationChannelInfo *> fChannelList;
 			CalibrationResult      fResult;
+			GUIData                fGUIData;
 			TH1F                   *fHtotal;
 			TH1F                   *fDummyHist;
 			UInt_t                 fMinVCth0;

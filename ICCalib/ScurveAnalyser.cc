@@ -24,7 +24,7 @@ namespace ICCalib{
 	}
 	ScurveAnalyser::ScurveAnalyser( 
 			UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
-			TestGroupMap *pGroupMap, const CbcRegMap *pCbcRegMap, 
+			CalibrationTestGroupMap *pGroupMap, const CbcRegMap *pCbcRegMap, 
 			Bool_t pNegativeLogicCbc, UInt_t pTargetVCth, const char *pOutputDir, GUIFrame *pGUIFrame ):
 		Analyser( pBeId, pNFe, pNCbc, pCbcRegMap, pNegativeLogicCbc, pOutputDir, pGUIFrame ),
 		fGroupMap(pGroupMap),  
@@ -36,21 +36,19 @@ namespace ICCalib{
 	void ScurveAnalyser::Initialise(){
 
 		Analyser::Initialise();
-
 		for( UInt_t i=0; i < fChannelList.size(); i++ ){
 
 			delete fChannelList[i];
 		}
 		fChannelList.clear();
-
-		TestGroupMap::iterator cIt = fGroupMap->begin(); 
+		CalibrationTestGroupMap::iterator cIt = fGroupMap->begin(); 
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 
-			TestGroup &cTestGroup = cIt->second;
+			CalibrationTestGroup &cTestGroup = cIt->second;
 			cTestGroup.ClearChannelList();
 		}
 		fResult.clear();
-
+		fGUIData.clear();
 		fNthVplusPoint = 0;	
 
 		TString cName = Form( "totalBE%u", fBeId ); 
@@ -68,17 +66,22 @@ namespace ICCalib{
 				cIt = fGroupMap->begin(); 
 				for( ; cIt != fGroupMap->end(); cIt++ ){
 
-					TestGroup &cTestGroup = cIt->second;
+					CalibrationTestGroup &cTestGroup = cIt->second;
 
 					for( UInt_t i=0; i<cTestGroup.size(); i++ ){
 
 						UInt_t cChannelId = cTestGroup[i];
 						TH1F *h = createScurveHistogram( cFeId, cCbcId, cChannelId );
-						Channel *cChannel = new Channel( cFeId, cCbcId, cChannelId );
-						cChannel->SetHist( h );
-
+						CalibrationChannelInfo *cChannel = new CalibrationChannelInfo( cFeId, cCbcId, cChannelId );
+						CalibrationChannelData cCalibChannelData;
+						cCalibChannelData.SetHist(h);
+						cChannel->SetData( cCalibChannelData );
 						fChannelList.push_back( cChannel );
 						fResult.AddChannel( cFeId, cCbcId, cChannelId, cChannel );
+						if( fGUIFrame ){
+							Channel<GUIChannelData> *cGUIChannel = new Channel<GUIChannelData>( cFeId, cCbcId, cChannelId );
+							fGUIData.AddChannel( cFeId, cCbcId, cChannelId, cGUIChannel );
+						}
 						cTestGroup.AddChannel( cChannel ); 
 					}
 
@@ -86,7 +89,8 @@ namespace ICCalib{
 					delete gROOT->FindObject( cName );
 					TGraphErrors *cG = new TGraphErrors( cTestGroup.size() * 10 );
 					cG->SetName( cName );
-					fResult.AddGraphVplusVCth0( cFeId, cCbcId, cIt->first, cG );
+					CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
+					cCbcInfo->getData().AddGraphVplusVCth0( cIt->first, cG );
 				}
 			}
 		}
@@ -109,16 +113,16 @@ namespace ICCalib{
 			UInt_t cChannel = fChannelList[i]->ChannelId();
 			UInt_t cOffset = fCbcRegMap->GetValue( cFeId, cCbcId, 1, cChannel+1 );
 			//std::cout << "Fe " << cFeId << ", Cbc " << cCbcId << ", Offset " << cOffset << std::endl;
-			fChannelList[i]->SetOffset( cOffset );
-			fChannelList[i]->SetNextOffset( cOffset );
+			fChannelList[i]->getData().SetOffset( cOffset );
+			fChannelList[i]->getData().SetNextOffset( cOffset );
 		}
 	}
 	void ScurveAnalyser::SetOffsets( UInt_t pInitalOffset ){
 
 		for( UInt_t i=0; i < fChannelList.size(); i++ ){
 			if( fChannelList[i] == 0 ) continue;
-			fChannelList[i]->SetOffset( pInitalOffset );
-			fChannelList[i]->SetNextOffset( pInitalOffset );
+			fChannelList[i]->getData().SetOffset( pInitalOffset );
+			fChannelList[i]->getData().SetNextOffset( pInitalOffset );
 		}
 	}
 	void ScurveAnalyser::Configure( Int_t pType, Int_t pOffsetTargetBit ){
@@ -132,30 +136,30 @@ namespace ICCalib{
 	int ScurveAnalyser::FillGraphVplusVCth0(){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return -1;
 
 		CalibrationResult::iterator cItFe = fResult.begin();
 		for( ; cItFe != fResult.end(); cItFe++ ){
 
 			UInt_t cFeId = cItFe->first;
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
+			CalibrationFeInfo &cFeInfo = cItFe->second;
+			CalibrationFeInfo::iterator cItCbc = cFeInfo.begin();
 			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
 				UInt_t cCbcId = cItCbc->first;
-				CbcInfo &cCbcInfo = cItCbc->second;
+				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
 
-				TGraphErrors *cG = cCbcInfo.GetGraphVplusVCth0(cGroupId);
+				TGraphErrors *cG = cCbcInfo.getData().GetGraphVplusVCth0(cGroupId);
 
-				const std::vector<Channel *> *cChannelList = cTestGroup->GetChannelList();
+				const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList();
 				UInt_t j=0;
 				for( UInt_t i=0; i < cChannelList->size(); i++ ){
-					Channel *cChannel = cChannelList->at(i);
+					CalibrationChannelInfo *cChannel = cChannelList->at(i);
 					if( !( cChannel->FeId() == cFeId && cChannel->CbcId() == cCbcId ) )continue; 
 					UInt_t cVplus = fCbcRegMap->GetValue( cFeId, cCbcId, 0, 0x0B );
-					cG->SetPoint( fNthVplusPoint+j, cChannel->VCth0(), cVplus ); 
-					cG->SetPointError( fNthVplusPoint+j, cChannel->VCth0Error(), 0 ); 
+					cG->SetPoint( fNthVplusPoint+j, cChannel->GetData().VCth0(), cVplus ); 
+					cG->SetPointError( fNthVplusPoint+j, cChannel->GetData().VCth0Error(), 0 ); 
 					//					std::cout << "SetPoint [" << fNthVplusPoint+j << "] for Channel " << cChannel->ChannelId() << " Vplus " << cVplus << " VCth0 = " << cChannel->VCth0() << std::endl;
 					j++;
 				}
@@ -167,25 +171,25 @@ namespace ICCalib{
 	void ScurveAnalyser::DrawVplusVCth0(){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
 		CalibrationResult::iterator cItFe = fResult.begin();
 		for( ; cItFe != fResult.end(); cItFe++ ){
 
 			UInt_t cFeId = cItFe->first;
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
+			CalibrationFeInfo &cFeInfo = cItFe->second;
+			CalibrationFeInfo::iterator cItCbc = cFeInfo.begin();
 			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
 				UInt_t cCbcId = cItCbc->first;
-				CbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.GetVplusVsVCth0GraphDisplayPad();	
+				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
+				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetVplusVsVCth0GraphDisplayPad();	
 				if( cPad ){
 
 					cPad->cd();
 
-					TGraphErrors *cG = cCbcInfo.GetGraphVplusVCth0(cGroupId);
+					TGraphErrors *cG = cCbcInfo.getData().GetGraphVplusVCth0(cGroupId);
 					TString cOption( "P" );
 					TString cHistName = Form( "VplusScanBE%uFE%uCBC%u", fBeId, cFeId, cCbcId);
 
@@ -215,17 +219,17 @@ namespace ICCalib{
 	}
 	void ScurveAnalyser::PrintVplusVsVCth0DisplayPads(){
 
-		CalibrationResult::iterator cItFe = fResult.begin();
-		for( ; cItFe != fResult.end(); cItFe++ ){
+		GUIData::iterator cItFe = fGUIData.begin();
+		for( ; cItFe != fGUIData.end(); cItFe++ ){
 
 			UInt_t cFeId = cItFe->first;
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
+			GUIFeInfo &cFeInfo = cItFe->second;
+			GUIFeInfo::iterator cItCbc = cFeInfo.begin();
 			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
 				UInt_t cCbcId = cItCbc->first;
-				CbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.GetVplusVsVCth0GraphDisplayPad();	
+				GUICbcInfo &cCbcInfo = cItCbc->second;
+				TPad *cPad = cCbcInfo.getData().GetVplusVsVCth0GraphDisplayPad();	
 				if( cPad ){
 					cPad->cd();
 					//cPad->Update();
@@ -237,19 +241,19 @@ namespace ICCalib{
 	int ScurveAnalyser::FillHists( UInt_t pVcth, const Event *pEvent ){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return -1;
 
 		UInt_t cNhit(0);
 		UInt_t cFeId(0), cCbcId(0), cChannelId(0);
 
-		const std::vector<Channel *> *cChannelList = cTestGroup->GetChannelList(); 
+		const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList(); 
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
-			Channel *cChannel = cChannelList->at(k);
+			CalibrationChannelInfo *cChannel = cChannelList->at(k);
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
-			TH1F *h = cChannel->Hist();
+			TH1F *h = cChannel->getData().Hist();
 
 			const FeEvent *cFeEvent = pEvent->GetFeEvent( cFeId );
 			if( cFeEvent == 0 ) return cNhit; 
@@ -269,18 +273,18 @@ namespace ICCalib{
 	void ScurveAnalyser::FitHists( UInt_t pMin, UInt_t pMax ){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
-		CalibrationResult::iterator cItFe = fResult.begin();
-		for( ; cItFe != fResult.end(); cItFe++ ){
+		GUIData::iterator cItGUIFe = fGUIData.begin();
+		for( ; cItGUIFe != fGUIData.end(); cItGUIFe++ ){
 
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
-			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
+			GUIFeInfo &cFeInfo = cItGUIFe->second;
+			GUIFeInfo::iterator cItGUICbc = cFeInfo.begin();
+			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
-				CbcInfo &cCbcInfo = cItCbc->second;
-				cCbcInfo.GetDummyPad()->cd();
+				GUICbcInfo &cCbcInfo = cItGUICbc->second;
+				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
 				//cCbcInfo.GetDummyPad()->Clear();
 				fDummyHist->Draw();
 			}
@@ -291,14 +295,14 @@ namespace ICCalib{
 		fMaxVCth0 = 0x0;
 		UInt_t cFeId(0), cCbcId(0), cChannelId(0);
 
-		const std::vector<Channel *> *cChannelList = cTestGroup->GetChannelList(); 
+		const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList(); 
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
-			Channel *cChannel = cChannelList->at(k);
+			CalibrationChannelInfo *cChannel = cChannelList->at(k);
 			if( cChannel == 0 ) continue;
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
-			TH1F *h = cChannel->Hist();
+			TH1F *h = cChannel->getData().Hist();
 			if(h==0) continue;
 
 			h->Divide( h, fHtotal, 1.0, 1.0, "B" );
@@ -337,7 +341,7 @@ namespace ICCalib{
 			f->SetParameters( cMid, cWidth );
 			//Option S is for TFitResultPtr
 			//TFitResultPtr cFitR = h->Fit( fname, "RSLQ0" ); 
-			fResult.getCbcInfo( cFeId, cCbcId )->GetDummyPad()->cd();
+			fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetDummyPad( cFeId, cCbcId )->cd();
 			TFitResultPtr cFitR = h->Fit( fname, "RSLQ", "same" ); 
 			//			TFitResultPtr cFitR = h->Fit( fname, "RSLQ" ); 
 			int cStatus = int( cFitR ); 
@@ -348,7 +352,7 @@ namespace ICCalib{
 			}
 			double cVCth0 = f->GetParameter( 0 ); 
 			double cVCth0Error = f->GetParError( 0 ); 
-			cChannel->SetVCth0( (float)cVCth0, (float) cVCth0Error );
+			cChannel->getData().SetVCth0( (float)cVCth0, (float) cVCth0Error );
 			fMinVCth0 = cVCth0 < (double)fMinVCth0 ? (UInt_t)cVCth0 : fMinVCth0;
 			fMaxVCth0 = (double)fMaxVCth0 < cVCth0 ? (UInt_t)cVCth0 : fMaxVCth0;
 			h->Write(h->GetName(), TObject::kOverwrite );
@@ -358,35 +362,35 @@ namespace ICCalib{
 		fout.Close();
 		setNextOffsets();
 
-		cItFe = fResult.begin();
-		for( ; cItFe != fResult.end(); cItFe++ ){
+		cItGUIFe = fGUIData.begin();
+		for( ; cItGUIFe != fGUIData.end(); cItGUIFe++ ){
 
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
-			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
+			GUIFeInfo &cFeInfo = cItGUIFe->second;
+			GUIFeInfo::iterator cItGUICbc = cFeInfo.begin();
+			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
-				CbcInfo &cCbcInfo = cItCbc->second;
-				cCbcInfo.GetDummyPad()->Update();
+				GUICbcInfo &cCbcInfo = cItGUICbc->second;
+				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
 			}
 		}
 	}
 	void ScurveAnalyser::DrawHists(){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
 		CalibrationResult::iterator cItFe = fResult.begin();
 		for( ; cItFe != fResult.end(); cItFe++ ){
 
 			UInt_t cFeId = cItFe->first;
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
+			CalibrationFeInfo &cFeInfo = cItFe->second;
+			CalibrationFeInfo::iterator cItCbc = cFeInfo.begin();
 			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
 				UInt_t cCbcId = cItCbc->first;
-				CbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.GetScurveHistogramDisplayPad( cGroupId );	
+				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
+				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetScurveHistogramDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					cPad->Clear();
@@ -427,11 +431,11 @@ namespace ICCalib{
 					for( UInt_t i=0; i < cTestGroup->size(); i++ ){
 
 						cChannelId = cTestGroup->at(i);
-						CbcInfo::iterator cItChannel = cCbcInfo.find( cChannelId );
+						CalibrationCbcInfo::iterator cItChannel = cCbcInfo.find( cChannelId );
 						if( cItChannel == cCbcInfo.end() ) continue;
 
-						Channel *cChannel = cItChannel->second;
-						TH1F *h = cChannel->Hist(); 
+						CalibrationChannelInfo *cChannel = cItChannel->second;
+						TH1F *h = cChannel->getData().Hist(); 
 						h->Draw( option );
 						TF1 *cFunc = (TF1 *) h->GetListOfFunctions()->Last();
 						double cVCth0(0);
@@ -444,9 +448,9 @@ namespace ICCalib{
 							Nch++;
 						}
 						else{
-							cVCth0 = cChannel->VCth0();
+							cVCth0 = cChannel->GetData().VCth0();
 						}
-						UInt_t cOffset = cChannel->Offset();
+						UInt_t cOffset = cChannel->GetData().Offset();
 						TString label( Form( "[%02X] %05.1f#pm%5.2f   %02X", cChannelId, cVCth0, cVCthError, cOffset )); 
 						TLegend *cL = cChannelId %2 ? cLegend0 : cLegend1;
 						cL->AddEntry( h, label, "p" ); 
@@ -472,20 +476,20 @@ namespace ICCalib{
 	void ScurveAnalyser::PrintScurveHistogramDisplayPads(){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
-		CalibrationResult::iterator cItFe = fResult.begin();
-		for( ; cItFe != fResult.end(); cItFe++ ){
+		GUIData::iterator cItFe = fGUIData.begin();
+		for( ; cItFe != fGUIData.end(); cItFe++ ){
 
 			UInt_t cFeId = cItFe->first;
-			FeInfo &cFeInfo = cItFe->second;
-			FeInfo::iterator cItCbc = cFeInfo.begin();
+			GUIFeInfo &cFeInfo = cItFe->second;
+			GUIFeInfo::iterator cItCbc = cFeInfo.begin();
 			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
 				UInt_t cCbcId = cItCbc->first;
-				CbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.GetScurveHistogramDisplayPad( cGroupId );	
+				GUICbcInfo &cCbcInfo = cItCbc->second;
+				TPad *cPad = cCbcInfo.getData().GetScurveHistogramDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					TString cRegInfo;
@@ -505,19 +509,19 @@ namespace ICCalib{
 		}
 	}
 	UInt_t ScurveAnalyser::GetOffset( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){ 
-		const Channel *cC = fResult.GetChannel( pFeId, pCbcId, pChannelId ); 
+		const CalibrationChannelInfo *cC = fResult.GetChannel( pFeId, pCbcId, pChannelId ); 
 #ifdef __CBCDAQ_DEV__
-		std::cout << "ChannelTest [" << cC->ChannelId() << "] " << pChannelId << "  Offset = " << cC->Offset() << std::endl; 
+		std::cout << "ChannelTest [" << cC->ChannelId() << "] " << pChannelId << "  Offset = " << cC->GetData().Offset() << std::endl; 
 #endif
 		if( cC == 0 ) return 0;
-		return cC->Offset();
+		return cC->GetData().Offset();
 	}
 	UInt_t ScurveAnalyser::GetVplus( UInt_t pFeId, UInt_t pCbcId ){
 
 		UInt_t cVplus(0);
-		CbcInfo *cCbcInfo = fResult.getCbcInfo( pFeId, pCbcId );	
+		CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( pFeId, pCbcId );	
 		if( cCbcInfo ){
-			cVplus = cCbcInfo->Vplus();
+			cVplus = cCbcInfo->GetData().Vplus();
 		}	
 		return cVplus;
 	}
@@ -527,16 +531,16 @@ namespace ICCalib{
 
 			for( UInt_t cCbcId=0; cCbcId< fNCbc; cCbcId++ ){
 
-				CbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
+				const CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
 				if( cCbcInfo == 0 ) return;
 
-				printf( "FE: %d CBC: %d Vpluse: %u\n", cFeId, cCbcId, cCbcInfo->Vplus() );
+				printf( "FE: %d CBC: %d Vpluse: %u\n", cFeId, cCbcId, cCbcInfo->GetData().Vplus() );
 
-				CbcInfo::iterator cIt = cCbcInfo->begin();
+				CalibrationCbcInfo::const_iterator cIt = cCbcInfo->begin();
 				for( ; cIt != cCbcInfo->end(); cIt++ ){
-					Channel *cChannel = cIt->second;
+					CalibrationChannelInfo *cChannel = cIt->second;
 					printf( "FE: %d, CBC: %d Channel: %03d Offset: %2X VCth0: %6.2f VCth0Error: %7.3f\n", 
-							cFeId, cCbcId, cChannel->ChannelId(), cChannel->Offset(), cChannel->VCth0(), cChannel->VCth0Error() );
+							cFeId, cCbcId, cChannel->ChannelId(), cChannel->GetData().Offset(), cChannel->GetData().VCth0(), cChannel->GetData().VCth0Error() );
 				}
 			}
 		}
@@ -549,8 +553,8 @@ namespace ICCalib{
 				UInt_t cVplus(0);
 				Int_t cN(0);
 				Float_t cSum(0);
-				CbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
-				std::map<UInt_t, TGraphErrors *> *cMap = cCbcInfo->GetGraphVplusVCth0();	
+				CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
+				std::map<UInt_t, TGraphErrors *> *cMap = cCbcInfo->getData().GetGraphVplusVCth0();	
 				std::map<UInt_t, TGraphErrors *>::iterator cIt = cMap->begin();
 				for( ; cIt != cMap->end(); cIt++ ){
 					TGraphErrors *cG = cIt->second; 
@@ -560,7 +564,7 @@ namespace ICCalib{
 					cN++;
 				}
 				if( cN != 0 ) cVplus = (UInt_t) ( cSum / cN );
-				cCbcInfo->SetVplus( cVplus );
+				cCbcInfo->getData().SetVplus( cVplus );
 			}
 		}
 	}
@@ -573,27 +577,27 @@ namespace ICCalib{
 		pPad->Divide( cNcol, cNrow );
 
 		UInt_t i(0);
-		TestGroupMap::iterator cIt = fGroupMap->begin();
+		CalibrationTestGroupMap::iterator cIt = fGroupMap->begin();
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 			UInt_t cGroupId = cIt->first;
-			fResult.SetScurveHistogramDisplayPad( pFeId, pCbcId, cGroupId, (TPad *)pPad->GetPad(++i) );
+			fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetScurveHistogramDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
 		}
-		fResult.SetDummyPad( pFeId, pCbcId, (TPad *) pPad->GetPad(cNcol*cNrow) );
+		fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetDummyPad( (TPad *) pPad->GetPad(cNcol*cNrow) );
 	}
 	void ScurveAnalyser::SetVplusVsVCth0GraphDisplayPad( UInt_t pFeId, TPad *pPad ){
 
-		CalibrationResult::const_iterator cItFe = fResult.find( pFeId );
+		GUIData::const_iterator cItFe = fGUIData.find( pFeId );
 
-		const FeInfo &cFeInfo = cItFe->second;
+		const GUIFeInfo &cFeInfo = cItFe->second;
 		UInt_t cNcbc = cFeInfo.size();
 		if( cNcbc == 2 ){
 			pPad->Divide( 2, 1 );
 		}
-		FeInfo::const_iterator cItCbc = cFeInfo.begin();
+		GUIFeInfo::const_iterator cItCbc = cFeInfo.begin();
 		UInt_t i(0);
 		for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 			UInt_t cCbcId = cItCbc->first;
-			fResult.SetVplusVsVCth0GraphDisplayPad( pFeId, cCbcId, (TPad *)pPad->GetPad( ++i ) );
+			fGUIData.getCbcInfo( cItFe->first, cCbcId )->getData().SetVplusVsVCth0GraphDisplayPad( (TPad *)pPad->GetPad( ++i ) );
 		}
 	}
 	TH1F * ScurveAnalyser::createScurveHistogram( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){
@@ -620,20 +624,20 @@ namespace ICCalib{
 		fHtotal->Reset();
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
-		const std::vector<Channel *> *cChannelList = cTestGroup->GetChannelList(); 
+		const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList(); 
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
-			Channel *cChannel = cChannelList->at(k);
-			cChannel->ResetHist();
+			CalibrationChannelInfo *cChannel = cChannelList->at(k);
+			cChannel->getData().ResetHist();
 		}
 	}
 	void ScurveAnalyser::updateOffsets(){
 		for( UInt_t i=0; i < fChannelList.size(); i++ ){
 			if( fChannelList[i] == 0 ) continue;
-			fChannelList[i]->UpdateOffset();
+			fChannelList[i]->getData().UpdateOffset();
 		}
 	}
 
@@ -688,32 +692,32 @@ namespace ICCalib{
 		if( fScanType != OFFSETCALIB ) return;	
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
 
 		UInt_t cFeId(0), cCbcId(0), cChannelId(0);
 
-		const std::vector<Channel *> *cChannelList = cTestGroup->GetChannelList(); 
+		const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList(); 
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
-			Channel *cChannel = cChannelList->at(k);
+			CalibrationChannelInfo *cChannel = cChannelList->at(k);
 			if( cChannel == 0 ) continue;
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
 			//std::cout << "GroupId = " << cGroupId << ", Channel id = " << cChannelId << std::endl;
-			TH1F *h = cChannel->Hist();
+			TH1F *h = cChannel->getData().Hist();
 			if(h==0) continue;
 
 			TF1 *cFunc = (TF1 *) h->GetListOfFunctions()->Last();	
 			if( !cFunc ) continue;
 
 			double cVCth0 = cFunc->GetParameter(0);
-			UInt_t cOffset = cChannel->Offset();
+			UInt_t cOffset = cChannel->GetData().Offset();
 			if( fTargetVCth < cVCth0 && fCurrentTargetBit != 8 ){
 				cOffset &= ~( 1 << fCurrentTargetBit );
 			}
 			if( fCurrentTargetBit > 0 )cOffset |= 1 << ( fCurrentTargetBit - 1 );
-			cChannel->SetNextOffset( cOffset );
+			cChannel->getData().SetNextOffset( cOffset );
 			//if( cCbcId == 0 && cChannelId == 0 ){
 			//	if( cOffset & 0x40000000 ){
 			//		std::cout << cVCth0 << " " << fCurrentTargetBit << std::endl; 
