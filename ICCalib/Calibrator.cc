@@ -21,7 +21,7 @@
 #include "Strasbourg/Data.h"
 #include "utils/Utilities.h"
 #include "utils/Exception.h"
-#include "ScurveAnalyser.h"
+#include "Analysers/ScurveAnalyser.h"
 #include "TCanvas.h"
 #include <TThread.h>
 #include <sstream>

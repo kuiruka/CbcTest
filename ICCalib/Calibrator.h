@@ -36,8 +36,8 @@
 #include <map>
 #include "Cbc/CbcRegInfo.h"
 #include "CbcDaq/DAQController.h"
-#include "AnalysedData.h"
-#include "GUIData.h"
+#include "Analysers/AnalysedData.h"
+#include "Analysers/GUIData.h"
 //#include "TestGroup.h"
 
 class TPad;

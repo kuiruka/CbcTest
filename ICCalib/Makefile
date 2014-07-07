@@ -1,4 +1,4 @@
-Objs			= Calibrator.o ScurveAnalyser.o AnalysedData.o GUIData.o
+Objs			= Calibrator.o 
 GUISourceFiles	= GUICalibConfigFrame.cc GUICalibratorControlButtonFrame.cc GUICalibHistoFrame.cc GUICalibratorFrame.cc 
 GUIObj			= GUICalibratorFrameDict.o
 CC              = gcc

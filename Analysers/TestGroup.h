@@ -61,6 +61,6 @@ namespace ICCalib{
 		};
 
 }
-#include "ICCalib/TestGroup.icc"
+#include "TestGroup.icc"
 #endif
 
