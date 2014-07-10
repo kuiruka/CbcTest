@@ -47,24 +47,32 @@ namespace Strasbourg{
 	class Data;
 	class Event;
 }
-using namespace Cbc;
-using namespace Strasbourg;
-using namespace CbcDaq;
 
-namespace ICCalib{
-
+namespace Analysers{
 	class ScurveAnalyser;
 	class CalibrationChannelData;
 	class CalibrationCbcData;
+}
+namespace ICCalib{
+	typedef std::pair< std::string, UInt_t > CalibItem;
+	typedef std::map< std::string, UInt_t > CalibSetting; 
+}
+
+namespace Cbc{
 	template <class T> class _TestGroup;
 	template <class T> class _TestGroupMap;
 	typedef _TestGroup<UInt_t>                    TestGroup;
 	typedef _TestGroupMap<UInt_t>                 TestGroupMap;
-	typedef _TestGroup<CalibrationChannelData>    CalibrationTestGroup;
-	typedef _TestGroupMap<CalibrationChannelData> CalibrationTestGroupMap;
+	typedef _TestGroup<Analysers::Channel<Analysers::CalibrationChannelData> >   CalibrationTestGroup;
+	typedef _TestGroupMap<Analysers::Channel<Analysers::CalibrationChannelData> > CalibrationTestGroupMap;
+}
 
-	typedef std::pair< std::string, UInt_t > CalibItem;
-	typedef std::map< std::string, UInt_t > CalibSetting; 
+using namespace Cbc;
+using namespace Strasbourg;
+using namespace CbcDaq;
+using namespace Analysers;
+
+namespace ICCalib{
 
 	class Calibrator: public DAQController {
 
@@ -91,7 +99,7 @@ namespace ICCalib{
 
 			void SetVplusVsVCth0GraphDisplayPad( UInt_t pFeId, TPad *pPad );
 			void SetScurveHistogramDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );
-			void ReadSettingFile( const char *pFname );
+			void ReadSettingFile( const char *pFname ); //Called by DAQController::Initialise()
 
 			//functions used internally for a moment.
 			Int_t GetDataStreamHistId( UInt_t pFeId, UInt_t pCbcId );
@@ -112,12 +120,11 @@ namespace ICCalib{
 			void SetCalibratedOffsets();
 
 		private:
-			void initialiseSetting();
+			void initialiseSetting(); //Called by DAQController::Initialise()
 
 			CalibSetting                    fCalibSetting;
 
 			ScurveAnalyser                       *fScurveAnalyser;
-			TestGroupMap                         *fTestPulseGroupMap;
 			CalibrationTestGroupMap              *fTestGroupMap;
 
 			std::vector<UInt_t>             fGroupList;

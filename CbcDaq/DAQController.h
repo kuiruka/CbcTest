@@ -6,6 +6,7 @@
 #include <TString.h>
 #include <map>
 #include "Cbc/CbcRegInfo.h"
+#include "Cbc/TestGroup.h"
 #include "Analyser.h"
 
 class TPad;
@@ -115,6 +116,8 @@ namespace CbcDaq{
 			unsigned int                    fNeventPerAcq;
 			bool                            fNegativeLogicCBC;
 			bool                            fStop;
+
+			TestGroupMap                         *fTestPulseGroupMap;
 	};
 }
 #endif

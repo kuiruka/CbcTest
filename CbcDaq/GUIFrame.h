@@ -61,7 +61,7 @@ namespace CbcDaq{
 			virtual void ConfigureGlib();
 			virtual void ConfigureCbc();
 			virtual void ConfigureAnalyser();
-			virtual void Run();
+			void Run();
 			static void Run( void *p );
 			virtual void Stop();
 			virtual void CbcHardReset();

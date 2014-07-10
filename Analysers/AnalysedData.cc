@@ -1,7 +1,6 @@
 #include "AnalysedData.h"
 
-namespace ICCalib{
-
+namespace Analysers{
 
 	TGraphErrors *CalibrationCbcData::GetGraphVplusVCth0( UInt_t pGroupId ){
 		std::map<UInt_t, TGraphErrors *>::iterator cIt = fGraphVplusVCth0.find( pGroupId ); 

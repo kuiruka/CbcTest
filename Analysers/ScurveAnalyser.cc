@@ -1,27 +1,20 @@
 #include "ScurveAnalyser.h"
 #include "TString.h"
 #include "TCanvas.h"
-#include <math.h>
-#include <TH1F.h>
 #include "TF1.h"
-#include "TMath.h"
+#include <TH1F.h>
 #include <TFile.h>
 #include <TBinomialEfficiencyFitter.h>
 #include <TLegend.h>
 #include <TThread.h>
 #include <TGraphErrors.h>
 #include "Cbc/CbcRegInfo.h"
+#include "Cbc/TestGroup.h"
+#include "Analysers.h"
+#include <cmath>
 
-namespace ICCalib{
+namespace Analysers{
 
-	Double_t MyErf( Double_t *x, Double_t *par ){
-		Double_t x0 = par[0];
-		Double_t width = par[1];
-		Double_t fitval(0);
-		if( x[0] < x0 ) fitval = 0.5 * TMath::Erfc( ( x0 - x[0] )/width );
-		else fitval = 0.5 + 0.5 * TMath::Erf( ( x[0] - x0 )/width );
-		return fitval;
-	}
 	ScurveAnalyser::ScurveAnalyser( 
 			UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
 			CalibrationTestGroupMap *pGroupMap, const CbcRegMap *pCbcRegMap, 
@@ -509,6 +502,7 @@ namespace ICCalib{
 		}
 	}
 	UInt_t ScurveAnalyser::GetOffset( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){ 
+
 		const CalibrationChannelInfo *cC = fResult.GetChannel( pFeId, pCbcId, pChannelId ); 
 #ifdef __CBCDAQ_DEV__
 		std::cout << "ChannelTest [" << cC->ChannelId() << "] " << pChannelId << "  Offset = " << cC->GetData().Offset() << std::endl; 

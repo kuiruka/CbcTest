@@ -11,7 +11,7 @@ namespace Strasbourg{
 	template<typename T> T swapBit( T pVal, unsigned int pNbits ){
 		T cNewValue(0);
 		unsigned int cSize = sizeof(T);
-		if( pNbits > cSize ) return 0;
+		if( pNbits > cSize*8 ) return 0;
 		for( unsigned int i=0; i < pNbits; i++ ){
 			cNewValue |= pVal & 1<<i ? 1<<(pNbits-1-i) : 0;	
 		}
@@ -205,6 +205,16 @@ namespace Strasbourg{
 		cNewTestGroupVal |= cGroupBits;
 
 		AddCbcRegUpdateItem( pFe, pCbc, 0, cAddr, cNewTestGroupVal );
+	}
+	void HwController::AddCbcRegUpdateItemsForNewTestPulseDelay( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseDelay ){
+
+		unsigned int cDelayBits = swapBit( pTestPulseDelay, 5 );
+		unsigned int cPage(0x00), cAddr(0x0E);
+		unsigned int cNewVal = fCbcRegSetting.GetValue( pFe, pCbc, cPage, cAddr );
+		unsigned int cMask = 0xF8;
+		cNewVal &= ~cMask;
+		cNewVal |= ( cDelayBits << 3 );
+		AddCbcRegUpdateItem( pFe, pCbc, 0, cAddr, cNewVal );
 	}
 	void HwController::AddCbcRegUpdateItemsForNewVCth( unsigned int pVCth ){
 

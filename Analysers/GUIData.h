@@ -5,7 +5,7 @@
 #include "DataContainer.h"
 
 class TPad;
-namespace ICCalib{
+namespace Analysers{
 
 	class GUIChannelData {
 
@@ -18,25 +18,29 @@ namespace ICCalib{
 	class GUICbcData {
 
 		public:
-			GUICbcData(): fVplusVsVCth0GraphDisplayPad(0), fDummyPad(0){}
+			GUICbcData(): fDummyPad(0), fVplusVsVCth0GraphDisplayPad(0){}
 			GUICbcData( const GUICbcData &pC ):
 				fScurveHistogramDisplayPad(pC.fScurveHistogramDisplayPad),
+				fDummyPad(pC.fDummyPad),
 				fVplusVsVCth0GraphDisplayPad(pC.fVplusVsVCth0GraphDisplayPad),
-				fDummyPad(pC.fDummyPad){}
+				fSignalShapeGraphDisplayPad( pC.fSignalShapeGraphDisplayPad ){}
 
 			TPad *GetVplusVsVCth0GraphDisplayPad(){ return fVplusVsVCth0GraphDisplayPad; }
 			TPad *GetScurveHistogramDisplayPad( UInt_t pGroupId ){ return fScurveHistogramDisplayPad.find( pGroupId )->second; }
+			TPad *GetSignalShapeGraphDisplayPad( UInt_t pGroupId ){ return fSignalShapeGraphDisplayPad.find( pGroupId )->second; }
 			TPad *GetDummyPad( UInt_t pFeId, UInt_t pCbcId ){ if( fDummyPad == 0 ) fDummyPad =
 				new TCanvas( Form( "cFE%dCBC%d", pFeId, pCbcId ), Form( "cFE%dCBC%d", pFeId, pCbcId ), 100, 100 ); return fDummyPad; }
 
-			void SetVplusVsVCth0GraphDisplayPad( TPad *pPad );
 			void SetScurveHistogramDisplayPad( UInt_t pGroupId, TPad *pPad ); 
+			void SetVplusVsVCth0GraphDisplayPad( TPad *pPad );
+			void SetSignalShapeGraphDisplayPad( UInt_t pGroupId, TPad *pPad ); 
 			void SetDummyPad( TPad *pPad ){ fDummyPad = pPad; }
 
 		private:
 			std::map<UInt_t, TPad *>         fScurveHistogramDisplayPad;
-			TPad                             *fVplusVsVCth0GraphDisplayPad;
 			TPad                             *fDummyPad;
+			TPad                             *fVplusVsVCth0GraphDisplayPad;
+			std::map<UInt_t, TPad *>         fSignalShapeGraphDisplayPad;
 	};
 
 	typedef DataContainer<GUIChannelData, GUICbcData> GUIData; 

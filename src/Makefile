@@ -11,13 +11,13 @@ IncludePaths		= $(IncludeDirs:%=-I%)
 LibraryDirs = /opt/cactus/lib /opt/xdaq/lib ../lib
 LibraryPaths = $(LibraryDirs:%=-L%)
 
-ExternalObjects = $(LibraryPaths) -lpthread -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_thread -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lcgicc `root-config --glibs` -lutils -lCbc -lStrasbourg -lAnalysers
+ExternalObjects = $(LibraryPaths) -lpthread -lboost_thread -lboost_filesystem -lboost_regex -lboost_system -lboost_thread -lcactus_extern_pugixml -lcactus_uhal_log -lcactus_uhal_grammars -lcactus_uhal_uhal -lcgicc `root-config --glibs` -lutils -lCbc -lStrasbourg -lAnalysers 
 
 %.o: %.cc %.h 
 	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 
-all: calib vcthscan calibGUI daq daqGUI
+all: calib vcthscan calibGUI daq daqGUI ssGUI
 
 calib: calib.cc  
 	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq -lICCalib 
@@ -37,6 +37,10 @@ daq: daq.cc
 
 daqGUI: daqGUI.cc  
 	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq 
+	mv $@ ../bin
+
+ssGUI: ssGUI.cc  
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq -lSignalShape
 	mv $@ ../bin
 
 clean:

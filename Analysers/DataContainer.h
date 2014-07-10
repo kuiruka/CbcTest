@@ -11,12 +11,14 @@
 class TPad;
 class TH1F;
 class TGraphErrors;
-namespace ICCalib{
+
+namespace Analysers{
 
 	template <typename ChannelData, typename CbcData> class DataContainer; 
 
 	template<typename ChannelData> class Channel {
 		friend class ScurveAnalyser;
+		friend class SignalShapeAnalyser;
 		public:
 
 			Channel( UInt_t pFeId=0, UInt_t pCbcId=0, UInt_t pChannelId=0 ):
@@ -45,6 +47,7 @@ namespace ICCalib{
 		class CbcInfo: public std::map<UInt_t, Channel<ChannelData> * >{
 
 			friend class ScurveAnalyser;
+			friend class SignalShapeAnalyser;
 
 			public:
 			typedef typename std::map<UInt_t, Channel<ChannelData> * > Map;
@@ -112,6 +115,7 @@ namespace ICCalib{
 		class DataContainer : public std::map<UInt_t, FeInfo<ChannelData, CbcData> >{ 
 
 			friend class ScurveAnalyser;
+			friend class SignalShapeAnalyser;
 
 			public:
 			typedef typename std::map<UInt_t, FeInfo<ChannelData, CbcData> > Map;

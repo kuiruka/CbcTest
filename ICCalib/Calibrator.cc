@@ -34,32 +34,15 @@ namespace ICCalib{
 		DAQController( "ScurveAnalyser", pConfigFile ),
 		fCalibSetting(),
 		fScurveAnalyser(0),
-		fTestPulseGroupMap(0),
 		fTestGroupMap(0),
 		fGroupList(),
 		fCurrentTestPulseGroup(-1),
 		fNonTestGroupOffset(0xFF)
 	{
-
-		//TestPulseGroupMap initialisation.
-		fTestPulseGroupMap = new TestGroupMap;
-
-		UInt_t cChannel(0);
-		for( int ig = 0; ig < 8; ig++ ){
-			fGroupList.push_back(ig);
-			TestGroup cTestGroup;
-			for( int i=0; i < 16; i++ ){
-				cChannel = i * 16 + ig*2;
-				if( cChannel < 254 )cTestGroup.push_back( cChannel );
-				if( ++cChannel < 254 )cTestGroup.push_back( cChannel ); 
-			}
-			fTestPulseGroupMap->insert( std::pair< UInt_t, TestGroup >(ig, cTestGroup ) );
-		}
 	}
 
 	Calibrator::~Calibrator(){
 
-		delete fTestPulseGroupMap;
 		delete fTestGroupMap;
 
 	}
@@ -197,7 +180,6 @@ namespace ICCalib{
 
 			if( fStop ) return;
 
-			std::cout << "FitHists() begin" << std::endl;
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
 			if( fGUIFrame ){
 				fScurveAnalyser->DrawHists();

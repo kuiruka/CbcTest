@@ -1,4 +1,4 @@
-Objs			= ScurveAnalyser.o AnalysedData.o GUIData.o
+Objs			= Analysers.o AnalysedData.o GUIData.o ScurveAnalyser.o SignalShapeAnalyser.o
 CC              = gcc
 CXX             = g++
 CCFlags         = -g -O1 -Wall -fPIC `root-config --cflags`

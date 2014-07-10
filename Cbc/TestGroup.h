@@ -3,11 +3,8 @@
 #include <TROOT.h>
 #include <map>
 #include <vector>
-#include "AnalysedData.h"
 
-class TGraphErrors;
-
-namespace ICCalib{
+namespace Cbc{
 
 	template <class T> class _TestGroup;
 	template <class T> class _TestGroupMap;
@@ -16,21 +13,21 @@ namespace ICCalib{
 	template <class T>
 		class _TestGroup : public std::vector<UInt_t>{
 			public:
-				_TestGroup():fChannelList(std::vector<Channel<T> *>(0)), fActivated(0){}
+				_TestGroup():fChannelList(std::vector<T *>(0)), fActivated(0){}
 				_TestGroup(const _TestGroup &pT): std::vector<UInt_t>(pT), fChannelList(pT.fChannelList), fActivated(pT.fActivated){}
 				~_TestGroup(){}
 
-				const std::vector<Channel<T> *> *GetChannelList()const{ return &fChannelList; }
+				const std::vector<T *> *GetChannelList()const{ return &fChannelList; }
 				bool Has( UInt_t pChannel )const; 
 				bool Activated()const{ return fActivated; }
 
-				void AddChannel( Channel<T> *pChannel );
+				void AddChannel( T *pChannel );
 				void Activate( bool pActivate ){ fActivated = pActivate; }
 
-				void ClearChannelList(){ fChannelList.clear(); } 
+				void ClearChannelList();
 
 			private:
-				std::vector<Channel<T> *> fChannelList;
+				std::vector<T *> fChannelList;
 				bool fActivated;
 		};
 	template <class T>

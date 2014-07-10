@@ -7,6 +7,7 @@
 /*
 	input file
 		Name	Page	Address	DefVal	Value0
+
 */
 namespace Cbc{
 
@@ -24,8 +25,8 @@ namespace Cbc{
 			UInt_t Page()const{ return fPage; }
 			UInt_t Address()const{ return fAddress; }
 			UInt_t DefVal()const{ return fDefVal; }
-			UInt_t Value()const{ return fValue; }
-			UInt_t Value0()const{ return fValue0; }
+			UInt_t Value()const{ return fValue; }       //Read value
+			UInt_t Value0()const{ return fValue0; }     //Written value
 			Bool_t WriteFailed()const{ return fWriteFailed; }
 
 			void SetFeId( UInt_t pFe ){ fFeId = pFe; }

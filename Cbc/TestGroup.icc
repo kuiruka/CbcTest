@@ -1,8 +1,8 @@
 #include <iostream>
 
-namespace ICCalib{
+namespace Cbc{
 	template <class T>
-		void _TestGroup<T>::AddChannel( Channel<T> *pChannel ){ 
+		void _TestGroup<T>::AddChannel( T *pChannel ){ 
 
 			fChannelList.push_back( pChannel ); 
 		}
@@ -13,17 +13,23 @@ namespace ICCalib{
 			}
 			return false;
 		}
+	template <class T>
+		void _TestGroup<T>::ClearChannelList(){ 
+
+			fChannelList.clear(); 
+		} 
+
 	template <class T> _TestGroupMap<T>::_TestGroupMap( TestGroupMap &pTestGroupMap ){ 
 
-			TestGroupMap::const_iterator cIt = pTestGroupMap.begin();
-			for( ; cIt != pTestGroupMap.end(); cIt++ ){
-				TestGroup cTG = cIt->second;
-				_TestGroup<T> cTestGroup;
-				for( UInt_t i=0; i < cTG.size(); i++ ){
-					cTestGroup.push_back( cTG.at(i) );
-				}
-				( (Map *) this )->insert( std::pair<UInt_t, _TestGroup<T> >( cIt->first, cTestGroup ) );
+		TestGroupMap::const_iterator cIt = pTestGroupMap.begin();
+		for( ; cIt != pTestGroupMap.end(); cIt++ ){
+			TestGroup cTG = cIt->second;
+			_TestGroup<T> cTestGroup;
+			for( UInt_t i=0; i < cTG.size(); i++ ){
+				cTestGroup.push_back( cTG.at(i) );
 			}
+			( (Map *) this )->insert( std::pair<UInt_t, _TestGroup<T> >( cIt->first, cTestGroup ) );
+		}
 	}
 	template <class T>
 		_TestGroup<T> *_TestGroupMap<T>::GetGroup( UInt_t pGroupId ){

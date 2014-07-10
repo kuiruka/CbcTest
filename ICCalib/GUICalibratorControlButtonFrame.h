@@ -22,7 +22,7 @@ namespace ICCalib {
 //			void SetButtonState( State pState ); 
 			void SetCalibButtonState( CalibState pState );
 //			Bool_t ToggleDataStreamDisplayButton();
-			ClassDef( ControlButtonFrame, 0 );
+			ClassDef( CalibratorControlButtonFrame, 0 );
 		private:
 			void addProcessButtons();
 			TGTextButton *fCalibrationButton;

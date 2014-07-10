@@ -7,21 +7,24 @@
 #include <vector>
 #include <set>
 #include <TString.h>
-#include "TestGroup.h"
 #include "CbcDaq/Analyser.h"
 
 namespace Cbc{
+
 	class CbcRegMap;
+	template <class T> class _TestGroup;
+	template <class T> class _TestGroupMap;
+	typedef _TestGroup<UInt_t>                    TestGroup;
+	typedef _TestGroupMap<UInt_t>                 TestGroupMap;
+	typedef _TestGroup<Analysers::Channel<Analysers::CalibrationChannelData> >   CalibrationTestGroup;
+	typedef _TestGroupMap<Analysers::Channel<Analysers::CalibrationChannelData> > CalibrationTestGroupMap;
 }
 
 using namespace Cbc;
 using namespace Strasbourg;
 using namespace CbcDaq;
 
-namespace ICCalib{
-
-	typedef _TestGroup<CalibrationChannelData>    CalibrationTestGroup;
-	typedef _TestGroupMap<CalibrationChannelData> CalibrationTestGroupMap;
+namespace Analysers{
 
 	class ScurveAnalyser : public Analyser{
 

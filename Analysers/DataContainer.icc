@@ -1,6 +1,6 @@
 #include <TPad.h>
 
-namespace ICCalib{
+namespace Analysers{
 
 	template <typename ChannelData, typename CbcData>
 		const Channel<ChannelData> *CbcInfo<ChannelData,CbcData>::GetChannel( UInt_t pChannelId )const{

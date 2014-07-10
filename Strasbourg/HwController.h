@@ -60,6 +60,7 @@ namespace Strasbourg{
 			void AddCbcRegUpdateItem( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pVal );
 			void AddCbcRegUpdateItemsForEnableTestPulse( unsigned int pFe, unsigned int pCbc, bool pEnable );
 			void AddCbcRegUpdateItemsForNewTestPulseGroup( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseGroup );
+			void AddCbcRegUpdateItemsForNewTestPulseDelay( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseDelay );
 			void AddCbcRegUpdateItemsForNewVCth( unsigned int pVCth );
 			std::vector<const CbcRegItem *> ResetCbcRegUpdateList();
 			void LoadCbcRegInfo( unsigned int pFe, unsigned int pCbc );

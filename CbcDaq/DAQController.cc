@@ -48,15 +48,31 @@ namespace CbcDaq{
 		fNAcq(0),
 		fNeventPerAcq(100),//# of events in one data taking
 		fNegativeLogicCBC(true),
-		fStop(false)
-	{
+		fStop(false),
+		fTestPulseGroupMap(0){
 		NBe++;
+
+		//TestPulseGroupMap initialisation.
+		fTestPulseGroupMap = new TestGroupMap;
+
+		UInt_t cChannel(0);
+		for( int ig = 0; ig < 8; ig++ ){
+			//fGroupList.push_back(ig);
+			TestGroup cTestGroup;
+			for( int i=0; i < 16; i++ ){
+				cChannel = i * 16 + ig*2;
+				if( cChannel < 254 )cTestGroup.push_back( cChannel );
+				if( ++cChannel < 254 )cTestGroup.push_back( cChannel ); 
+			}
+			fTestPulseGroupMap->insert( std::pair< UInt_t, TestGroup >(ig, cTestGroup ) );
+		}
 	}
 
 	DAQController::~DAQController(){
 
 		delete fHwController;
 		delete fAnalyser;
+		delete fTestPulseGroupMap;
 
 	}
 	void DAQController::initialiseSetting(){
