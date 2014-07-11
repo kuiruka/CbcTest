@@ -72,8 +72,8 @@ namespace Strasbourg{
 			virtual void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite)=0;
 			virtual void addCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite)=0;
 
-			std::vector<const CbcRegItem *> setCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pReadVecReq );	
-			const CbcRegItem * setCbcRegSetting( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pValue ); 
+			std::vector<const CbcRegItem *> setReadValueToCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pReadVecReq );	
+			const CbcRegItem * setReadValueToCbcRegSetting( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pValue ); 
 
 			std::string fName;
 

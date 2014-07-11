@@ -3,10 +3,9 @@
 namespace Analysers{
 
 	template <typename ChannelData, typename CbcData>
-		const Channel<ChannelData> *CbcInfo<ChannelData,CbcData>::GetChannel( UInt_t pChannelId )const{
+		Channel<ChannelData> *CbcInfo<ChannelData,CbcData>::GetChannel( UInt_t pChannelId ){
 
-
-			const_iterator cIt = this->find( pChannelId );
+			iterator cIt = this->find( pChannelId );
 			if( cIt != this->end() ) return cIt->second;
 			return 0;
 		}
@@ -17,19 +16,19 @@ namespace Analysers{
 		}
 
 	template <typename ChannelData, typename CbcData>
-		const CbcInfo<ChannelData, CbcData> *FeInfo<ChannelData, CbcData>::GetCbcInfo( UInt_t pCbcId )const{
+		CbcInfo<ChannelData, CbcData> *FeInfo<ChannelData, CbcData>::GetCbcInfo( UInt_t pCbcId ){
 
-			const CbcInfo<ChannelData, CbcData> *cCbcInfo(0);
-			const_iterator cIt = this->find( pCbcId );
+			CbcInfo<ChannelData, CbcData> *cCbcInfo(0);
+			iterator cIt = this->find( pCbcId );
 			if( cIt != this->end() ){
 				cCbcInfo = &(cIt->second);
 			}
 			return cCbcInfo;
 		}
 	template <typename ChannelData, typename CbcData>
-		const Channel<ChannelData> *FeInfo<ChannelData, CbcData>::GetChannel( UInt_t pCbcId, UInt_t pChannelId )const{
+		Channel<ChannelData> *FeInfo<ChannelData, CbcData>::GetChannel( UInt_t pCbcId, UInt_t pChannelId ){
 
-			const CbcInfo<ChannelData, CbcData> *cCbcInfo = GetCbcInfo( pCbcId );
+			CbcInfo<ChannelData, CbcData> *cCbcInfo = GetCbcInfo( pCbcId );
 			if( cCbcInfo == 0 ) return 0;
 			return cCbcInfo->GetChannel( pChannelId );
 		}
@@ -41,14 +40,14 @@ namespace Analysers{
 	template <typename ChannelData, typename CbcData>
 		void FeInfo<ChannelData, CbcData>::AddChannel( UInt_t pCbcId, UInt_t pChannelId, Channel<ChannelData> * pChannel ){ 
 
-			CbcInfo<ChannelData, CbcData> *cCbcInfo = getCbcInfo( pCbcId );
+			CbcInfo<ChannelData, CbcData> *cCbcInfo = GetCbcInfo( pCbcId );
 			if( cCbcInfo == 0 ){
 				AddCbcInfo( pCbcId, CbcInfo<ChannelData, CbcData>( fFeId, pCbcId ) );
 				cCbcInfo = &(this->find(pCbcId)->second);
 			}
 			cCbcInfo->AddChannel( pChannelId, pChannel );
 		}
-
+/*
 	template <typename ChannelData, typename CbcData>
 		CbcInfo<ChannelData, CbcData> *FeInfo<ChannelData, CbcData>::getCbcInfo( UInt_t pCbcId ){
 
@@ -59,28 +58,29 @@ namespace Analysers{
 			}
 			return cCbcInfo;
 		}
+		*/
 
 	template <typename ChannelData, typename CbcData>
-		const FeInfo<ChannelData, CbcData> *DataContainer<ChannelData, CbcData>::GetFeInfo( UInt_t pFeId )const{
+		FeInfo<ChannelData, CbcData> *DataContainer<ChannelData, CbcData>::GetFeInfo( UInt_t pFeId ){
 
-			const FeInfo<ChannelData, CbcData> *cFeInfo(0);
-			const_iterator cIt = this->find( pFeId );
+			FeInfo<ChannelData, CbcData> *cFeInfo(0);
+			iterator cIt = this->find( pFeId );
 			if( cIt != this->end() ){
 				cFeInfo = &(cIt->second);
 			}
 			return cFeInfo;
 		}
 	template <typename ChannelData, typename CbcData>
-		const CbcInfo<ChannelData, CbcData> *DataContainer<ChannelData, CbcData>::GetCbcInfo( UInt_t pFeId, UInt_t pCbcId )const{
+		CbcInfo<ChannelData, CbcData> *DataContainer<ChannelData, CbcData>::GetCbcInfo( UInt_t pFeId, UInt_t pCbcId ){
 
-			const FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
+			FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
 			if( cFeInfo == 0 ) return 0;
 			return cFeInfo->GetCbcInfo( pCbcId );
 		}
 	template <typename ChannelData, typename CbcData>
-		const Channel<ChannelData> *DataContainer<ChannelData, CbcData>::GetChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId )const{
+		Channel<ChannelData> *DataContainer<ChannelData, CbcData>::GetChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){
 
-			const FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
+			FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
 			if( cFeInfo == 0 ) return 0;
 			return cFeInfo->GetChannel( pCbcId, pChannelId );
 		}
@@ -92,7 +92,7 @@ namespace Analysers{
 	template <typename ChannelData, typename CbcData>
 		void DataContainer<ChannelData, CbcData>::AddCbcInfo( UInt_t pFeId, UInt_t pCbcId, CbcInfo<ChannelData, CbcData> pCbcInfo ){ 
 
-			FeInfo<ChannelData, CbcData> *cFeInfo = getFeInfo( pFeId );
+			FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
 			if( cFeInfo == 0 ){
 				AddFeInfo( pFeId, FeInfo<ChannelData, CbcData>( pFeId ) );
 				cFeInfo =  &(this->find(pFeId)->second);
@@ -102,13 +102,14 @@ namespace Analysers{
 	template <typename ChannelData, typename CbcData>
 		void DataContainer<ChannelData, CbcData>::AddChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId, Channel<ChannelData> *pChannel ){ 
 
-			FeInfo<ChannelData, CbcData> *cFeInfo = getFeInfo( pFeId );
+			FeInfo<ChannelData, CbcData> *cFeInfo = GetFeInfo( pFeId );
 			if( cFeInfo == 0 ){
 				AddFeInfo( pFeId, FeInfo<ChannelData, CbcData>( pFeId ) );
 				cFeInfo =  &(this->find(pFeId)->second);
 			}
 			cFeInfo->AddChannel( pCbcId, pChannelId, pChannel );
 		}
+		/*
 	template <typename ChannelData, typename CbcData>
 		FeInfo<ChannelData, CbcData> *DataContainer<ChannelData, CbcData>::getFeInfo( UInt_t pFeId ){
 
@@ -128,5 +129,6 @@ namespace Analysers{
 			}
 			return 0;	
 		}
+		*/
 }
 

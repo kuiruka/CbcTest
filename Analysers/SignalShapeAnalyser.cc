@@ -55,6 +55,7 @@ namespace Analysers{
 					for( UInt_t i=0; i<cTestGroup.size(); i++ ){
 
 						UInt_t cChannelId = cTestGroup[i];
+						//std::cout << "ChannelId = " << cChannelId << std::endl;
 						TH1F *h = createScurveHistogram( cFeId, cCbcId, cChannelId );
 						TGraphErrors *g = createSignalShapeGraph( cFeId, cCbcId, cChannelId );
 						SignalShapeChannelInfo *cChannel = new SignalShapeChannelInfo( cFeId, cCbcId, cChannelId );
@@ -104,7 +105,7 @@ namespace Analysers{
 			SignalShapeChannelInfo *cChannel = cChannelList->at(k);
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
-			TH1F *h = cChannel->getData().Hist();
+			TH1F *h = cChannel->GetData().Hist();
 
 			const FeEvent *cFeEvent = pEvent->GetFeEvent( cFeId );
 			if( cFeEvent == 0 ) return cNhit; 
@@ -135,7 +136,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
+				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
 				//cCbcInfo.GetDummyPad()->Clear();
 				fDummyHist->Draw();
 			}
@@ -153,7 +154,7 @@ namespace Analysers{
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
 
-			TH1F *h = cChannel->getData().Hist();
+			TH1F *h = cChannel->GetData().Hist();
 			if(h==0) continue;
 
 			h->Divide( h, fHtotal, 1.0, 1.0, "B" );
@@ -193,7 +194,7 @@ namespace Analysers{
 			f->SetParameters( cMid, cWidth );
 			//Option S is for TFitResultPtr
 			//TFitResultPtr cFitR = h->Fit( fname, "RSLQ0" ); 
-			fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetDummyPad( cFeId, cCbcId )->cd();
+			fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad( cFeId, cCbcId )->cd();
 			TFitResultPtr cFitR = h->Fit( fname, "RSLQ", "same" ); 
 			//			TFitResultPtr cFitR = h->Fit( fname, "RSLQ" ); 
 			int cStatus = int( cFitR ); 
@@ -207,18 +208,18 @@ namespace Analysers{
 			double cVCth0Error = f->GetParError( 0 ); 
 			double cVCth0Width = f->GetParameter( 1 ); 
 			double cVCth0WidthError = f->GetParError( 1 ); 
-			cChannel->getData().SetVCth0( (float) cVCth0, (float) cVCth0Error );
-			cChannel->getData().SetVCth0Width( (float) cVCth0Width, (float) cVCth0WidthError );
+			cChannel->GetData().SetVCth0( (float) cVCth0, (float) cVCth0Error );
+			cChannel->GetData().SetVCth0Width( (float) cVCth0Width, (float) cVCth0WidthError );
 			fMinVCth0 = cVCth0 < (double)fMinVCth0 ? (UInt_t)cVCth0 : fMinVCth0;
 			fMaxVCth0 = (double)fMaxVCth0 < cVCth0 ? (UInt_t)cVCth0 : fMaxVCth0;
 
-			TGraphErrors *g = cChannel->getData().Graph();
+			TGraphErrors *g = cChannel->GetData().Graph();
 			Int_t cNpoints = g->GetN();	
 			g->SetPoint( cNpoints, fCurrentTime, cChannel->GetData().VCth0() ); 
 			g->SetPointError( cNpoints, 0, cChannel->GetData().VCth0Width() ); 
 		}
 		fHtotal->Divide( fHtotal, fHtotal, 1.0, 1.0, "B" );
-		
+
 		cItGUIFe = fGUIData.begin();
 		for( ; cItGUIFe != fGUIData.end(); cItGUIFe++ ){
 
@@ -227,7 +228,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
+				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
 			}
 		}
 
@@ -279,7 +280,7 @@ namespace Analysers{
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
 			SignalShapeChannelInfo *cChannel = cChannelList->at(k);
-			cChannel->getData().ResetHist();
+			cChannel->GetData().ResetHist();
 		}
 	}
 	void SignalShapeAnalyser::DrawHists(){
@@ -298,7 +299,7 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				SignalShapeCbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetScurveHistogramDisplayPad( cGroupId );	
+				TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetScurveHistogramDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					cPad->Clear();
@@ -343,7 +344,7 @@ namespace Analysers{
 						if( cItChannel == cCbcInfo.end() ) continue;
 
 						SignalShapeChannelInfo *cChannel = cItChannel->second;
-						TH1F *h = cChannel->getData().Hist(); 
+						TH1F *h = cChannel->GetData().Hist(); 
 						h->Draw( option );
 						TF1 *cFunc = (TF1 *) h->GetListOfFunctions()->Last();
 						double cVCth0(0);
@@ -395,7 +396,7 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				SignalShapeCbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetSignalShapeGraphDisplayPad( cGroupId );	
+				TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetSignalShapeGraphDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					//TString option("e0p0");
@@ -427,7 +428,7 @@ namespace Analysers{
 						if( cItChannel == cCbcInfo.end() ) continue;
 
 						SignalShapeChannelInfo *cChannel = cItChannel->second;
-						TGraphErrors *g = cChannel->getData().Graph(); 
+						TGraphErrors *g = cChannel->GetData().Graph(); 
 						g->Draw( option );
 					}
 					cPad->Update();
@@ -441,9 +442,10 @@ namespace Analysers{
 			UInt_t cFeId = fChannelList[i]->FeId();
 			UInt_t cCbcId = fChannelList[i]->CbcId();
 			UInt_t cChannel = fChannelList[i]->ChannelId();
-			UInt_t cOffset = fCbcRegMap->GetValue( cFeId, cCbcId, 1, cChannel+1 );
+			std::cout << "SetOffsets  Channel = " << cChannel << std::endl;
+			UInt_t cOffset = fCbcRegMap->GetValue0( cFeId, cCbcId, 1, cChannel+1 );
 			//std::cout << "Fe " << cFeId << ", Cbc " << cCbcId << ", Offset " << cOffset << std::endl;
-			fChannelList[i]->getData().SetOffset( cOffset );
+			fChannelList[i]->GetData().SetOffset( cOffset );
 		}
 	}
 	void   SignalShapeAnalyser::SetSignalShapeGraphDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad ){
@@ -458,7 +460,7 @@ namespace Analysers{
 		SignalShapeTestGroupMap::iterator cIt = fGroupMap->begin();
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 			UInt_t cGroupId = cIt->first;
-			fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetSignalShapeGraphDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
+			fGUIData.GetCbcInfo( pFeId, pCbcId )->GetData().SetSignalShapeGraphDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
 		}
 	}
 	void   SignalShapeAnalyser::SetScurveHistogramDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad ){
@@ -473,14 +475,14 @@ namespace Analysers{
 		SignalShapeTestGroupMap::iterator cIt = fGroupMap->begin();
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 			UInt_t cGroupId = cIt->first;
-			fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetScurveHistogramDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
+			fGUIData.GetCbcInfo( pFeId, pCbcId )->GetData().SetScurveHistogramDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
 		}
-		fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetDummyPad( (TPad *) pPad->GetPad(cNcol*cNrow) );
+		fGUIData.GetCbcInfo( pFeId, pCbcId )->GetData().SetDummyPad( (TPad *) pPad->GetPad(cNcol*cNrow) );
 	}
 
 	UInt_t SignalShapeAnalyser::GetOffset( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){ 
 
-		const SignalShapeChannelInfo *cC = fSignalShapeData.GetChannel( pFeId, pCbcId, pChannelId ); 
+		SignalShapeChannelInfo *cC = fSignalShapeData.GetChannel( pFeId, pCbcId, pChannelId ); 
 #ifdef __CBCDAQ_DEV__
 		std::cout << "ChannelTest [" << cC->ChannelId() << "] " << pChannelId << "  Offset = " << cC->GetData().Offset() << std::endl; 
 #endif
@@ -504,7 +506,7 @@ namespace Analysers{
 				for( ; cItChannel != cCbcInfo.end(); cItChannel++ ){
 
 					SignalShapeChannelInfo *cChannelInfo = cItChannel->second;
-					SignalShapeChannelData &cData = cChannelInfo->getData();
+					SignalShapeChannelData &cData = cChannelInfo->GetData();
 					TGraphErrors *cGraph = cData.Graph();
 
 					cGraph->Write(cGraph->GetName(), TObject::kOverwrite );

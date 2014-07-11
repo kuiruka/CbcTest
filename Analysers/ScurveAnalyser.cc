@@ -15,6 +15,23 @@
 
 namespace Analysers{
 
+	const TGraphErrors *CalibrationCbcData::GetGraphVplusVCth0( UInt_t pGroupId )const{
+
+		std::map<UInt_t, TGraphErrors *>::const_iterator cIt = fGraphVplusVCth0.find( pGroupId ); 
+		if( cIt == fGraphVplusVCth0.end() ) return 0;
+		return cIt->second;
+	}
+
+	TGraphErrors *CalibrationCbcData::GetGraphVplusVCth0( UInt_t pGroupId ){
+		std::map<UInt_t, TGraphErrors *>::iterator cIt = fGraphVplusVCth0.find( pGroupId ); 
+		if( cIt == fGraphVplusVCth0.end() ) return 0;
+		return cIt->second;
+	}
+	void CalibrationCbcData::AddGraphVplusVCth0( UInt_t pGroup, TGraphErrors *pGraph ){
+
+		fGraphVplusVCth0.insert( std::pair< UInt_t, TGraphErrors *>( pGroup, pGraph ) );
+
+	}
 	ScurveAnalyser::ScurveAnalyser( 
 			UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
 			CalibrationTestGroupMap *pGroupMap, const CbcRegMap *pCbcRegMap, 
@@ -82,8 +99,8 @@ namespace Analysers{
 					delete gROOT->FindObject( cName );
 					TGraphErrors *cG = new TGraphErrors( cTestGroup.size() * 10 );
 					cG->SetName( cName );
-					CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
-					cCbcInfo->getData().AddGraphVplusVCth0( cIt->first, cG );
+					CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
+					cCbcInfo->GetData().AddGraphVplusVCth0( cIt->first, cG );
 				}
 			}
 		}
@@ -104,18 +121,18 @@ namespace Analysers{
 			UInt_t cFeId = fChannelList[i]->FeId();
 			UInt_t cCbcId = fChannelList[i]->CbcId();
 			UInt_t cChannel = fChannelList[i]->ChannelId();
-			UInt_t cOffset = fCbcRegMap->GetValue( cFeId, cCbcId, 1, cChannel+1 );
+			UInt_t cOffset = fCbcRegMap->GetReadValue( cFeId, cCbcId, 1, cChannel+1 );
 			//std::cout << "Fe " << cFeId << ", Cbc " << cCbcId << ", Offset " << cOffset << std::endl;
-			fChannelList[i]->getData().SetOffset( cOffset );
-			fChannelList[i]->getData().SetNextOffset( cOffset );
+			fChannelList[i]->GetData().SetOffset( cOffset );
+			fChannelList[i]->GetData().SetNextOffset( cOffset );
 		}
 	}
 	void ScurveAnalyser::SetOffsets( UInt_t pInitalOffset ){
 
 		for( UInt_t i=0; i < fChannelList.size(); i++ ){
 			if( fChannelList[i] == 0 ) continue;
-			fChannelList[i]->getData().SetOffset( pInitalOffset );
-			fChannelList[i]->getData().SetNextOffset( pInitalOffset );
+			fChannelList[i]->GetData().SetOffset( pInitalOffset );
+			fChannelList[i]->GetData().SetNextOffset( pInitalOffset );
 		}
 	}
 	void ScurveAnalyser::Configure( Int_t pType, Int_t pOffsetTargetBit ){
@@ -143,14 +160,14 @@ namespace Analysers{
 				UInt_t cCbcId = cItCbc->first;
 				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
 
-				TGraphErrors *cG = cCbcInfo.getData().GetGraphVplusVCth0(cGroupId);
+				TGraphErrors *cG = cCbcInfo.GetData().GetGraphVplusVCth0(cGroupId);
 
 				const std::vector<CalibrationChannelInfo *> *cChannelList = cTestGroup->GetChannelList();
 				UInt_t j=0;
 				for( UInt_t i=0; i < cChannelList->size(); i++ ){
 					CalibrationChannelInfo *cChannel = cChannelList->at(i);
 					if( !( cChannel->FeId() == cFeId && cChannel->CbcId() == cCbcId ) )continue; 
-					UInt_t cVplus = fCbcRegMap->GetValue( cFeId, cCbcId, 0, 0x0B );
+					UInt_t cVplus = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0B );
 					cG->SetPoint( fNthVplusPoint+j, cChannel->GetData().VCth0(), cVplus ); 
 					cG->SetPointError( fNthVplusPoint+j, cChannel->GetData().VCth0Error(), 0 ); 
 					//					std::cout << "SetPoint [" << fNthVplusPoint+j << "] for Channel " << cChannel->ChannelId() << " Vplus " << cVplus << " VCth0 = " << cChannel->VCth0() << std::endl;
@@ -177,12 +194,12 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetVplusVsVCth0GraphDisplayPad();	
+				TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetVplusVsVCth0GraphDisplayPad();	
 				if( cPad ){
 
 					cPad->cd();
 
-					TGraphErrors *cG = cCbcInfo.getData().GetGraphVplusVCth0(cGroupId);
+					TGraphErrors *cG = cCbcInfo.GetData().GetGraphVplusVCth0(cGroupId);
 					TString cOption( "P" );
 					TString cHistName = Form( "VplusScanBE%uFE%uCBC%u", fBeId, cFeId, cCbcId);
 
@@ -222,7 +239,7 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				GUICbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.getData().GetVplusVsVCth0GraphDisplayPad();	
+				TPad *cPad = cCbcInfo.GetData().GetVplusVsVCth0GraphDisplayPad();	
 				if( cPad ){
 					cPad->cd();
 					//cPad->Update();
@@ -246,7 +263,7 @@ namespace Analysers{
 			CalibrationChannelInfo *cChannel = cChannelList->at(k);
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
-			TH1F *h = cChannel->getData().Hist();
+			TH1F *h = cChannel->GetData().Hist();
 
 			const FeEvent *cFeEvent = pEvent->GetFeEvent( cFeId );
 			if( cFeEvent == 0 ) return cNhit; 
@@ -277,7 +294,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
+				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
 				//cCbcInfo.GetDummyPad()->Clear();
 				fDummyHist->Draw();
 			}
@@ -295,7 +312,7 @@ namespace Analysers{
 			if( cChannel == 0 ) continue;
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
-			TH1F *h = cChannel->getData().Hist();
+			TH1F *h = cChannel->GetData().Hist();
 			if(h==0) continue;
 
 			h->Divide( h, fHtotal, 1.0, 1.0, "B" );
@@ -334,7 +351,7 @@ namespace Analysers{
 			f->SetParameters( cMid, cWidth );
 			//Option S is for TFitResultPtr
 			//TFitResultPtr cFitR = h->Fit( fname, "RSLQ0" ); 
-			fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetDummyPad( cFeId, cCbcId )->cd();
+			fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad( cFeId, cCbcId )->cd();
 			TFitResultPtr cFitR = h->Fit( fname, "RSLQ", "same" ); 
 			//			TFitResultPtr cFitR = h->Fit( fname, "RSLQ" ); 
 			int cStatus = int( cFitR ); 
@@ -345,7 +362,7 @@ namespace Analysers{
 			}
 			double cVCth0 = f->GetParameter( 0 ); 
 			double cVCth0Error = f->GetParError( 0 ); 
-			cChannel->getData().SetVCth0( (float)cVCth0, (float) cVCth0Error );
+			cChannel->GetData().SetVCth0( (float)cVCth0, (float) cVCth0Error );
 			fMinVCth0 = cVCth0 < (double)fMinVCth0 ? (UInt_t)cVCth0 : fMinVCth0;
 			fMaxVCth0 = (double)fMaxVCth0 < cVCth0 ? (UInt_t)cVCth0 : fMaxVCth0;
 			h->Write(h->GetName(), TObject::kOverwrite );
@@ -363,7 +380,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.getData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
+				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
 			}
 		}
 	}
@@ -383,7 +400,7 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				CalibrationCbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = fGUIData.getCbcInfo( cFeId, cCbcId )->getData().GetScurveHistogramDisplayPad( cGroupId );	
+				TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetScurveHistogramDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					cPad->Clear();
@@ -428,7 +445,7 @@ namespace Analysers{
 						if( cItChannel == cCbcInfo.end() ) continue;
 
 						CalibrationChannelInfo *cChannel = cItChannel->second;
-						TH1F *h = cChannel->getData().Hist(); 
+						TH1F *h = cChannel->GetData().Hist(); 
 						h->Draw( option );
 						TF1 *cFunc = (TF1 *) h->GetListOfFunctions()->Last();
 						double cVCth0(0);
@@ -454,7 +471,7 @@ namespace Analysers{
 						cTotalVCth0Error = sqrt( ( cTotalVCth0Error - Nch * cTotalVCth0*cTotalVCth0 ) / Nch );
 						cStringTotalVCth0 = Form( "  VCth mid. point = %05.1f#pm%5.2f (0x%02X#pm%02X)", cTotalVCth0, cTotalVCth0Error, (Int_t)cTotalVCth0, (Int_t)cTotalVCth0Error );
 					}
-					UInt_t cVplus = fCbcRegMap->GetValue( cFeId, cCbcId, 0, 0x0B );
+					UInt_t cVplus = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0B );
 					TString cHtotalTitle =  Form( "FE(%d) CBC(%d) Group(%03X) Vplus = 0x%02X Target VCth = 0x%02X %s%s; VCth", 
 							cFeId, cCbcId, cGroupId, cVplus, fTargetVCth, getScanType().Data(), cStringTotalVCth0.Data() );
 					cHtotal->SetTitle( cHtotalTitle );
@@ -482,18 +499,18 @@ namespace Analysers{
 
 				UInt_t cCbcId = cItCbc->first;
 				GUICbcInfo &cCbcInfo = cItCbc->second;
-				TPad *cPad = cCbcInfo.getData().GetScurveHistogramDisplayPad( cGroupId );	
+				TPad *cPad = cCbcInfo.GetData().GetScurveHistogramDisplayPad( cGroupId );	
 				if( cPad ){
 					cPad->cd();
 					TString cRegInfo;
 					if( fScanType == SINGLEVCTHSCAN ){
 
-						UInt_t cVplus = fCbcRegMap->GetValue( cFeId, cCbcId, 0, 0x0B );
+						UInt_t cVplus = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0B );
 						UInt_t cPage(0x00), cAddr(0x0F);
-						UInt_t cTPEnable = fCbcRegMap->GetValue( cFeId, cCbcId, cPage, cAddr );
+						UInt_t cTPEnable = fCbcRegMap->GetReadValue( cFeId, cCbcId, cPage, cAddr );
 						UInt_t cMask = 1 << 6;
 						cTPEnable &= cMask;
-						UInt_t cTPPot = fCbcRegMap->GetValue( cFeId, cCbcId, 0, 0x0D );
+						UInt_t cTPPot = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0D );
 						cRegInfo = Form( "Vplus%02XTP%02XPot%02X", cVplus, cTPEnable, cTPPot );
 					}
 					cPad->Print( Form( "%s/%sFE%uCBC%uTestGroup%d%s.eps", fOutputDir.Data(), getScanId().Data(), cFeId, cCbcId, cGroupId, cRegInfo.Data() ) );
@@ -503,7 +520,7 @@ namespace Analysers{
 	}
 	UInt_t ScurveAnalyser::GetOffset( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){ 
 
-		const CalibrationChannelInfo *cC = fResult.GetChannel( pFeId, pCbcId, pChannelId ); 
+		CalibrationChannelInfo *cC = fResult.GetChannel( pFeId, pCbcId, pChannelId ); 
 #ifdef __CBCDAQ_DEV__
 		std::cout << "ChannelTest [" << cC->ChannelId() << "] " << pChannelId << "  Offset = " << cC->GetData().Offset() << std::endl; 
 #endif
@@ -513,7 +530,7 @@ namespace Analysers{
 	UInt_t ScurveAnalyser::GetVplus( UInt_t pFeId, UInt_t pCbcId ){
 
 		UInt_t cVplus(0);
-		CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( pFeId, pCbcId );	
+		CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( pFeId, pCbcId );	
 		if( cCbcInfo ){
 			cVplus = cCbcInfo->GetData().Vplus();
 		}	
@@ -525,7 +542,7 @@ namespace Analysers{
 
 			for( UInt_t cCbcId=0; cCbcId< fNCbc; cCbcId++ ){
 
-				const CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
+				CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
 				if( cCbcInfo == 0 ) return;
 
 				printf( "FE: %d CBC: %d Vpluse: %u\n", cFeId, cCbcId, cCbcInfo->GetData().Vplus() );
@@ -547,8 +564,8 @@ namespace Analysers{
 				UInt_t cVplus(0);
 				Int_t cN(0);
 				Float_t cSum(0);
-				CalibrationCbcInfo *cCbcInfo = fResult.getCbcInfo( cFeId, cCbcId );	
-				std::map<UInt_t, TGraphErrors *> *cMap = cCbcInfo->getData().GetGraphVplusVCth0();	
+				CalibrationCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
+				std::map<UInt_t, TGraphErrors *> *cMap = cCbcInfo->GetData().GetGraphVplusVCth0();	
 				std::map<UInt_t, TGraphErrors *>::iterator cIt = cMap->begin();
 				for( ; cIt != cMap->end(); cIt++ ){
 					TGraphErrors *cG = cIt->second; 
@@ -558,7 +575,7 @@ namespace Analysers{
 					cN++;
 				}
 				if( cN != 0 ) cVplus = (UInt_t) ( cSum / cN );
-				cCbcInfo->getData().SetVplus( cVplus );
+				cCbcInfo->GetData().SetVplus( cVplus );
 			}
 		}
 	}
@@ -574,9 +591,9 @@ namespace Analysers{
 		CalibrationTestGroupMap::iterator cIt = fGroupMap->begin();
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 			UInt_t cGroupId = cIt->first;
-			fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetScurveHistogramDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
+			fGUIData.GetCbcInfo( pFeId, pCbcId )->GetData().SetScurveHistogramDisplayPad( cGroupId, (TPad *)pPad->GetPad(++i) );
 		}
-		fGUIData.getCbcInfo( pFeId, pCbcId )->getData().SetDummyPad( (TPad *) pPad->GetPad(cNcol*cNrow) );
+		fGUIData.GetCbcInfo( pFeId, pCbcId )->GetData().SetDummyPad( (TPad *) pPad->GetPad(cNcol*cNrow) );
 	}
 	void ScurveAnalyser::SetVplusVsVCth0GraphDisplayPad( UInt_t pFeId, TPad *pPad ){
 
@@ -591,7 +608,7 @@ namespace Analysers{
 		UInt_t i(0);
 		for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 			UInt_t cCbcId = cItCbc->first;
-			fGUIData.getCbcInfo( cItFe->first, cCbcId )->getData().SetVplusVsVCth0GraphDisplayPad( (TPad *)pPad->GetPad( ++i ) );
+			fGUIData.GetCbcInfo( cItFe->first, cCbcId )->GetData().SetVplusVsVCth0GraphDisplayPad( (TPad *)pPad->GetPad( ++i ) );
 		}
 	}
 	TH1F * ScurveAnalyser::createScurveHistogram( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId ){
@@ -625,13 +642,13 @@ namespace Analysers{
 		for( UInt_t k=0; k < cChannelList->size(); k++ ){
 
 			CalibrationChannelInfo *cChannel = cChannelList->at(k);
-			cChannel->getData().ResetHist();
+			cChannel->GetData().ResetHist();
 		}
 	}
 	void ScurveAnalyser::updateOffsets(){
 		for( UInt_t i=0; i < fChannelList.size(); i++ ){
 			if( fChannelList[i] == 0 ) continue;
-			fChannelList[i]->getData().UpdateOffset();
+			fChannelList[i]->GetData().UpdateOffset();
 		}
 	}
 
@@ -649,7 +666,7 @@ namespace Analysers{
 		}
 		else if( fScanType == VPLUSSEARCH ){
 
-			UInt_t cVplus = fCbcRegMap->GetValue( 0, 0, 0, 0x0B );
+			UInt_t cVplus = fCbcRegMap->GetReadValue( 0, 0, 0, 0x0B );
 			cType = Form( "Vplus = 0x%02X", cVplus );
 		}
 		else if( fScanType == SINGLEVCTHSCAN ){
@@ -672,7 +689,7 @@ namespace Analysers{
 		}
 		else if( fScanType == VPLUSSEARCH ){
 
-			UInt_t cVplus = fCbcRegMap->GetValue( 0, 0, 0, 0x0B );
+			UInt_t cVplus = fCbcRegMap->GetReadValue( 0, 0, 0, 0x0B );
 			cType = Form( "Vplus%02X", cVplus );
 		}
 		else if( fScanType == SINGLEVCTHSCAN ){
@@ -699,7 +716,7 @@ namespace Analysers{
 
 			cChannel->Id( cFeId, cCbcId, cChannelId );
 			//std::cout << "GroupId = " << cGroupId << ", Channel id = " << cChannelId << std::endl;
-			TH1F *h = cChannel->getData().Hist();
+			TH1F *h = cChannel->GetData().Hist();
 			if(h==0) continue;
 
 			TF1 *cFunc = (TF1 *) h->GetListOfFunctions()->Last();	
@@ -711,7 +728,7 @@ namespace Analysers{
 				cOffset &= ~( 1 << fCurrentTargetBit );
 			}
 			if( fCurrentTargetBit > 0 )cOffset |= 1 << ( fCurrentTargetBit - 1 );
-			cChannel->getData().SetNextOffset( cOffset );
+			cChannel->GetData().SetNextOffset( cOffset );
 			//if( cCbcId == 0 && cChannelId == 0 ){
 			//	if( cOffset & 0x40000000 ){
 			//		std::cout << cVCth0 << " " << fCurrentTargetBit << std::endl; 

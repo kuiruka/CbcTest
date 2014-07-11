@@ -46,7 +46,6 @@ namespace SignalShape{
 			//main functions
 			void ConfigureAnalyser();
 			void Run();
-			void ActivateGroup( UInt_t pGroupId );
 			void VCthScan( UInt_t &pMinVCth, UInt_t &pMaxVCth );
 
 			void SetSignalShapeGraphDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );
@@ -71,7 +70,6 @@ namespace SignalShape{
 			SignalShapeTestGroupMap              *fTestGroupMap;
 
 			std::vector<UInt_t>                  fGroupList;
-			Int_t                                fCurrentTestPulseGroup;
 			UInt_t                               fNonTestGroupOffset;
 	};
 

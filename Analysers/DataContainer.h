@@ -17,8 +17,6 @@ namespace Analysers{
 	template <typename ChannelData, typename CbcData> class DataContainer; 
 
 	template<typename ChannelData> class Channel {
-		friend class ScurveAnalyser;
-		friend class SignalShapeAnalyser;
 		public:
 
 			Channel( UInt_t pFeId=0, UInt_t pCbcId=0, UInt_t pChannelId=0 ):
@@ -32,11 +30,11 @@ namespace Analysers{
 			UInt_t FeId()const{ return fFeId; } 
 			UInt_t CbcId()const{ return fCbcId; } 
 			UInt_t ChannelId()const{ return fChannelId; }
-			const ChannelData &GetData()const{ return fData; }
+			ChannelData &GetData(){ return fData; }
 			void SetData( ChannelData &pData ){ fData = pData; }
 
 		private:
-			ChannelData &getData(){ return fData; }
+//			ChannelData &getData(){ return fData; }
 			UInt_t fFeId;
 			UInt_t fCbcId;
 			UInt_t fChannelId;
@@ -45,9 +43,6 @@ namespace Analysers{
 
 	template <typename ChannelData, typename CbcData> 
 		class CbcInfo: public std::map<UInt_t, Channel<ChannelData> * >{
-
-			friend class ScurveAnalyser;
-			friend class SignalShapeAnalyser;
 
 			public:
 			typedef typename std::map<UInt_t, Channel<ChannelData> * > Map;
@@ -68,12 +63,12 @@ namespace Analysers{
 
 			UInt_t FeId()const{ return fFeId; } 
 			UInt_t CbcId()const{ return fCbcId; } 
-			const Channel<ChannelData> * GetChannel( UInt_t pChannelId )const;
+			Channel<ChannelData> * GetChannel( UInt_t pChannelId );
 			void AddChannel( UInt_t pChannelId, Channel<ChannelData> * pChannel );
-			const CbcData &GetData()const{ return fData; }
+			CbcData &GetData(){ return fData; }
 
 			private:
-			CbcData &getData(){ return fData; }
+//			CbcData &getData(){ return fData; }
 			UInt_t                           fFeId;
 			UInt_t                           fCbcId;
 			CbcData                          fData;
@@ -101,21 +96,18 @@ namespace Analysers{
 			FeInfo(const FeInfo &pFeInfo): std::map<UInt_t, CbcInfo<ChannelData, CbcData> >(pFeInfo), fFeId(pFeInfo.fFeId), fCbcIds(pFeInfo.fCbcIds){}
 			~FeInfo(){}
 			const std::vector<UInt_t> &GetCbcIds(){ return fCbcIds; }
-			const CbcInfo<ChannelData, CbcData> *GetCbcInfo( UInt_t pCbcId )const;
-			const Channel<ChannelData> *GetChannel( UInt_t pCbcId, UInt_t pChannelId )const;
+			CbcInfo<ChannelData, CbcData> *GetCbcInfo( UInt_t pCbcId );
+			Channel<ChannelData> *GetChannel( UInt_t pCbcId, UInt_t pChannelId );
 			void AddCbcInfo( UInt_t pCbcId, CbcInfo<ChannelData, CbcData> pCbcInfo ); 
 			void AddChannel( UInt_t pCbcId, UInt_t pChannelId, Channel<ChannelData> *pChannel ); 
 			private:
-			CbcInfo<ChannelData, CbcData> *getCbcInfo( UInt_t pCbcId );
+//			CbcInfo<ChannelData, CbcData> *getCbcInfo( UInt_t pCbcId );
 			UInt_t fFeId;
 			std::vector<UInt_t> fCbcIds;
 		};
 
 	template <typename ChannelData, typename CbcData> 
 		class DataContainer : public std::map<UInt_t, FeInfo<ChannelData, CbcData> >{ 
-
-			friend class ScurveAnalyser;
-			friend class SignalShapeAnalyser;
 
 			public:
 			typedef typename std::map<UInt_t, FeInfo<ChannelData, CbcData> > Map;
@@ -134,16 +126,16 @@ namespace Analysers{
 			DataContainer( const DataContainer &pC ): std::map<UInt_t, FeInfo<ChannelData, CbcData> >(pC), fFeIds(pC.fFeIds){}
 			~DataContainer(){}
 			const std::vector<UInt_t> GetFeIds()const{ return fFeIds; }
-			const FeInfo<ChannelData, CbcData> *GetFeInfo( UInt_t pFeId )const;
-			const CbcInfo<ChannelData, CbcData> *GetCbcInfo( UInt_t pFeId, UInt_t pCbcInfo )const;
-			const Channel<ChannelData> *GetChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId )const;
+			FeInfo<ChannelData, CbcData> *GetFeInfo( UInt_t pFeId );
+			CbcInfo<ChannelData, CbcData> *GetCbcInfo( UInt_t pFeId, UInt_t pCbcInfo );
+			Channel<ChannelData> *GetChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId );
 			void AddFeInfo( UInt_t pFeId, FeInfo<ChannelData, CbcData> pFeInfo );
 			void AddCbcInfo( UInt_t pFeId, UInt_t pCbcId, CbcInfo<ChannelData, CbcData> pCbcInfo );
 			void AddChannel( UInt_t pFeId, UInt_t pCbcId, UInt_t pChannelId, Channel<ChannelData> *pChannel ); 
 
 			private:
-			FeInfo<ChannelData, CbcData> *getFeInfo( UInt_t pFeId );
-			CbcInfo<ChannelData, CbcData> *getCbcInfo( UInt_t pFeId, UInt_t pCbcId );
+//			FeInfo<ChannelData, CbcData> *getFeInfo( UInt_t pFeId );
+//			CbcInfo<ChannelData, CbcData> *getCbcInfo( UInt_t pFeId, UInt_t pCbcId );
 			std::vector<UInt_t> fFeIds;
 		};
 

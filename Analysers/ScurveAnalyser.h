@@ -1,6 +1,5 @@
 #ifndef __SCURVEANALYSER_H__
 #define __SCURVEANALYSER_H__
-#include "AnalysedData.h"
 #include "GUIData.h"
 #include "../Strasbourg/Data.h"
 #include "TH1F.h"
@@ -8,6 +7,69 @@
 #include <set>
 #include <TString.h>
 #include "CbcDaq/Analyser.h"
+
+namespace Analysers{
+
+	class ScurveAnalyser;
+
+	class CalibrationChannelData {
+
+		friend class ScurveAnalyser;
+
+		public:
+			CalibrationChannelData(): fOffset(0), fNextOffset(0), fHist(0), fVCth0(0), fVCth0Error(0){}
+			CalibrationChannelData( const CalibrationChannelData &pC ): fOffset(pC.fOffset), fNextOffset(pC.fNextOffset), fHist(pC.fHist), fVCth0(pC.fVCth0), fVCth0Error(pC.fVCth0Error) {}
+			~CalibrationChannelData(){}
+
+			const TH1F * GetHist()const{ return fHist; }
+			UInt_t Offset()const{ return fOffset; }
+			float VCth0()const{ return fVCth0; }
+			float VCth0Error()const{ return fVCth0Error; }
+
+		private:
+			TH1F * Hist(){ return fHist; }
+			void SetOffset( UInt_t pOffset ){ fOffset = pOffset; }
+			void SetNextOffset( UInt_t pOffset ){ fNextOffset = pOffset; }
+			void SetHist( TH1F *pH ){ fHist = pH; }
+			void SetVCth0( float pVCth0, float pVCth0Error ){ fVCth0 = pVCth0; fVCth0Error = pVCth0Error; }
+
+			void UpdateOffset(){ fOffset = fNextOffset; }
+			void ResetHist(){ if( fHist ) fHist->Reset(); }
+			UInt_t fOffset;
+			UInt_t fNextOffset;
+			TH1F * fHist;
+			float fVCth0;
+			float fVCth0Error;
+	};
+
+	class CalibrationCbcData {
+
+		friend class ScurveAnalyser;
+
+		public:
+			CalibrationCbcData(){}
+			CalibrationCbcData( const CalibrationCbcData &pC ):	
+				fGraphVplusVCth0(pC.fGraphVplusVCth0), 
+				fVplus(pC.fVplus){}
+
+			std::map<UInt_t, TGraphErrors *> * GetGraphVplusVCth0(){ return &fGraphVplusVCth0; }
+			const TGraphErrors *GetGraphVplusVCth0( UInt_t pGroupId )const;
+			UInt_t Vplus()const{ return fVplus; }
+
+		private:
+			TGraphErrors *GetGraphVplusVCth0( UInt_t pGroupId );
+			void AddGraphVplusVCth0( UInt_t pGroup, TGraphErrors *pGraph );
+			void SetVplus( UInt_t pValue ){ fVplus = pValue; }
+
+			std::map<UInt_t, TGraphErrors *> fGraphVplusVCth0;
+			UInt_t                           fVplus;
+	};
+
+	typedef DataContainer<CalibrationChannelData, CalibrationCbcData> CalibrationResult; 
+	typedef FeInfo<CalibrationChannelData, CalibrationCbcData>        CalibrationFeInfo; 
+	typedef CbcInfo<CalibrationChannelData, CalibrationCbcData>       CalibrationCbcInfo; 
+	typedef Channel<CalibrationChannelData>                       CalibrationChannelInfo; 
+}
 
 namespace Cbc{
 
@@ -25,6 +87,7 @@ using namespace Strasbourg;
 using namespace CbcDaq;
 
 namespace Analysers{
+
 
 	class ScurveAnalyser : public Analyser{
 

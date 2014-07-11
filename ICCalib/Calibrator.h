@@ -36,7 +36,6 @@
 #include <map>
 #include "Cbc/CbcRegInfo.h"
 #include "CbcDaq/DAQController.h"
-#include "Analysers/AnalysedData.h"
 #include "Analysers/GUIData.h"
 //#include "TestGroup.h"
 
@@ -52,6 +51,7 @@ namespace Analysers{
 	class ScurveAnalyser;
 	class CalibrationChannelData;
 	class CalibrationCbcData;
+	typedef DataContainer<CalibrationChannelData, CalibrationCbcData> CalibrationResult; 
 }
 namespace ICCalib{
 	typedef std::pair< std::string, UInt_t > CalibItem;
@@ -107,7 +107,6 @@ namespace ICCalib{
 			void CalibrateOffsets();
 
 			void ConfigureVplusScan( UInt_t pVplus );
-			void ActivateGroup( UInt_t pGroupId );
 			void ConfigureCbcOffset( Int_t pTargetOffsetBit, UInt_t &pMinVCth, UInt_t &pMaxVCth );
 
 			void VCthScanForVplusCalibration( UInt_t pVplus ); 
@@ -128,7 +127,6 @@ namespace ICCalib{
 			CalibrationTestGroupMap              *fTestGroupMap;
 
 			std::vector<UInt_t>             fGroupList;
-			Int_t                           fCurrentTestPulseGroup;
 
 			UInt_t                          fNonTestGroupOffset;
 	};

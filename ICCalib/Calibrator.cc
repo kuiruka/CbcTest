@@ -36,7 +36,6 @@ namespace ICCalib{
 		fScurveAnalyser(0),
 		fTestGroupMap(0),
 		fGroupList(),
-		fCurrentTestPulseGroup(-1),
 		fNonTestGroupOffset(0xFF)
 	{
 	}
@@ -169,7 +168,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			fScurveAnalyser->Configure( ScurveAnalyser::SINGLEVCTHSCAN );
 
@@ -242,7 +245,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			UInt_t cMinVCth(0), cMaxVCth(0xFF);
 			ConfigureCbcOffset( 8, cMinVCth, cMaxVCth );
@@ -271,7 +278,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			for( Int_t cTargetBit = 8; cTargetBit >=-1; cTargetBit-- ){
 
@@ -299,28 +310,6 @@ namespace ICCalib{
 		return;
 	}
 
-	void Calibrator::ActivateGroup( UInt_t pGroupId ){
-
-		fTestGroupMap->Activate( pGroupId );
-
-		UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
-		if( cEnableTestPulse ){
-			if( fCurrentTestPulseGroup != (Int_t)pGroupId ){
-				for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
-					for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
-						fHwController->AddCbcRegUpdateItemsForNewTestPulseGroup( cFe, cCbc, pGroupId );
-					}
-				}
-				UpdateCbcRegValues();
-				fCurrentTestPulseGroup = pGroupId;
-				Emit( "Message( const char *)", Form( "Activated TestPulseGroup = %d", pGroupId ) );
-			}
-		}
-#ifdef __CBCDAQ_DEV__
-		std::cout << "Activated group is " << pGroupId << std::endl; 
-#endif
-	}
-
 	//Configuration for Vth scan
 	void Calibrator::ConfigureCbcOffset( Int_t pOffsetTargetBit, UInt_t &pMinVCth, UInt_t &pMaxVCth ){
 
@@ -344,7 +333,7 @@ namespace ICCalib{
 					if( cTestGroup->Has( cChannel ) ) cTestChannel = true;
 					if( !( cTestChannel || pOffsetTargetBit == 8 ) ) continue;
 
-//					if( cTestChannel || ( pOffsetTargetBit == 8 && cEnableTestPulse == 1 ) ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+					//					if( cTestChannel || ( pOffsetTargetBit == 8 && cEnableTestPulse == 1 ) ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
 					if( cTestChannel ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
 					else{ 
 						cVal = fNonTestGroupOffset;

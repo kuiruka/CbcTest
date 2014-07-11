@@ -4,6 +4,7 @@
 #include "Strasbourg/Data.h"
 #include "Analysers/SignalShapeAnalyser.h"
 #include "utils/Exception.h"
+#include "utils/Utilities.h"
 #include <uhal/uhal.hpp>
 
 namespace SignalShape{
@@ -11,7 +12,6 @@ namespace SignalShape{
 	SSController::SSController( const char *pConfigFile ):
 		DAQController( "SignalShapeAnalyser", pConfigFile ),
 		fSSSetting(),
-		fCurrentTestPulseGroup(-1),
 		fNonTestGroupOffset(0xFF){
 		}
 	SSController::~SSController(){
@@ -53,7 +53,7 @@ namespace SignalShape{
 		system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 		delete fTestGroupMap;
-		fTestGroupMap   = new SignalShapeTestGroupMap( *fTestPulseGroupMap );
+		fTestGroupMap   = new SignalShapeTestGroupMap( *fAnalyserGroupMap );
 
 		delete fSignalShapeAnalyser;
 		fSignalShapeAnalyser = new SignalShapeAnalyser( fBeId, fNFe, fNCbc, 
@@ -67,6 +67,7 @@ namespace SignalShape{
 	}
 	void SSController::Run(){
 
+		std::cout << "I am here" << std::endl;
 		fSignalShapeAnalyser->SetOffsets();
 		const char *cTriggerDelayString = "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE"; 
 		UInt_t cBaseDelay = fHwController->GetGlibSetting( cTriggerDelayString );
@@ -78,7 +79,7 @@ namespace SignalShape{
 			for( Int_t cTriggerDelay=-1; cTriggerDelay < 14; cTriggerDelay++ ){
 
 				uint32_t cVal = (uint32_t) (cBaseDelay + cTriggerDelay);
-//				std::cout << "Val = " << cVal << std::endl;
+				std::cout << "Val = " << cVal << std::endl;
 
 				uhal::HwInterface *cBoard = ( (BeController *)fHwController)->GetBoard();
 				cBoard->getNode( cTriggerDelayString ).write( cVal );
@@ -86,7 +87,7 @@ namespace SignalShape{
 
 				cCurrentTime = 25 - ( cPulseDelay + 1 ) + cTriggerDelay * 25;
 
-//				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
+				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
 
 				uint32_t cFe(0), cCbc(0);
 				for( cFe = 0; cFe < fNFe; cFe++ ){
@@ -98,17 +99,20 @@ namespace SignalShape{
 				}
 				UpdateCbcRegValues();
 
-				SignalShapeTestGroupMap::iterator cIt = fTestGroupMap->begin();
+				TestGroupMap::iterator cIt = fTestPulseGroupMap->begin();
 
 
-				for( ; cIt != fTestGroupMap->end(); cIt++ ){
+				for( ; cIt != fTestPulseGroupMap->end(); cIt++ ){
 
 					UInt_t cTestGroup = cIt->first;
 					if( cTestGroup != 0 ) continue;
 					ActivateGroup( cTestGroup );
+					fTestGroupMap->Activate( cTestGroup );
 
 					UInt_t cMinVCth(0), cMaxVCth(0xFF);
 					ConfigureCbcOffset( cMinVCth, cMaxVCth );
+
+					fTestGroupMap->Activate( cTestGroup );
 
 					fSignalShapeAnalyser->Configure( cCurrentTime );
 
@@ -136,24 +140,6 @@ namespace SignalShape{
 		return;
 	}
 
-	void SSController::ActivateGroup( UInt_t pGroupId ){
-
-		fTestGroupMap->Activate( pGroupId );
-
-		if( fCurrentTestPulseGroup != (Int_t)pGroupId ){
-			for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
-				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
-					fHwController->AddCbcRegUpdateItemsForNewTestPulseGroup( cFe, cCbc, pGroupId );
-				}
-			}
-			UpdateCbcRegValues();
-			fCurrentTestPulseGroup = pGroupId;
-			Emit( "Message( const char *)", Form( "Activated TestPulseGroup = %d", pGroupId ) );
-		}
-#ifdef __CBCDAQ_DEV__
-		std::cout << "Activated group is " << pGroupId << std::endl; 
-#endif
-	}
 
 	void SSController::VCthScan( UInt_t &pMinVCth, UInt_t &pMaxVCth ){
 
@@ -264,6 +250,7 @@ namespace SignalShape{
 
 		UInt_t cGroupId(0);
 		SignalShapeTestGroup *cTestGroup = fTestGroupMap->GetActivatedGroup(cGroupId);
+		//TestGroup *cTestGroup = fTestPulseGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) throw Exception( "Call ActivateGroup() before ConfigureCbcOffset()" );
 
 		//UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
@@ -281,9 +268,14 @@ namespace SignalShape{
 					bool cTestChannel = false;
 					if( cTestGroup->Has( cChannel ) ) cTestChannel = true;
 
-					if( cTestChannel ) cVal = fSignalShapeAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+					if( cTestChannel ){
+						//						cVal = fHwController->GetCbcRegSetting().GetValue0( cFe, cCbc, 1, cChannel+1 );
+						cVal = fSignalShapeAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+
+					}
 					else{ 
 						cVal = fNonTestGroupOffset;
+			//			std::cout << "Channel=" << cChannel << " Offset=" << cVal << std::endl;
 					}
 					//				std::cout << "OffsetCheck : CBC = " << cCbc << "[" << cChannel << "] " << cVal << std::endl;  
 					fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cVal );
@@ -323,7 +315,7 @@ namespace SignalShape{
 				for( uint16_t cAddr = 0x01; cAddr < 0xFF; cAddr++ ){ 
 
 					cChannel = cAddr - 1; 	
-					cVal = fSignalShapeAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+					cVal = fHwController->GetCbcRegSetting().GetValue0( cFe, cCbc, 1, cChannel+1 );
 					fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cVal );
 				}
 			}

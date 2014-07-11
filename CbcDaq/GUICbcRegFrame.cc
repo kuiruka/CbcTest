@@ -38,12 +38,12 @@ namespace CbcDaq {
 			fLabelAddress->ChangeOptions( fLabelAddress->GetOptions() | kFixedWidth );
 			fLabelAddress->Resize( 25, 20 );
 
-			fLabelValue = new TGLabel( this, Form( "%02X", pCbcRegItem->Value() ) );
+			fLabelValue = new TGLabel( this, Form( "%02X", pCbcRegItem->ReadValue() ) );
 			AddFrame( fLabelValue, fLayoutValue ); 
 			fLabelValue->ChangeOptions( fLabelValue->GetOptions() | kFixedWidth );
 			fLabelValue->Resize( 22, 20 );
 
-			fNumberEntry = new TGNumberEntry( this, pCbcRegItem->Value0(), 2, ++gNumberEntryId, 
+			fNumberEntry = new TGNumberEntry( this, pCbcRegItem->WrittenValue(), 2, ++gNumberEntryId, 
 					TGNumberFormat::kNESHex, TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 0xFF  );
 			fNumberEntry->Connect( "ValueSet(Long_t)", "CbcDaq::CbcRegWidget", this, "AddUpdateItem()" );
 			Bool_t cWriteFailed = fCbcRegItem->WriteFailed();
@@ -87,12 +87,12 @@ namespace CbcDaq {
 			gClient->GetColorByName( "white", color );
 		}
 
-		fNumberEntry->SetNumber( fCbcRegItem->Value0() );
+		fNumberEntry->SetNumber( fCbcRegItem->WrittenValue() );
 		fNumberEntry->GetNumberEntry()->SetBackgroundColor(color);
 		gClient->NeedRedraw( fNumberEntry->GetNumberEntry() );
 		gClient->NeedRedraw( fNumberEntry );
 
-		fLabelValue->SetText( Form( "%02X", fCbcRegItem->Value() ) );
+		fLabelValue->SetText( Form( "%02X", fCbcRegItem->ReadValue() ) );
 		gClient->NeedRedraw( fLabelValue );
 		//		Emit( "Message( const char *)", Form( " FE: %d, CBC: %d, Page: %d, Addr: %02X, Value: %02X is set.", 
 		//					fCbcRegItem->FeId(), fCbcRegItem->CbcId(), fCbcRegItem->Page(), fCbcRegItem->Address(), fCbcRegItem->Value() ) );

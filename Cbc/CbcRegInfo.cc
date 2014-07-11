@@ -5,20 +5,17 @@ using namespace CbcDaq;
 
 namespace Cbc{
 
-	void CbcRegItem::SetValue( UInt_t pValue ){ 
-		fValue = pValue; 
-                /*
-                if( fAddress == 0xCC ) {
-                        std::cout << "Value0 = " << fValue0 << std::endl;
-                        std::cout << "Value = " << fValue << std::endl;
-                }
-                */
-		if( fValue != fValue0 ){ 
-                        std::cout << "Name = " << fName << " Value = " << fValue << std::endl;
+	void CbcRegItem::SetReadValue( UInt_t pReadValue ){ 
+
+		fReadValue = pReadValue; 
+
+		std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
+		if( fReadValue != fWrittenValue ){ 
+			std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 			if( fPage == 0 && fAddress == 0 ){
 				unsigned int cMask(0x00000000);
 				for( int i = 0; i < 7; i++ ) cMask |= (unsigned int) 1 << i;
-				if( ( fValue & cMask ) != ( fValue0 & cMask ) ){
+				if( ( fReadValue & cMask ) != ( fWrittenValue & cMask ) ){
 					fWriteFailed = true; 
 				}
 				else fWriteFailed = false;
@@ -57,17 +54,29 @@ namespace Cbc{
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for Page=%d, Address=0x%02X does not exist.", pPage, pAddr ) );
 		return cItem->Value0();
 	}
-	UInt_t CbcRegList::GetValue( const std::string &pName )const{
+	UInt_t CbcRegList::GetWrittenValue( const std::string &pName )const{
 
 		const CbcRegItem *cItem = GetRegItem( pName );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for %s does not exist.", pName.c_str() ) );
-		return cItem->Value();
+		return cItem->WrittenValue();
 	}
-	UInt_t CbcRegList::GetValue( UInt_t pPage, UInt_t pAddr )const{
+	UInt_t CbcRegList::GetWrittenValue( UInt_t pPage, UInt_t pAddr )const{
 
 		const CbcRegItem *cItem = GetRegItem( pPage, pAddr );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for Page=%d, Address=0x%02X does not exist.", pPage, pAddr ) );
-		return cItem->Value();
+		return cItem->WrittenValue();
+	}
+	UInt_t CbcRegList::GetReadValue( const std::string &pName )const{
+
+		const CbcRegItem *cItem = GetRegItem( pName );
+		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for %s does not exist.", pName.c_str() ) );
+		return cItem->ReadValue();
+	}
+	UInt_t CbcRegList::GetReadValue( UInt_t pPage, UInt_t pAddr )const{
+
+		const CbcRegItem *cItem = GetRegItem( pPage, pAddr );
+		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for Page=%d, Address=0x%02X does not exist.", pPage, pAddr ) );
+		return cItem->ReadValue();
 	}
 	void CbcRegList::Clear(){
 
@@ -88,17 +97,29 @@ namespace Cbc{
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for Page=0x%02X, Address=0x%02X.", pPage, pAddr ) );
 		cCRI->SetValue0(pValue);
 	}
-	void CbcRegList::SetValue( const std::string &pName, UInt_t pValue ){
+	void CbcRegList::SetWrittenValue( const std::string &pName, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getRegItem( pName );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for Name=%s.", pName.c_str() ) );
-		cCRI->SetValue(pValue );
+		cCRI->SetWrittenValue(pValue );
 	}
-	void CbcRegList::SetValue( UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+	void CbcRegList::SetWrittenValue( UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getRegItem( pPage, pAddr );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for Page=0x%02X, Address=0x%02X.", pPage, pAddr ) );
-		cCRI->SetValue(pValue);
+		cCRI->SetWrittenValue(pValue);
+	}
+	void CbcRegList::SetReadValue( const std::string &pName, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getRegItem( pName );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for Name=%s.", pName.c_str() ) );
+		cCRI->SetReadValue(pValue );
+	}
+	void CbcRegList::SetReadValue( UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getRegItem( pPage, pAddr );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for Page=0x%02X, Address=0x%02X.", pPage, pAddr ) );
+		cCRI->SetReadValue(pValue);
 	}
 	CbcRegItem *CbcRegList::getRegItem( const std::string &pName ){
 		for( UInt_t i=0; i<size(); i++ ){
@@ -134,17 +155,17 @@ namespace Cbc{
 		if( cList == 0 ) return 0;
 		return cList->GetRegItem( pName );
 	}
-	UInt_t FeCbcRegMap::GetValue( UInt_t pCbc, const std::string &pName )const{
+	UInt_t FeCbcRegMap::GetReadValue( UInt_t pCbc, const std::string &pName )const{
 
 		const CbcRegItem *cItem = GetCbcRegItem( pCbc, pName );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for CBC=%d, Name=%s does not exist.", pCbc, pName.c_str() ) ); 
-		return cItem->Value();
+		return cItem->ReadValue();
 	}
-	UInt_t FeCbcRegMap::GetValue( UInt_t pCbc, UInt_t pPage, UInt_t pAddr )const{
+	UInt_t FeCbcRegMap::GetReadValue( UInt_t pCbc, UInt_t pPage, UInt_t pAddr )const{
 
 		const CbcRegItem *cItem = GetCbcRegItem( pCbc, pPage, pAddr );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for CBC=%d, Page=%d, Address=0x%02X does not exist.", pCbc, pPage, pAddr ) ); 
-		return cItem->Value();
+		return cItem->ReadValue();
 	}
 
 	void FeCbcRegMap::Clear(){
@@ -180,17 +201,29 @@ namespace Cbc{
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for CBC=%d, Page=0x%02X, Address=0x%02X.", pCbc, pPage, pAddr ) );
 		cCRI->SetValue0(pValue);
 	}
-	void FeCbcRegMap::SetValue( UInt_t pCbc, const std::string &pName, UInt_t pValue ){
+	void FeCbcRegMap::SetWrittenValue( UInt_t pCbc, const std::string &pName, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getCbcRegItem( pCbc, pName );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for CBC=%d, Name=%s.", pCbc, pName.c_str() ) );
-		cCRI->SetValue(pValue );
+		cCRI->SetWrittenValue(pValue );
 	}
-	void FeCbcRegMap::SetValue( UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+	void FeCbcRegMap::SetWrittenValue( UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getCbcRegItem( pCbc, pPage, pAddr );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for CBC=%d, Page=0x%02X, Address=0x%02X.", pCbc, pPage, pAddr ) );
-		cCRI->SetValue(pValue);
+		cCRI->SetWrittenValue(pValue);
+	}
+	void FeCbcRegMap::SetReadValue( UInt_t pCbc, const std::string &pName, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getCbcRegItem( pCbc, pName );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for CBC=%d, Name=%s.", pCbc, pName.c_str() ) );
+		cCRI->SetReadValue(pValue );
+	}
+	void FeCbcRegMap::SetReadValue( UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getCbcRegItem( pCbc, pPage, pAddr );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for CBC=%d, Page=0x%02X, Address=0x%02X.", pCbc, pPage, pAddr ) );
+		cCRI->SetReadValue(pValue);
 	}
 	CbcRegList *FeCbcRegMap::getCbcRegList( UInt_t pCbc ){
 
@@ -256,17 +289,29 @@ namespace Cbc{
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for FE=%d, CBC=%d, Page=%d, Address=0x%02X does not exist.", pFe, pCbc, pPage, pAddr ) ); 
 		return cItem->Value0();
 	}
-	UInt_t CbcRegMap::GetValue( UInt_t pFe, UInt_t pCbc, const std::string &pName )const{
+	UInt_t CbcRegMap::GetWrittenValue( UInt_t pFe, UInt_t pCbc, const std::string &pName )const{
 
 		const CbcRegItem *cItem = GetCbcRegItem( pFe, pCbc, pName );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for FE=%d, CBC=%d, Name=%s does not exist.", pFe, pCbc, pName.c_str() ) ); 
-		return cItem->Value();
+		return cItem->WrittenValue();
 	}
-	UInt_t CbcRegMap::GetValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr )const{
+	UInt_t CbcRegMap::GetWrittenValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr )const{
 
 		const CbcRegItem *cItem = GetCbcRegItem( pFe, pCbc, pPage, pAddr );
 		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for FE=%d, CBC=%d, Page=%d, Address=0x%02X does not exist.", pFe, pCbc, pPage, pAddr ) ); 
-		return cItem->Value();
+		return cItem->WrittenValue();
+	}
+	UInt_t CbcRegMap::GetReadValue( UInt_t pFe, UInt_t pCbc, const std::string &pName )const{
+
+		const CbcRegItem *cItem = GetCbcRegItem( pFe, pCbc, pName );
+		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for FE=%d, CBC=%d, Name=%s does not exist.", pFe, pCbc, pName.c_str() ) ); 
+		return cItem->ReadValue();
+	}
+	UInt_t CbcRegMap::GetReadValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr )const{
+
+		const CbcRegItem *cItem = GetCbcRegItem( pFe, pCbc, pPage, pAddr );
+		if( cItem == 0 ) throw Exception( Form( "CbcRegItem for FE=%d, CBC=%d, Page=%d, Address=0x%02X does not exist.", pFe, pCbc, pPage, pAddr ) ); 
+		return cItem->ReadValue();
 	}
 	void CbcRegMap::Clear(){
 
@@ -350,18 +395,32 @@ namespace Cbc{
 		cCRI->SetValue0( pValue0 );
 		return cCRI;
 	}
-	const CbcRegItem *CbcRegMap::SetValue( UInt_t pFe, UInt_t pCbc, const std::string &pName, UInt_t pValue ){
+	const CbcRegItem *CbcRegMap::SetWrittenValue( UInt_t pFe, UInt_t pCbc, const std::string &pName, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getCbcRegItem( pFe, pCbc, pName );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for FE=%d, CBC=%d, Name=%s.", pFe, pCbc, pName.c_str() ) );
-		cCRI->SetValue( pValue );
+		cCRI->SetWrittenValue( pValue );
 		return cCRI;
 	}
-	const CbcRegItem *CbcRegMap::SetValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+	const CbcRegItem *CbcRegMap::SetWrittenValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
 
 		CbcRegItem *cCRI = getCbcRegItem( pFe, pCbc, pPage, pAddr );
 		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for FE=%d, CBC=%d, Page=0x%02X, Address=0x%02X.", pFe, pCbc, pPage, pAddr ) );
-		cCRI->SetValue( pValue );
+		cCRI->SetWrittenValue( pValue );
+		return cCRI;
+	}
+	const CbcRegItem *CbcRegMap::SetReadValue( UInt_t pFe, UInt_t pCbc, const std::string &pName, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getCbcRegItem( pFe, pCbc, pName );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for FE=%d, CBC=%d, Name=%s.", pFe, pCbc, pName.c_str() ) );
+		cCRI->SetReadValue( pValue );
+		return cCRI;
+	}
+	const CbcRegItem *CbcRegMap::SetReadValue( UInt_t pFe, UInt_t pCbc, UInt_t pPage, UInt_t pAddr, UInt_t pValue ){
+
+		CbcRegItem *cCRI = getCbcRegItem( pFe, pCbc, pPage, pAddr );
+		if( cCRI == 0 ) throw Exception( Form( "CbcRegItem is not found for FE=%d, CBC=%d, Page=0x%02X, Address=0x%02X.", pFe, pCbc, pPage, pAddr ) );
+		cCRI->SetReadValue( pValue );
 		return cCRI;
 	}
 	FeCbcRegMap *CbcRegMap::getFeCbcRegMap( UInt_t pFe ){
