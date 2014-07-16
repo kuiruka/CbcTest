@@ -12,11 +12,16 @@ using namespace CbcDaq;
 
 int main( int argc, char *argv[] ){
 
+	TString cSettingFile( "settings/CbcCalibElectrion.txt" );
+	if( argc >= 1 ){
+		cSettingFile = argv[1];
+	}
+
 	TApplication theApp( "App", &argc, argv );
 
-//	std::string cAnalyserName = "Analyser";
+	//	std::string cAnalyserName = "Analyser";
 	std::string cAnalyserName = "ErrorAnalyser";
-	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), "settings/SEUElectron.txt" );
+	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), cSettingFile );
 
 	cDaq->Initialise();
 

@@ -173,12 +173,13 @@ namespace CbcDaq{
 
 	void DAQController::ConfigureAnalyser(){
 
-		fOutputDir = Form( "BE%01uNeg%d", fBeId, fNegativeLogicCBC );
-		system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 		delete fAnalyser;
 		
 		if( fAnalyserName == "Analyser" ){
+
+			fOutputDir = Form( "BE%01uNeg%d", fBeId, fNegativeLogicCBC );
+			system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 			fAnalyser = new Analyser( fBeId, fNFe, fNCbc, 
 					&( fHwController->GetCbcRegSetting() ),
@@ -186,6 +187,10 @@ namespace CbcDaq{
 
 		}
 		if( fAnalyserName == "ErrorAnalyser" ){
+
+
+			fOutputDir = Form( "SEUTestBE%01uNeg%d", fBeId, fNegativeLogicCBC );
+			system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 			fAnalyser = new ErrorAnalyser( fBeId, fNFe, fNCbc, 
 					&( fHwController->GetCbcRegSetting() ),
@@ -225,6 +230,7 @@ namespace CbcDaq{
 		if( cSaveData ){
 			delete fDataFile;
 			fDataFile = new std::ofstream( (fOutputDir + "/RawData.dat").c_str(), std::ofstream::binary );
+			std::cout << "SaveData : file is created" << std::endl;
 		}
 	}
 
