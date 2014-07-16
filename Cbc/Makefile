@@ -1,4 +1,4 @@
-Objs			= CbcRegInfo.o 
+Objs			= CbcRegInfo.o  
 CC              = gcc
 CXX             = g++
 CCFlags         = -g -O1 -Wall -fPIC `root-config --cflags`

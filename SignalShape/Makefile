@@ -1,6 +1,6 @@
-Objs			= Calibrator.o 
-GUISourceFiles	= GUICalibConfigFrame.cc GUICalibratorControlButtonFrame.cc GUICalibHistoFrame.cc GUICalibratorFrame.cc 
-GUIObj			= GUICalibratorFrameDict.o
+Objs			= SSController.o 
+GUISourceFiles	= GUISSControlButtonFrame.cc GUIHistoFrame.cc GUISSConfigFrame.cc GUISSControllerFrame.cc 
+GUIObj			= GUISSControllerFrameDict.o
 CC              = gcc
 CXX             = g++
 CCFlags         = -g -O1 -Wall -fPIC `root-config --cflags`
@@ -13,13 +13,13 @@ IncludePaths		= $(IncludeDirs:%=-I%)
 
 
 all: $(Objs) $(Objs:.o=.h) $(Objs:.o=.cc) $(GUIObj:.o=.cxx) $(GUIObj) $(GUISourceFiles:.cc=.h) $(GUISourceFiles)
-	$(CC) -shared -o libICCalib.so $(Objs) $(GUIObj)
-	mv libICCalib.so ../lib/
+	$(CC) -shared -o libSignalShape.so $(Objs) $(GUIObj)
+	mv libSignalShape.so ../lib/
 
-GUICalibratorFrameDict.cxx: GUICalibratorFrameLinkDef.h $(Objs:.o=.h) $(Objs:.o=.cc) $(GUISourceFiles:.cc=.h) $(GUISourceFiles)
+GUISSControllerFrameDict.cxx: GUISSControllerFrameLinkDef.h $(Objs:.o=.h) $(Objs:.o=.cc) $(GUISourceFiles:.cc=.h) $(GUISourceFiles)
 	rootcint -f $@ -c -I../ $(GUISourceFiles) $< 
 
-GUICalibratorFrameDict.o: GUICalibratorFrameDict.cxx GUICalibratorFrameDict.h
+GUISSControllerFrameDict.o: GUISSControllerFrameDict.cxx GUISSControllerFrameDict.h
 	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 	
 %.o: %.cc %.h 
@@ -30,5 +30,5 @@ GUICalibratorFrameDict.o: GUICalibratorFrameDict.cxx GUICalibratorFrameDict.h
 
 
 clean:
-		rm -f *.o GUICalibratorFrameDict.cxx GUICalibratorFrameDict.h
+		rm -f *.o GUISSControllerFrameDict.cxx GUISSControllerFrameDict.h
 

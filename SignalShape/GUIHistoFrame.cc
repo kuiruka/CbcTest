@@ -1,21 +1,25 @@
-#include "GUICalibHistoFrame.h"
+#include "GUIHistoFrame.h"
 #include "CbcDaq/GUI.h"
+#include "CbcDaq/DAQController.h"
+#include "SignalShape/GUISSControllerFrame.h"
+#include "SignalShape/SSController.h"
+
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TGFrame.h>
 #include <TGTab.h>
 
-namespace ICCalib{
+namespace SignalShape{
 
-	VplusVsVCth0GraphFrame::VplusVsVCth0GraphFrame( TGCompositeFrame *pFrame, CalibratorFrame *pCalibratorFrame ):
+	SignalShapeGraphFrame::SignalShapeGraphFrame( TGCompositeFrame *pFrame, SSControllerFrame *pSSControllerFrame ):
 		TGCompositeFrame( pFrame, gMainFrameWidth, gMainFrameHeight ),
 		fMotherFrame( pFrame ),
-		fCalibratorFrame( pCalibratorFrame ){
+		fSSControllerFrame( pSSControllerFrame ){
 
 			fMotherFrame->AddFrame( this, gLHVexpand ); 
 		}
 
-	void VplusVsVCth0GraphFrame::RenewFrame(){
+	void SignalShapeGraphFrame::RenewFrame(){
 
 		if( fFrame ){
 			RemoveFrame( fFrame );
@@ -25,26 +29,32 @@ namespace ICCalib{
 		fFrame = new TGTab( this, gMainFrameWidth, gMainFrameHeight );
 		AddFrame( fFrame, gLHVexpand );
 
-		UInt_t cNFe = fCalibratorFrame->GetDAQController()->GetNFe();
+		UInt_t cNFe = fSSControllerFrame->GetDAQController()->GetNFe();
+		UInt_t cNCbc = fSSControllerFrame->GetDAQController()->GetNCbc();
 
 		for( UInt_t cFeId = 0; cFeId < cNFe; cFeId++ ){
 
 		   TGCompositeFrame *cFeFrame = fFrame->AddTab( Form( "FE%u", cFeId ) );
-		   TRootEmbeddedCanvas *cEcanvas = new TRootEmbeddedCanvas( Form( "VplusVsVCth0EcanvasFe%u", cFeId ), cFeFrame, gMainFrameWidth, 600 );
-		   cFeFrame->AddFrame( cEcanvas, new TGLayoutHints( kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1 ) );
-		   TCanvas *cCanvas = cEcanvas->GetCanvas();
+		   TGTab *cFeTabFrame = new TGTab( cFeFrame, gMainFrameWidth, gMainFrameHeight );
+		   cFeFrame->AddFrame( cFeTabFrame, gLHVexpand );
 
-			fCalibratorFrame->GetCalibrator()->SetVplusVsVCth0GraphDisplayPad( cFeId, cCanvas );
+		   for( UInt_t cCbcId = 0; cCbcId < cNCbc; cCbcId++ ){
 
+			   TGCompositeFrame *cCbcFrame = cFeTabFrame->AddTab( Form( "CBC%u", cCbcId ) );
+			   TRootEmbeddedCanvas *cEcanvas = new TRootEmbeddedCanvas( Form( "SignalShapeEcanvasFe%uCbc%u", cFeId, cCbcId ), cCbcFrame, gMainFrameWidth, 600 );
+			   cCbcFrame->AddFrame( cEcanvas, new TGLayoutHints( kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1 ) );
+			   TCanvas *cCanvas = cEcanvas->GetCanvas();
+			   fSSControllerFrame->GetSSController()->SetSignalShapeGraphDisplayPad( cFeId, cCbcId, cCanvas );
+		   }
 		}
 		MapSubwindows();
 		Layout();
 	}
 
-	ScurveHistogramFrame::ScurveHistogramFrame( TGCompositeFrame *pFrame, CalibratorFrame *pCalibratorFrame ):
+	ScurveHistogramFrame::ScurveHistogramFrame( TGCompositeFrame *pFrame, SSControllerFrame *pSSControllerFrame ):
 		TGCompositeFrame( pFrame, gMainFrameWidth, gMainFrameHeight ),
 		fMotherFrame( pFrame ), 
-		fCalibratorFrame( pCalibratorFrame ){
+		fSSControllerFrame( pSSControllerFrame ){
 
 			fMotherFrame->AddFrame( this, gLHVexpand ); 
 		}
@@ -59,8 +69,8 @@ namespace ICCalib{
 		fFrame = new TGTab( this, gMainFrameWidth, gMainFrameHeight );
 		AddFrame( fFrame, gLHVexpand );
 		
-		UInt_t cNFe = fCalibratorFrame->GetDAQController()->GetNFe();
-		UInt_t cNCbc = fCalibratorFrame->GetDAQController()->GetNCbc();
+		UInt_t cNFe = fSSControllerFrame->GetDAQController()->GetNFe();
+		UInt_t cNCbc = fSSControllerFrame->GetDAQController()->GetNCbc();
 
 		for( UInt_t cFeId = 0; cFeId < cNFe; cFeId++ ){
 
@@ -74,7 +84,7 @@ namespace ICCalib{
 			   TRootEmbeddedCanvas *cEcanvas = new TRootEmbeddedCanvas( Form( "ScurveEcanvasFe%uCbc%u", cFeId, cCbcId ), cCbcFrame, gMainFrameWidth, 600 );
 			   cCbcFrame->AddFrame( cEcanvas, new TGLayoutHints( kLHintsExpandX | kLHintsExpandY, 10, 10, 10, 1 ) );
 			   TCanvas *cCanvas = cEcanvas->GetCanvas();
-			   fCalibratorFrame->GetCalibrator()->SetScurveHistogramDisplayPad( cFeId, cCbcId, cCanvas );
+			   fSSControllerFrame->GetSSController()->SetScurveHistogramDisplayPad( cFeId, cCbcId, cCanvas );
 
 		   }
 		}

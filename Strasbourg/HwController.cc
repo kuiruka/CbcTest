@@ -11,7 +11,7 @@ namespace Strasbourg{
 	template<typename T> T swapBit( T pVal, unsigned int pNbits ){
 		T cNewValue(0);
 		unsigned int cSize = sizeof(T);
-		if( pNbits > cSize ) return 0;
+		if( pNbits > cSize*8 ) return 0;
 		for( unsigned int i=0; i < pNbits; i++ ){
 			cNewValue |= pVal & 1<<i ? 1<<(pNbits-1-i) : 0;	
 		}
@@ -146,7 +146,7 @@ namespace Strasbourg{
 			if( cSentVecReq.size() != cReadVecReq.size() ) {
 				std::cout << "CBC registers are not written correctly." << std::endl;
 			}
-			std::vector<const CbcRegItem *> cThisList = setCbcRegSettings( cFe, cReadVecReq );	
+			std::vector<const CbcRegItem *> cThisList = setReadValueToCbcRegSettings( cFe, cReadVecReq );	
 			cRegList.insert( cRegList.end(), cThisList.begin(), cThisList.end() ); 
 			cSentVecReq.clear();
 		}
@@ -177,7 +177,7 @@ namespace Strasbourg{
 	}
 	void HwController::AddCbcRegUpdateItem( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pVal ){
 
-		fCbcRegSetting.SetValue0( pFe, pCbc, pPage, pAddr, pVal );
+		fCbcRegSetting.SetWrittenValue( pFe, pCbc, pPage, pAddr, pVal );
 //		std::cout << pVal << std::endl;
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
 		if( cIt == fCbcRegUpdateList.end() ){
@@ -189,7 +189,7 @@ namespace Strasbourg{
 	void HwController::AddCbcRegUpdateItemsForEnableTestPulse( unsigned int pFe, unsigned int pCbc, bool pEnable ){
 
 		unsigned int cPage(0x00), cAddr(0x0F);
-		unsigned int cValue = fCbcRegSetting.GetValue( pFe, pCbc, cPage, cAddr );
+		unsigned int cValue = fCbcRegSetting.GetReadValue( pFe, pCbc, cPage, cAddr );
 		unsigned int cMask = 1 << 6;
 		cValue &= ~cMask;
 		cValue |= pEnable << 6;
@@ -199,13 +199,23 @@ namespace Strasbourg{
 
 		unsigned int cGroupBits = swapBit( pTestPulseGroup, 3 );
 		unsigned int cPage(0x00), cAddr(0x0E);
-		unsigned int cNewTestGroupVal = fCbcRegSetting.GetValue( pFe, pCbc, cPage, cAddr );
+		unsigned int cNewTestGroupVal = fCbcRegSetting.GetReadValue( pFe, pCbc, cPage, cAddr );
 
 		unsigned int cMask = ( 1<<2 | 1<<1 | 1 );
 		cNewTestGroupVal &= ~cMask;
 		cNewTestGroupVal |= cGroupBits;
 
 		AddCbcRegUpdateItem( pFe, pCbc, 0, cAddr, cNewTestGroupVal );
+	}
+	void HwController::AddCbcRegUpdateItemsForNewTestPulseDelay( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseDelay ){
+
+		unsigned int cDelayBits = swapBit( pTestPulseDelay, 5 );
+		unsigned int cPage(0x00), cAddr(0x0E);
+		unsigned int cNewVal = fCbcRegSetting.GetReadValue( pFe, pCbc, cPage, cAddr );
+		unsigned int cMask = 0xF8;
+		cNewVal &= ~cMask;
+		cNewVal |= ( cDelayBits << 3 );
+		AddCbcRegUpdateItem( pFe, pCbc, 0, cAddr, cNewVal );
 	}
 	void HwController::AddCbcRegUpdateItemsForNewVCth( unsigned int pVCth ){
 
@@ -273,7 +283,7 @@ namespace Strasbourg{
 				fCbcRegSetting.AddItem( pFe, pCbc, cItemNew );
 			}
 			else{
-				fCbcRegSetting.SetValue0( pFe, pCbc, cName, cVal );
+				fCbcRegSetting.SetWrittenValue( pFe, pCbc, cName, cVal );
 			}
 			addCbcReg( cVecReq, pCbc, cPage, cAddr, cVal );
 		}
@@ -324,18 +334,18 @@ namespace Strasbourg{
 			cPage = cList->at(i)->Page();
 			cAddr = cList->at(i)->Address();
 			cDefVal = cList->at(i)->DefVal();
-			cVal = cList->at(i)->Value();
+			cVal = cList->at(i)->ReadValue();
 			cLine = Form( "%-45s\t0x%02X\t0x%02X\t0x%02X\t0x%02X", cName.c_str(), cPage, cAddr, cDefVal, cVal );
 			cFile << cLine << std::endl; 
 		}
 		cFile.close();
 	}
-	const CbcRegItem * HwController::setCbcRegSetting( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pValue ){
+	const CbcRegItem * HwController::setReadValueToCbcRegSetting( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pValue ){
 
-		return  fCbcRegSetting.SetValue( pFe, pCbc, pPage, pAddr, pValue ); 
+		return  fCbcRegSetting.SetReadValue( pFe, pCbc, pPage, pAddr, pValue ); 
 	}
 
-	std::vector< const CbcRegItem *> HwController::setCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
+	std::vector< const CbcRegItem *> HwController::setReadValueToCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
                 
 		std::vector<const CbcRegItem *> cRegList(0);
 		for( unsigned int i=0; i < pVecReq.size(); i++ ){
@@ -344,7 +354,7 @@ namespace Strasbourg{
 #ifdef __CBCDAQ_DEV__
 			if( cRAddr == 0x0B ) std::cout << "Cbc register configuration : " << pFe << " " << cCbc << " " << cPage << " " << cAddr << " " << cVal << std::endl;
 #endif
-			cRegList.push_back( setCbcRegSetting( pFe, cCbc, cPage, cAddr, cVal ) );
+			cRegList.push_back( setReadValueToCbcRegSetting( pFe, cCbc, cPage, cAddr, cVal ) );
 		}
 		return cRegList;
 	}

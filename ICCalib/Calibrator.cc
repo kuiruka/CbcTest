@@ -21,7 +21,7 @@
 #include "Strasbourg/Data.h"
 #include "utils/Utilities.h"
 #include "utils/Exception.h"
-#include "ScurveAnalyser.h"
+#include "Analysers/ScurveAnalyser.h"
 #include "TCanvas.h"
 #include <TThread.h>
 #include <sstream>
@@ -34,38 +34,21 @@ namespace ICCalib{
 		DAQController( "ScurveAnalyser", pConfigFile ),
 		fCalibSetting(),
 		fScurveAnalyser(0),
-		fTestPulseGroupMap(0),
 		fTestGroupMap(0),
 		fGroupList(),
-		fCurrentTestPulseGroup(-1),
 		fNonTestGroupOffset(0xFF)
 	{
-
-		//TestPulseGroupMap initialisation.
-		fTestPulseGroupMap = new TestGroupMap();
-
-		UInt_t cChannel(0);
-		for( int ig = 0; ig < 8; ig++ ){
-			fGroupList.push_back(ig);
-			TestGroup cTestGroup;
-			for( int i=0; i < 16; i++ ){
-				cChannel = i * 16 + ig*2;
-				if( cChannel < 254 )cTestGroup.push_back( cChannel );
-				if( ++cChannel < 254 )cTestGroup.push_back( cChannel ); 
-			}
-			fTestPulseGroupMap->insert( std::pair< UInt_t, TestGroup >(ig, cTestGroup ) );
-		}
 	}
 
 	Calibrator::~Calibrator(){
 
-		delete fTestPulseGroupMap;
 		delete fTestGroupMap;
 
 	}
 	void Calibrator::initialiseSetting(){
 		//CalibSetting initialisation
 		fCalibSetting.insert( CalibItem( "EnableTestPulse", 0x00 ) );
+		fCalibSetting.insert( CalibItem( "SkipVplusTuning", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "TestPulsePotentiometer", 0xF1 ) );
 		fCalibSetting.insert( CalibItem( "InitialOffset", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "TargetOffset", 0x50 ) );
@@ -103,8 +86,7 @@ namespace ICCalib{
 
 		delete fTestGroupMap;
 		delete fScurveAnalyser;
-
-		fTestGroupMap   = new TestGroupMap( *fTestPulseGroupMap );
+		fTestGroupMap   = new CalibrationTestGroupMap( *fTestPulseGroupMap );
 		fScurveAnalyser = new ScurveAnalyser( fBeId, fNFe, fNCbc, 
 				fTestGroupMap, &(fHwController->GetCbcRegSetting()),
 				fNegativeLogicCBC, cTargetVCth, fOutputDir.c_str(), fGUIFrame );
@@ -123,7 +105,7 @@ namespace ICCalib{
 		struct timeval start;
 		gettimeofday( &start, 0 );
 
-		//Disable test pulse
+		//test pulse setting( default setting : disabled )
 		UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
 		if( cEnableTestPulse ){
 			for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
@@ -133,21 +115,26 @@ namespace ICCalib{
 			}
 			UpdateCbcRegValues();
 		}
-		FindVplus();
-		if( fStop ) return;
 
-		//Update Vplus
-		for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+		UInt_t cSkipVplusTuning = fCalibSetting.find( "SkipVplusTuning" )->second;
+		if( !cSkipVplusTuning ){
 
-			for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+			FindVplus();
+			if( fStop ) return;
 
-				uint32_t cPage(0), cAddr(0x0B), cValue(0);
-				cValue = fScurveAnalyser->GetVplus( cFe, cCbc );
-				Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X.", cFe, cCbc, cValue ) );
-				fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cValue );
+			//Update Vplus
+			for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+
+				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+
+					uint32_t cPage(0), cAddr(0x0B), cValue(0);
+					cValue = fScurveAnalyser->GetVplus( cFe, cCbc );
+					Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X.", cFe, cCbc, cValue ) );
+					fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cValue );
+				}
 			}
+			UpdateCbcRegValues();
 		}
-		UpdateCbcRegValues();
 
 		CalibrateOffsets();
 		if( fStop ) return;
@@ -181,7 +168,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			fScurveAnalyser->Configure( ScurveAnalyser::SINGLEVCTHSCAN );
 
@@ -254,7 +245,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			UInt_t cMinVCth(0), cMaxVCth(0xFF);
 			ConfigureCbcOffset( 8, cMinVCth, cMaxVCth );
@@ -283,7 +278,11 @@ namespace ICCalib{
 
 		for( UInt_t cTestGroup=0; cTestGroup<fTestGroupMap->size(); cTestGroup++ ){
 
-			ActivateGroup( cTestGroup );
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroup );
+			}
+			fTestGroupMap->Activate( cTestGroup );
 
 			for( Int_t cTargetBit = 8; cTargetBit >=-1; cTargetBit-- ){
 
@@ -311,36 +310,14 @@ namespace ICCalib{
 		return;
 	}
 
-	void Calibrator::ActivateGroup( UInt_t pGroupId ){
-
-		fTestGroupMap->Activate( pGroupId );
-
-		UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
-		if( cEnableTestPulse ){
-			if( fCurrentTestPulseGroup != (Int_t)pGroupId ){
-				for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
-					for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
-						fHwController->AddCbcRegUpdateItemsForNewTestPulseGroup( cFe, cCbc, pGroupId );
-					}
-				}
-				UpdateCbcRegValues();
-				fCurrentTestPulseGroup = pGroupId;
-				Emit( "Message( const char *)", Form( "Activated TestPulseGroup = %d", pGroupId ) );
-			}
-		}
-#ifdef __CBCDAQ_DEV__
-		std::cout << "Activated group is " << pGroupId << std::endl; 
-#endif
-	}
-
 	//Configuration for Vth scan
 	void Calibrator::ConfigureCbcOffset( Int_t pOffsetTargetBit, UInt_t &pMinVCth, UInt_t &pMaxVCth ){
 
 		UInt_t cGroupId(0);
-		TestGroup *cTestGroup = fTestGroupMap->GetActivatedGroup(cGroupId);
+		CalibrationTestGroup *cTestGroup = fTestGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) throw Exception( "Call ActivateGroup() before ConfigureCbcOffset()" );
 
-		UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+		//UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
 
 		uint32_t cPage(1);
 		uint32_t cFe(0), cCbc(0), cChannel(0);
@@ -356,7 +333,8 @@ namespace ICCalib{
 					if( cTestGroup->Has( cChannel ) ) cTestChannel = true;
 					if( !( cTestChannel || pOffsetTargetBit == 8 ) ) continue;
 
-					if( cTestChannel || ( pOffsetTargetBit == 8 && cEnableTestPulse == 1 ) ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+					//					if( cTestChannel || ( pOffsetTargetBit == 8 && cEnableTestPulse == 1 ) ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
+					if( cTestChannel ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
 					else{ 
 						cVal = fNonTestGroupOffset;
 					}
@@ -481,7 +459,10 @@ namespace ICCalib{
 				cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
 				cEvent = fHwController->GetNextEvent();
 			}
-			if( fGUIFrame )fScurveAnalyser->Analyser::DrawHists();	
+			//if( fGUIFrame )fScurveAnalyser->Analyser::DrawHists();	
+			if( fGUIFrame ){
+				fScurveAnalyser->Analyser::DrawHists();	
+			}
 
 			if( !(cVCth % 20) ){
 #ifdef __CBCDAQ_DEV__
