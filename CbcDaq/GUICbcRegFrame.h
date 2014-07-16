@@ -76,11 +76,13 @@ namespace CbcDaq{
 			CbcRegFrame( const CbcRegList &pCRL, TGCompositeFrame *pFrame, GUIFrame *pGUIFrame, CbcRegFrames *pCbcRegFrames ); 
 			virtual ~CbcRegFrame();
 			ClassDef( CbcRegFrame, 0 );
+			bool ConfigureFailed()const{ return fConfigureFailed; }
 
 		private:
 			TGCompositeFrame *fMotherFrame;
 			GUIFrame         *fGUIFrame;
 			CbcRegFrames     *fCbcRegFrames;
+			bool             fConfigureFailed;
 	};
 
 	typedef std::pair<const CbcRegItem *, UInt_t> CbcRegUpdateItem;
@@ -101,6 +103,7 @@ namespace CbcDaq{
 		void Update( std::vector<const CbcRegItem *> pList );
 		void UpdateCbcRegisters();
 		void ResetCbcRegUpdateList();
+		bool ConfigureFailed()const{ return fConfigureFailed; }
 
 		ClassDef( CbcRegFrames, 0 );
 
@@ -114,6 +117,7 @@ namespace CbcDaq{
 
 		CbcRegGUIMap                    fCbcRegGUIMap;
 		CbcRegUpdateList                fCbcRegUpdateList;
+		bool             fConfigureFailed;
 	};
 }
 #endif

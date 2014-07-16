@@ -111,7 +111,7 @@ namespace CbcDaq{
 
 		TGNumberEntry *cE = 
 			new GUINumberEntry( 
-					pFrame, pValue, 8, ++gNumberEntryId, 
+					pFrame, pValue, 8, ++gDaqMainConfigFrameNumberEntryId, 
 					TGNumberFormat::kNESInteger,
 					TGNumberFormat::kNEANonNegative,
 					TGNumberFormat::kNELLimitMinMax,
@@ -245,7 +245,7 @@ namespace CbcDaq{
 
 		TGNumberEntry *cE = 
 			new GUINumberEntry( 
-					pFrame, pValue, 8, ++gNumberEntryId, 
+					pFrame, pValue, 8, ++gDaqMainConfigFrameNumberEntryId, 
 					TGNumberFormat::kNESInteger,
 					TGNumberFormat::kNEANonNegative,
 					TGNumberFormat::kNELLimitMinMax,

@@ -106,6 +106,7 @@ namespace CbcDaq{
 
 	void GUIFrame::LoadConfiguration( const char *pName ){
 
+		gDaqMainConfigFrameNumberEntryId = 0;
 		fDAQController->ReadSettingFile( pName );
 		fDAQController->InitialiseGlib();
 		if( fDaqMainConfigFrame ){
@@ -151,7 +152,7 @@ namespace CbcDaq{
 			const char *cName = cIt->second->GetText();
 			UInt_t cFe(0), cCbc(0);
 			getId( cIt->first, cFe, cCbc );
-//			std::cout << cFe << "," << cCbc << "," << cName << std::endl;
+			std::cout << cFe << "," << cCbc << "," << cName << std::endl;
 			fDAQController->SetCbcRegSettingFileName( cFe, cCbc, cName ); 
 		}
 		ULong_t cColor(0);	
@@ -167,7 +168,9 @@ namespace CbcDaq{
 		}
 		gClient->GetColorByName( "white", cColor );
 		fDaqMainConfigFrame->SetCbcRegFileNameColors( cColor );
+		std::cout << "Renewing CbcRegFrames" << std::endl;
 		fCbcRegFrames->RenewCbcRegFrames(); 	
+		if( fCbcRegFrames->ConfigureFailed() ) return;
 
 		fControlButtonFrame->SetButtonState( ControlButtonFrame::CbcConfigured );
 

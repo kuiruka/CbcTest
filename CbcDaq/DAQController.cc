@@ -2,7 +2,7 @@
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
-#include <time.h>
+#include <ctime>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -226,11 +226,33 @@ namespace CbcDaq{
 		}
 		void DAQController::ConfigureRun(){
 
+			time_t timer;
+			struct tm *t_st;
+			time(&timer);
+			t_st = localtime( &timer );
+
+			TString cStrLogFileName = Form( "Log%02d%02d%02d%02d%02d.txt", t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
+			fLogFile.open( (fOutputDir + "/" + cStrLogFileName.Data() ).c_str() );
+
 			TString msg;
+			const GlibSetting &cGlibSetting = GetGlibSetting();	
+			GlibSetting::const_iterator cItG = cGlibSetting.begin();
+			for( ; cItG != cGlibSetting.end(); cItG++ ){
+				msg = Form( "\tGlibReg_%-70s : %10d", cItG->first.c_str(), cItG->second );
+				fLogFile << msg << std::endl; 
+			}
+			for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+					const std::string &cFname =	fHwController->GetCbcRegSettingFileName( cFe, cCbc );
+					msg = Form( "\tCbcConfig_FE%d_CBC_%d : %s", cFe, cCbc, cFname.c_str() );
+					fLogFile << msg << std::endl;
+				}
+			}
 			RunSetting::const_iterator cItC = fRunSetting.begin();
 			for( ; cItC != fRunSetting.end(); cItC++ ){
 				msg = Form( "\tRun_%-30s : %010d", cItC->first.c_str(), cItC->second );
 				Emit( "Message( const char * )", msg.Data() ); 
+				fLogFile << msg << std::endl;
 			}
 			UInt_t cEnableTestPulse = fRunSetting.find( "EnableTestPulse"        )->second;
 			UInt_t cTPPot           = fRunSetting.find( "TestPulsePotentiometer" )->second;
@@ -250,8 +272,12 @@ namespace CbcDaq{
 
 			UInt_t cSaveData         = fRunSetting.find( "SaveData"              )->second;
 			if( cSaveData ){
+
+				TString cStrFileName = Form( "RawData%02d%02d%02d%02d%02d.dat", t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
+
 				delete fDataFile;
-				fDataFile = new std::ofstream( (fOutputDir + "/RawData.dat").c_str(), std::ofstream::binary );
+				fDataFile = new std::ofstream( (fOutputDir + "/" + cStrFileName.Data() ).c_str(), std::ofstream::binary );
+				fLogFile << "OutputFileName : " << cStrFileName << std::endl;
 			}
 		}
 
@@ -302,12 +328,16 @@ namespace CbcDaq{
 			long mtime = getTimeTook( start, 1 );
 			long min = (mtime/1000)/60;
 			long sec = (mtime/1000)%60;
-			TString msg = Form( "\tTime took for this calibration loop = %ld min %ld sec.", min, sec ); 
+			TString msg = Form( "\tTime took for this run = %ld min %ld sec.", min, sec ); 
 			Emit( "Message( const char * )", msg.Data() );
+			fLogFile << msg << std::endl;
 			Emit( "Message( const char * )", "RunEnd" );
 			UInt_t cFinalNTotalAcq = fHwController->GetNumberOfTotalAcq();
 			UInt_t cNAcq = cFinalNTotalAcq - cInitialNTotalAcq;
-			Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this calibration.", cNAcq, fNeventPerAcq ) );
+			msg = Form( "Total %d acquisitions (%d events per acq.) are made for this run.", cNAcq, fNeventPerAcq );
+			Emit( "Message( const char * )", msg.Data() );
+			fLogFile << msg << std::endl;
+			fLogFile.close();
 			fAnalyser->FinishRun();
 			fDataFile->close();
 			return;
