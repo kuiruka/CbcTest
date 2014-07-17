@@ -135,6 +135,7 @@ namespace CbcDaq{
 			fLogFrame->AddText( new TGText( e.c_str() ) );
 			gClient->GetColorByName( "red", cColor );
 			fDaqMainConfigFrame->SetGlibConfigColors( cColor ); 
+			std::cout << "I am here" << std::endl;
 			return;
 		}
 		gClient->GetColorByName( "white", cColor );

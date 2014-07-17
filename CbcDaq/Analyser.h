@@ -19,10 +19,15 @@ class TPad;
 
 namespace CbcDaq{
 	
+	class GUIFrame;
+}
+using namespace CbcDaq;
+
+namespace Analysers{
+
 	class HistGroup;
 	typedef std::map<Int_t, HistGroup*> HistGroupMap;
 
-	class GUIFrame;
 
 	class Analyser {
 
@@ -63,8 +68,9 @@ namespace CbcDaq{
 	class HistGroup {
 		friend class Analyser;
 		public:
-		HistGroup( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId );
+		HistGroup(){}
 		~HistGroup();
+		void SetHistograms( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId );
 		protected:
 		std::pair<TH1F *, TPad *> fDataStream;
 	};

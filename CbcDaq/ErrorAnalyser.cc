@@ -9,8 +9,10 @@
 #include "Cbc/CbcRegInfo.h"
 #include "TGFrame.h"
 #include "TGTextView.h"
+#include "TH2F.h"
+#include <TStyle.h>
 
-namespace CbcDaq{
+namespace Analysers{
 
 	ErrorAnalyser::ErrorAnalyser( UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
 			const CbcRegMap *pCbcRegMap, 
@@ -18,6 +20,7 @@ namespace CbcDaq{
 			const char *pOutputDir,
 			GUIFrame *pGUIFrame ):
 			Analyser( pBeId, pNFe, pNCbc, pCbcRegMap, pNegativeLogicCbc, pOutputDir, pGUIFrame ){
+				gStyle->SetTextSize(5);
 		}
 	ErrorAnalyser::~ErrorAnalyser(){
 /*
@@ -30,22 +33,19 @@ namespace CbcDaq{
 
 	void ErrorAnalyser::Initialise(){
 
-		for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+		fResult.clear();
 
-			for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+		for( UInt_t cFeId=0; cFeId < fNFe; cFeId++ ){
 
-				Int_t cId = getHistGroupId( cFeId, cCbcId );
-				ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.find( cId );
-				if( cIt != fErrorHistGroupMap.end() ){
-					delete cIt->second;
-					fErrorHistGroupMap.erase(cIt);
-				}
-				ErrorHistGroup * cErrorHistGroup = new ErrorHistGroup( fBeId, cFeId, cCbcId ); 
-				fErrorHistGroupMap.insert( std::pair<UInt_t, ErrorHistGroup *>( cId, cErrorHistGroup ) );
+			for( UInt_t cCbcId=0; cCbcId< fNCbc; cCbcId++ ){
+
+				fResult.AddCbcInfo( cFeId, cCbcId, ErrorAnalyserCbcInfo( cFeId, cCbcId ) );
+				ErrorAnalyserCbcInfo *cCbcInfo = fResult.GetCbcInfo( cFeId, cCbcId );	
+				cCbcInfo->GetData().SetHistograms( fBeId, cFeId, cCbcId );
 			}
 		}
 #ifdef __CBCDAQ_DEV__
-			std::cout << "ErrorAnalyser::Initialise() done" << std::endl;
+		std::cout << "ErrorAnalyser::Initialise() done" << std::endl;
 #endif
 	}
 
@@ -55,16 +55,36 @@ namespace CbcDaq{
 	}
 	void ErrorAnalyser::ResetHist(){
 
-		ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.begin();
-		for( ; cIt != fErrorHistGroupMap.end(); cIt++ ){
-			TH1F *cHist = cIt->second->fDataStream.first;
-			cHist->Reset();
-			cHist = cIt->second->fData.first;
-			cHist->Reset();
-			cHist = cIt->second->fError.first;
-			cHist->Reset();
-			cHist = cIt->second->fPipelineAddress.first;
-			cHist->Reset();
+		ErrorAnalyserResult::iterator cItFe = fResult.begin();
+		for( ; cItFe != fResult.end(); cItFe++ ){
+
+			UInt_t cFeId = cItFe->first;
+			ErrorAnalyserFeInfo &cFeInfo = cItFe->second;
+			ErrorAnalyserFeInfo::iterator cItCbc = cFeInfo.begin();
+			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
+				UInt_t cCbcId = cItCbc->first;
+				ErrorHistGroup &cData =  fResult.GetCbcInfo( cFeId, cCbcId )->GetData();
+				TH1F *cHist = cData.fDataStream.first;
+				cHist->Reset();
+				cHist = cData.fData.first;
+				cHist->Reset();
+				cHist = cData.fError.first;
+				cHist->Reset();
+				cHist = cData.fPipelineAddress0.first;
+				cHist->Reset();
+				cHist = cData.fPipelineAddress1.first;
+				cHist->Reset();
+				cHist = cData.fPipelineAddress2.first;
+				cHist->Reset();
+				cHist = cData.fPipelineAddress3.first;
+				cHist->Reset();
+
+				unsigned int cTriggerLatency = fCbcRegMap->GetReadValue( cFeId, cCbcId, "TriggerLatency" );
+				std::cout << "cTriggerLatency : " << std::dec << cTriggerLatency << std::endl;
+				int cTmp = ( fL1APointer - cTriggerLatency ) % 256;
+				if( cTmp < 0 ) cTmp += 256; 
+				cData.fExpectedPipelineAddress = cTmp;
+			}
 		}
 	}
 	UInt_t ErrorAnalyser::Analyse( const Event *pEvent, bool pFillDataStream ){
@@ -72,44 +92,52 @@ namespace CbcDaq{
 
 		int cHits(0);
 
-		for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+		ErrorAnalyserResult::iterator cItFe = fResult.begin();
+		for( ; cItFe != fResult.end(); cItFe++ ){
 
-			const FeEvent *cFeEvent = pEvent->GetFeEvent( cFeId );
-			if( cFeEvent == 0 ) continue; 
-			for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+			UInt_t cFeId = cItFe->first;
+			ErrorAnalyserFeInfo &cFeInfo = cItFe->second;
+			ErrorAnalyserFeInfo::iterator cItCbc = cFeInfo.begin();
+			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
+				UInt_t cCbcId = cItCbc->first;
+				ErrorAnalyserCbcInfo &cCbcInfo = cItCbc->second;
+
+
+				const FeEvent *cFeEvent = pEvent->GetFeEvent( cFeId );
+				if( cFeEvent == 0 ) continue; 
 				const CbcEvent *cCbcEvent = cFeEvent->GetCbcEvent( cCbcId );
 				if( cCbcEvent == 0 ) continue;
 
-				Int_t cId = getHistGroupId( cFeId, cCbcId );
-				ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.find( cId );
-				if( cIt == fErrorHistGroupMap.end() ) continue;
-
-				ErrorHistGroup *cErrorHistGroup = cIt->second;
-				TH1F *cHist = cErrorHistGroup->fError.first;
+				ErrorHistGroup &cErrorHistGroup = cCbcInfo.GetData();
+				TH1F *cHist = cErrorHistGroup.fError.first;
 				cHist->Fill( cCbcEvent->Error() );
 
-				cHist = cErrorHistGroup->fPipelineAddress.first;
-				cHist->Fill( cCbcEvent->PipelineAddress() );
+				UInt_t cAddress = cCbcEvent->PipelineAddress();	
+				TH2F *cPhist = (TH2F *) cErrorHistGroup.fPipelineAddress0.first;
+				if( 64 <= cAddress && cAddress < 128 ) cPhist = (TH2F *)cErrorHistGroup.fPipelineAddress1.first; 
+				else if( 128 <= cAddress && cAddress < 192 ) cPhist = (TH2F *)cErrorHistGroup.fPipelineAddress2.first; 
+				else if( 192 <= cAddress && cAddress < 256 ) cPhist = (TH2F *)cErrorHistGroup.fPipelineAddress3.first; 
+				cPhist->Fill( cAddress, 0.5 );
 
 				for( UInt_t cId = 0; cId < CbcEvent::NSENSOR; cId++ ){ 
 
 					bool cBitValue = cCbcEvent->DataBit( cId );
 					if( cBitValue ) {
-						cErrorHistGroup->fData.first->Fill( cId );
+						cErrorHistGroup.fData.first->Fill( cId );
 						cHits++;
 					}
 				}
-				cErrorHistGroup->fData.first->Fill( CbcEvent::NSENSOR );
-				
+				cErrorHistGroup.fData.first->Fill( CbcEvent::NSENSOR );
+
 				if( pFillDataStream ){
-					cErrorHistGroup->fDataStream.first->Reset();
+					cErrorHistGroup.fDataStream.first->Reset();
 					for( UInt_t cId = 0; cId < CbcEvent::NSENSOR; cId++ ){ 
 
 						bool cBitValue = cCbcEvent->DataBit( cId );
 						if( cBitValue ) {
 
-							cErrorHistGroup->fDataStream.first->Fill( cId );
+							cErrorHistGroup.fDataStream.first->Fill( cId );
 						}
 					}
 				}
@@ -120,47 +148,73 @@ namespace CbcDaq{
 
 	void ErrorAnalyser::SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad ){	
 
-		pPad->Divide( 1, 2 );
-		TPad *cPad = (TPad *)pPad->GetPad(1);
-		cPad->Divide( 2, 1 );
+		pPad->Divide( 1, 5 );
+		//		TPad *cPad = (TPad *)pPad->GetPad(1);
+		//		cPad->Divide( 2, 1 );
 
-		Int_t cId = getHistGroupId( pFeId, pCbcId );
-		ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.find( cId );
-		ErrorHistGroup *cGroup = cIt->second;
-		cGroup->fDataStream.second = (TPad *)pPad->GetPad(2);
-		cGroup->fData.second = (TPad *)pPad->GetPad(2);
-		cGroup->fError.second = (TPad *)cPad->GetPad(1);
-		cGroup->fPipelineAddress.second = (TPad *)cPad->GetPad(2);
+		ErrorHistGroup &cGroup = fResult.GetCbcInfo( pFeId, pCbcId )->GetData();
+		cGroup.fDataStream.second = (TPad *)pPad->GetPad(5);
+		cGroup.fData.second = (TPad *)pPad->GetPad(5);
+		//		cGroup->fError.second = (TPad *)cPad->GetPad(1);
+		cGroup.fPipelineAddress0.second = (TPad *)pPad->GetPad(1);
+		cGroup.fPipelineAddress1.second = (TPad *)pPad->GetPad(2);
+		cGroup.fPipelineAddress2.second = (TPad *)pPad->GetPad(3);
+		cGroup.fPipelineAddress3.second = (TPad *)pPad->GetPad(4);
 	}
 	void ErrorAnalyser::DrawHists(){
 
 		if( !fGUIFrame ) return;
 		TPad *cPad(0);
-		ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.begin();
-		for( ; cIt != fErrorHistGroupMap.end(); cIt++ ){
+		ErrorAnalyserResult::iterator cItFe = fResult.begin();
+		for( ; cItFe != fResult.end(); cItFe++ ){
 
-			std::pair<TH1F *, TPad *> cDataStream = cIt->second->fDataStream;
-			std::pair<TH1F *, TPad *> cData       = cIt->second->fData;
-			std::pair<TH1F *, TPad *> cError      = cIt->second->fError;
-			std::pair<TH1F *, TPad *> cPipelineAddress      = cIt->second->fPipelineAddress;
+			ErrorAnalyserFeInfo &cFeInfo = cItFe->second;
+			ErrorAnalyserFeInfo::iterator cItCbc = cFeInfo.begin();
+			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
 
-			if( fShowDataStream ){ 
-				cPad = (TPad *)cDataStream.second->cd();
-				cDataStream.first->Draw();
+				ErrorAnalyserCbcInfo &cCbcInfo = cItCbc->second;
+				ErrorHistGroup &cErrorHistGroup = cCbcInfo.GetData();
+
+				std::pair<TH1F *, TPad *> cDataStream = cErrorHistGroup.fDataStream;
+				std::pair<TH1F *, TPad *> cData       = cErrorHistGroup.fData;
+				std::pair<TH1F *, TPad *> cError      = cErrorHistGroup.fError;
+				std::pair<TH1F *, TPad *> cPipelineAddress0      = cErrorHistGroup.fPipelineAddress0;
+				std::pair<TH1F *, TPad *> cPipelineAddress1      = cErrorHistGroup.fPipelineAddress1;
+				std::pair<TH1F *, TPad *> cPipelineAddress2      = cErrorHistGroup.fPipelineAddress2;
+				std::pair<TH1F *, TPad *> cPipelineAddress3      = cErrorHistGroup.fPipelineAddress3;
+
+				if( fShowDataStream ){ 
+					cPad = (TPad *)cDataStream.second->cd();
+					cDataStream.first->Draw();
+					cPad->Update();
+				}
+				else{
+					cPad = (TPad *)cData.second->cd();
+					cData.first->Draw();
+					cPad->Update();
+				}
+				/*
+				   cPad = (TPad *)cError.second->cd();
+				   cError.first->Draw();
+				   cPad->Update();
+				 */
+
+				cPad = (TPad *)cPipelineAddress0.second->cd();
+				( (TH2F *) cPipelineAddress0.first)->Draw("TEXT");
+				cPad->Update();
+
+				cPad = (TPad *)cPipelineAddress1.second->cd();
+				( (TH2F *) cPipelineAddress1.first)->Draw("TEXT");
+				cPad->Update();
+
+				cPad = (TPad *)cPipelineAddress2.second->cd();
+				( (TH2F *) cPipelineAddress2.first)->Draw("TEXT");
+				cPad->Update();
+
+				cPad = (TPad *)cPipelineAddress3.second->cd();
+				( (TH2F *) cPipelineAddress3.first)->Draw("TEXT");
 				cPad->Update();
 			}
-			else{
-				cPad = (TPad *)cData.second->cd();
-				cData.first->Draw();
-				cPad->Update();
-			}
-			cPad = (TPad *)cError.second->cd();
-			cError.first->Draw();
-			cPad->Update();
-
-			cPad = (TPad *)cPipelineAddress.second->cd();
-			cPipelineAddress.first->Draw();
-			cPad->Update();
 		}
 	}
 	void ErrorAnalyser::DrawText(){
@@ -168,79 +222,166 @@ namespace CbcDaq{
 		if( !fGUIFrame ) return;
 
 		fTextView->Clear();
-		for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+		ErrorAnalyserResult::iterator cItFe = fResult.begin();
+		for( ; cItFe != fResult.end(); cItFe++ ){
 
-			for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+			UInt_t cFeId = cItFe->first;
+			ErrorAnalyserFeInfo &cFeInfo = cItFe->second;
+			ErrorAnalyserFeInfo::iterator cItCbc = cFeInfo.begin();
+			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
+
+				UInt_t cCbcId = cItCbc->first;
+				ErrorAnalyserCbcInfo &cCbcInfo = cItCbc->second;
+				ErrorHistGroup &cErrorHistGroup = cCbcInfo.GetData();
 
 				fTextView->AddText( new TGText( Form( "FE%uCBC%u\n", cFeId, cCbcId )  ) );
-				Int_t cId = getHistGroupId( cFeId, cCbcId );
-				ErrorHistGroupMap::iterator cIt = fErrorHistGroupMap.find( cId );
-				ErrorHistGroup *cErrorHistGroup = cIt->second;
 
-				UInt_t cNe00 = (UInt_t) cErrorHistGroup->fError.first->GetBinContent(1); 
-				UInt_t cNe01 = (UInt_t) cErrorHistGroup->fError.first->GetBinContent(2); 
-				UInt_t cNe10 = (UInt_t) cErrorHistGroup->fError.first->GetBinContent(3); 
-				UInt_t cNe11 = (UInt_t) cErrorHistGroup->fError.first->GetBinContent(4); 
-				UInt_t cN    = (UInt_t) cErrorHistGroup->fData.first->GetBinContent( cErrorHistGroup->fData.first->GetNbinsX() + 1 );
+				UInt_t cNe00 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(1); 
+				UInt_t cNe01 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(2); 
+				UInt_t cNe10 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(3); 
+				UInt_t cNe11 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(4); 
+				UInt_t cN    = (UInt_t) cErrorHistGroup.fData.first->GetBinContent( cErrorHistGroup.fData.first->GetNbinsX() + 1 );
 
 				Float_t cRe00 = cNe00 / cN;
 				Float_t cRe01 = cNe01 / cN;
 				Float_t cRe10 = cNe10 / cN;
 				Float_t cRe11 = cNe11 / cN;
 
-				fTextView->AddText( new TGText( Form( "# of ERROR 00 : %5u", cNe00 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "# of ERROR 01 : %5u", cNe01 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "# of ERROR 10 : %5u", cNe10 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "# of ERROR 11 : %5u", cNe11 ) ) ); 	
+				fTextView->AddText( new TGText( Form( "#    of ERROR 00 01 10 11: %8u %8u %8u %8u", cNe00, cNe01, cNe10, cNe11 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "# of ERROR 01 : %5u", cNe01 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "# of ERROR 10 : %5u", cNe10 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "# of ERROR 11 : %5u", cNe11 ) ) ); 	
 
-				fTextView->AddText( new TGText( Form( "Rate of ERROR 00 : %5f", cRe00 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "Rate of ERROR 01 : %5f", cRe01 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "Rate of ERROR 10 : %5f", cRe10 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "Rate of ERROR 11 : %5f", cRe11 ) ) ); 	
+				fTextView->AddText( new TGText( Form( "Rate of ERROR 00 01 10 11: %5f %5f %5f %5f", cRe00, cRe01, cRe10, cRe11 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "Rate of ERROR 01 : %5f", cRe01 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "Rate of ERROR 10 : %5f", cRe10 ) ) ); 	
+//				fTextView->AddText( new TGText( Form( "Rate of ERROR 11 : %5f", cRe11 ) ) ); 	
+				fTextView->AddText( new TGText( Form( "Expected pipeline address : %8u", cErrorHistGroup.fExpectedPipelineAddress ) ) ); 
 			}
 		}
 	}
 
-	ErrorHistGroup::ErrorHistGroup( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId ):
-		HistGroup( pBeId, pFeId, pCbcId ){
+	void ErrorHistGroup::SetHistograms( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId ){
 
-			TString cHname = Form( "hDataBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
-			TObject *cObj = gROOT->FindObject( cHname ); 
-			if( cObj ) delete cObj;
+		double cTitleSize(0.12);
+		double cLabelSize(0.10);
 
-			TH1F *cHist = new TH1F( cHname, 
-					Form( "Data BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
-					CbcEvent::NSENSOR, -0.5, CbcEvent::NSENSOR-0.5 ); 
+		gStyle->SetLabelSize(cLabelSize, "X" );
+		gStyle->SetTitleSize(cTitleSize, "Y" );
 
-			fData = std::pair<TH1F *, TPad *>( cHist, 0 );
+		HistGroup::SetHistograms( pBeId, pFeId, pCbcId );
+		fDataStream.first->GetYaxis()->SetTitle( "DataStream" );
+		fDataStream.first->GetYaxis()->SetTitleOffset( 0.10 );
+		fDataStream.first->GetYaxis()->SetLabelSize( 0.10 );
+		fDataStream.first -> SetNdivisions( 101, "y" );
+
+		TString cHname = Form( "hDataBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		TObject *cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
+
+		TH1F *cHist = new TH1F( cHname, 
+				Form( ";;Data BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
+				CbcEvent::NSENSOR, -0.5, CbcEvent::NSENSOR-0.5 ); 
+
+		cHist->GetYaxis()->CenterTitle();
+		cHist->GetYaxis()->SetTitleOffset( 0.10 );
+		cHist->GetYaxis()->SetTitle( "Data" );
+		cHist->GetYaxis()->SetLabelSize( 0.1 );
+		cHist -> SetNdivisions( 101, "y" );
+
+		fData = std::pair<TH1F *, TPad *>( cHist, 0 );
 
 
-			cHname = Form( "hErrorBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
-			cObj = gROOT->FindObject( cHname ); 
-			if( cObj ) delete cObj;
+		cHname = Form( "hErrorBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
 
-			cHist = new TH1F( cHname, 
-					Form( "Error BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
-					4, -0.5, 4-0.5 ); 
+		cHist = new TH1F( cHname, 
+				Form( "Error BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
+				4, -0.5, 4-0.5 ); 
 
-			fError = std::pair<TH1F *, TPad *>( cHist, 0 );
+		fError = std::pair<TH1F *, TPad *>( cHist, 0 );
 
 
-			cHname = Form( "hPipelineBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
-			cObj = gROOT->FindObject( cHname ); 
-			if( cObj ) delete cObj;
+		int cNch(64);
+		//double cTitleOffset(0.05);
+		//gStyle->SetTitleOffset( cTitleOffset, "t" );
+		double cMarkerSize(5.0);
+		int cNdivisions(907);
+		int cNdivisionsY(0);
+		cHname = Form( "hPipeline0BE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
 
-			cHist = new TH1F( cHname, 
-					Form( "Pipeline BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
-					256, -0.5, 256-0.5 ); 
+		TH2F *htmp = new TH2F( cHname, 
+				Form( ";;Pipeline %3d-%3d", 0, cNch-1  ), 
+				cNch, -0.5, cNch-0.5, 1, 0, 1 ); 
+		htmp->GetYaxis()->SetTitleSize( cTitleSize );
+		htmp->GetYaxis()->SetTitleOffset( 0.05 );
+		htmp -> SetLabelSize(cLabelSize);
+		htmp -> SetMarkerSize(cMarkerSize );
+		htmp -> SetNdivisions( cNdivisions );
+		htmp -> SetNdivisions( cNdivisionsY, "y" );
+		htmp->GetYaxis()->CenterTitle();
+		cHist = (TH1F *) htmp;
+		fPipelineAddress0 = std::pair<TH1F *, TPad *>( cHist, 0 );
 
-			fPipelineAddress = std::pair<TH1F *, TPad *>( cHist, 0 );
-		}
+		cHname = Form( "hPipeline1BE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
+
+		htmp = new TH2F( cHname, 
+				Form( ";;Pipeline %3d-%3d", cNch, cNch*2-1  ), 
+				cNch, cNch-0.5, cNch*2-0.5, 1, 0, 1 ); 
+		htmp -> SetLabelSize(cLabelSize);
+		htmp -> SetMarkerSize(cMarkerSize );
+		htmp -> SetNdivisions( cNdivisions );
+		htmp -> SetNdivisions( cNdivisionsY, "y" );
+		htmp->SetTitleSize( cTitleSize, "y" );
+		htmp->GetYaxis()->SetTitleOffset( 0.05 );
+		htmp->GetYaxis()->CenterTitle();
+		cHist = (TH1F *) htmp;
+		fPipelineAddress1 = std::pair<TH1F *, TPad *>( cHist, 0 );
+
+		cHname = Form( "hPipeline2BE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
+
+		htmp = new TH2F( cHname, 
+				Form( ";;Pipeline %3d-%3d", cNch*2, cNch*3-1  ), 
+				cNch, cNch*2-0.5, cNch*3-0.5, 1, 0, 1 ); 
+		htmp -> SetLabelSize(cLabelSize);
+		htmp -> SetMarkerSize(cMarkerSize );
+		htmp -> SetNdivisions( cNdivisions );
+		htmp -> SetNdivisions( cNdivisionsY, "y" );
+		htmp->SetTitleSize( cTitleSize, "y" );
+		htmp->GetYaxis()->SetTitleOffset( 0.05 );
+		htmp->GetYaxis()->CenterTitle();
+		cHist = (TH1F *) htmp;
+		fPipelineAddress2 = std::pair<TH1F *, TPad *>( cHist, 0 );
+
+		cHname = Form( "hPipeline3BE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
+		cObj = gROOT->FindObject( cHname ); 
+		if( cObj ) delete cObj;
+
+		htmp = new TH2F( cHname, 
+				Form( ";;Pipeline %3d-%3d", cNch*3, cNch*4-1  ), 
+				cNch, cNch*3-0.5, cNch*4-0.5, 1, 0, 1 ); 
+		htmp -> SetLabelSize(cLabelSize);
+		htmp -> SetMarkerSize(cMarkerSize );
+		htmp -> SetNdivisions( cNdivisions );
+		htmp -> SetNdivisions( cNdivisionsY, "y" );
+		htmp->SetTitleSize( cTitleSize, "y" );
+		htmp->GetYaxis()->SetTitleOffset( 0.05 );
+		htmp->GetYaxis()->CenterTitle();
+		cHist = (TH1F *) htmp;
+		fPipelineAddress3 = std::pair<TH1F *, TPad *>( cHist, 0 );
+	}
 	ErrorHistGroup::~ErrorHistGroup(){
-/*
-		delete fData.first;
-		delete fError.first;
-		delete fPipelineAddress.first;
-		*/
+		/*
+		   delete fData.first;
+		   delete fError.first;
+		   delete fPipelineAddress.first;
+		 */
 	}
 }

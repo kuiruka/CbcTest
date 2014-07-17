@@ -27,7 +27,7 @@ namespace Strasbourg{
 }
 using namespace Cbc;
 using namespace Strasbourg;
-
+using namespace Analysers;
 
 namespace CbcDaq{
 

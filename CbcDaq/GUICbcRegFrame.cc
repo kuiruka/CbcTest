@@ -45,7 +45,7 @@ namespace CbcDaq {
 
 			fNumberEntry = new TGNumberEntry( this, pCbcRegItem->WrittenValue(), 2, ++gCbcRegFramesNumberEntryId, 
 					TGNumberFormat::kNESHex, TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 0xFF  );
-			std::cout << pCbcRegItem->Page() << ", " << pCbcRegItem->Address() << ", " << gCbcRegFramesNumberEntryId << std::endl;
+//			std::cout << pCbcRegItem->Page() << ", " << pCbcRegItem->Address() << ", " << gCbcRegFramesNumberEntryId << std::endl;
 			fNumberEntry->Connect( "ValueSet(Long_t)", "CbcDaq::CbcRegWidget", this, "AddUpdateItem()" );
 			Bool_t cWriteFailed = fCbcRegItem->WriteFailed();
 			if( cWriteFailed ) {
@@ -184,7 +184,6 @@ namespace CbcDaq {
 					fCbcRegFrames->fCbcRegGUIMap.insert( CbcRegGUIPair( pCRL[i], cCbcRegWidget ) );
 					cPCount++;
 				}
-				std::cout << "I am here" << std::endl;
 				cTableFrame->MapSubwindows();
 				cTableFrame->Layout();
 			}

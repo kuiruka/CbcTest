@@ -83,11 +83,13 @@ namespace CbcDaq{
 	}
 	void DAQController::initialiseSetting(){
 
+		fRunSetting.insert( RunItem( "1)RunNumber", 0 ) );
+		fRunSetting.insert( RunItem( "2)BeamIntensity", 0 ) );
+		fRunSetting.insert( RunItem( "3)Nevents", 0 ) );
+		fRunSetting.insert( RunItem( "4)SaveData", 0 ) );
 		fRunSetting.insert( RunItem( "EnableTestPulse", 0 ) );
-		fRunSetting.insert( RunItem( "TestPulsePotentiometer", 0xF1 ) );
 		fRunSetting.insert( RunItem( "TestGroup", 0 ) );
-		fRunSetting.insert( RunItem( "Nevents", 0 ) );
-		fRunSetting.insert( RunItem( "SaveData", 0 ) );
+		fRunSetting.insert( RunItem( "TestPulsePotentiometer", 0xF1 ) );
 	}
 	void DAQController::Initialise(){
 
@@ -145,7 +147,7 @@ namespace CbcDaq{
 			UInt_t cExpectedCBC = fHwController->GetGlibSetting( "CBC_expected" );	
 			fNCbc = cExpectedCBC == 1 ? 1 : 2;	
 			fNegativeLogicCBC = (bool)fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC" );
-			fNeventPerAcq = fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" );
+			fNeventPerAcq     =       fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" );
 
 			TString msg;
 			const GlibSetting &cGlibSetting = GetGlibSetting();	
@@ -257,6 +259,7 @@ namespace CbcDaq{
 			UInt_t cEnableTestPulse = fRunSetting.find( "EnableTestPulse"        )->second;
 			UInt_t cTPPot           = fRunSetting.find( "TestPulsePotentiometer" )->second;
 			UInt_t cGroupId         = fRunSetting.find( "TestGroup"              )->second;
+
 			for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
 				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
 					fHwController->AddCbcRegUpdateItemsForEnableTestPulse( cFe, cCbc, cEnableTestPulse );
@@ -268,16 +271,38 @@ namespace CbcDaq{
 			}
 			UpdateCbcRegValues();
 
-			fAnalyser->ConfigureRun();
+			if( fAnalyserName == "ErrorAnalyser" ){
 
-			UInt_t cSaveData         = fRunSetting.find( "SaveData"              )->second;
+				unsigned int cTPDelay         = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET" );
+				unsigned int cL1ADelayAfterTP = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" );
+				unsigned int cStopClockSEU    = GetGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU"         );
+
+				unsigned int cL1APointer( cTPDelay - 2 );
+				std::cout << "cTPDelay         : " << std::dec << cTPDelay         << std::endl;
+				std::cout << "cL1ADelayAfterTP : " << std::dec << cL1ADelayAfterTP << std::endl;
+				std::cout << "cStopClockSEU    : " << std::dec << cStopClockSEU    << std::endl;
+
+				if( cStopClockSEU == 0 ){
+					cL1APointer += cL1ADelayAfterTP;
+				}
+				else{
+					cL1APointer += 3;
+				}
+				cL1APointer %= 256;
+				std::cout << "cL1APointer : " << std::dec << cL1APointer << std::endl;
+				( (ErrorAnalyser *)fAnalyser )->SetL1APointer( cL1APointer );
+			}
+			fAnalyser->ConfigureRun();
+			Emit( "Message( const char * )", "Run Configured" );
+
+			UInt_t cSaveData         = fRunSetting.find( "4)SaveData"              )->second;
 			if( cSaveData ){
 
 				TString cStrFileName = Form( "RawData%02d%02d%02d%02d%02d.dat", t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
 
 				delete fDataFile;
 				fDataFile = new std::ofstream( (fOutputDir + "/" + cStrFileName.Data() ).c_str(), std::ofstream::binary );
-				fLogFile << "OutputFileName : " << cStrFileName << std::endl;
+				fLogFile << "\tOutputFileName : " << cStrFileName << std::endl;
 			}
 		}
 
@@ -285,15 +310,22 @@ namespace CbcDaq{
 
 			fStop = false;
 			UInt_t cInitialNTotalAcq = fHwController->GetNumberOfTotalAcq();
-
-			struct timeval start;
-			gettimeofday( &start, 0 );
-
-			UInt_t cNevents = fRunSetting.find( "Nevents" )->second;
+			UInt_t cNevents = fRunSetting.find( "3)Nevents" )->second;
 			UInt_t cNthAcq = 0;
 			UInt_t cN(0);
 			usleep( 100 );
-			Emit( "Message( const char * )", "RunStart" );
+
+			//message and log for RunStart
+			time_t timer;
+			time(&timer);
+			TString cStrLog = Form( "\tRunStart       : %s", ctime( &timer ) );
+			Emit( "Message( const char * )", cStrLog.Data() );
+			fLogFile << cStrLog << std::endl; 
+
+			//time
+			struct timeval start;
+			gettimeofday( &start, 0 );
+
 			while( !fStop ){
 
 				fHwController->StartAcquisition();
@@ -328,18 +360,26 @@ namespace CbcDaq{
 			long mtime = getTimeTook( start, 1 );
 			long min = (mtime/1000)/60;
 			long sec = (mtime/1000)%60;
+			gettimeofday( &start, 0 );
+			cStrLog = Form( "\tRunTime        : %ld [msec]",  mtime ); 
+			Emit( "Message( const char * )", cStrLog.Data() );
+			fLogFile << cStrLog << std::endl; 
+
 			TString msg = Form( "\tTime took for this run = %ld min %ld sec.", min, sec ); 
 			Emit( "Message( const char * )", msg.Data() );
 			fLogFile << msg << std::endl;
 			Emit( "Message( const char * )", "RunEnd" );
 			UInt_t cFinalNTotalAcq = fHwController->GetNumberOfTotalAcq();
 			UInt_t cNAcq = cFinalNTotalAcq - cInitialNTotalAcq;
-			msg = Form( "Total %d acquisitions (%d events per acq.) are made for this run.", cNAcq, fNeventPerAcq );
+			msg = Form( "\tTotal %d acquisitions (%d events per acq.) are made for this run.", cNAcq, fNeventPerAcq );
 			Emit( "Message( const char * )", msg.Data() );
 			fLogFile << msg << std::endl;
 			fLogFile.close();
 			fAnalyser->FinishRun();
 			fDataFile->close();
+			int cThisRunNumber = fRunSetting.find( "1)RunNumber" )->second;
+			fRunSetting.find( "1)RunNumber" )->second = cThisRunNumber + 1;
+
 			return;
 		}
 

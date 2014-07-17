@@ -8,7 +8,7 @@
 #include "TGFrame.h"
 #include "TGTextView.h"
 
-namespace CbcDaq{
+namespace Analysers{
 
 	Analyser::Analyser( UInt_t pBeId, UInt_t pNFe, UInt_t pNCbc, 
 			const CbcRegMap *pCbcRegMap, 
@@ -42,7 +42,8 @@ namespace CbcDaq{
 					delete cIt->second;
 					fHistGroupMap.erase(cIt);
 				}
-				HistGroup * cHistGroup = new HistGroup( fBeId, cFeId, cCbcId ); 
+				HistGroup * cHistGroup = new HistGroup();
+				cHistGroup->SetHistograms( fBeId, cFeId, cCbcId ); 
 				fHistGroupMap.insert( std::pair<UInt_t, HistGroup *>( cId, cHistGroup ) );
 			}
 		}
@@ -124,14 +125,14 @@ namespace CbcDaq{
 			}
 		}
 	}
-	HistGroup::HistGroup( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId ){
+	void HistGroup::SetHistograms( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId ){
 
 		TString cHname = Form( "hDataStreamBE%uFE%uCBC%u", pBeId, pFeId, pCbcId );
 		TObject *cObj = gROOT->FindObject( cHname ); 
 		if( cObj ) delete cObj;
 
 		TH1F *cHist = new TH1F( cHname, 
-				Form( "Data stream BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
+				Form( ";;Data stream BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
 				CbcEvent::NSENSOR, -0.5, CbcEvent::NSENSOR-0.5 ); 
 
 		fDataStream = std::pair<TH1F *, TPad *>( cHist, 0 );
