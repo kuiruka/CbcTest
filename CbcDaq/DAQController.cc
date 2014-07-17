@@ -375,8 +375,12 @@ namespace CbcDaq{
 			Emit( "Message( const char * )", msg.Data() );
 			fLogFile << msg << std::endl;
 			fLogFile.close();
+			std::cout << "I am here" << std::endl;
 			fAnalyser->FinishRun();
-			fDataFile->close();
+			std::cout << "I am here" << std::endl;
+			if( fDataFile )fDataFile->close();
+				
+			std::cout << "I am here" << std::endl;
 			int cThisRunNumber = fRunSetting.find( "1)RunNumber" )->second;
 			fRunSetting.find( "1)RunNumber" )->second = cThisRunNumber + 1;
 
