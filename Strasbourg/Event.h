@@ -34,7 +34,7 @@ namespace Strasbourg {
 			fEventCount(pE.fEventCount), fEventCountCBC(pE.fEventCountCBC),fTDC(pE.fTDC){}
 			~Event(){}
 			void Clear(){ fEvent.clear(); }
-			void AddFe( UInt_t pFE ); 
+			void AddFe( UInt_t pFE, bool pDummy = false ); 
 			void AddCbc( UInt_t pFE, UInt_t pCBC ); 
 			UInt_t Size32()const{ return fSize32; }
 			int SetEvent( char *pEvent );

@@ -36,7 +36,8 @@ namespace ICCalib{
 		fScurveAnalyser(0),
 		fTestGroupMap(0),
 		fGroupList(),
-		fNonTestGroupOffset(0xFF)
+		fNonTestGroupOffset(0xFF),
+		fNAcq(3)
 	{
 	}
 
@@ -47,6 +48,7 @@ namespace ICCalib{
 	}
 	void Calibrator::initialiseSetting(){
 		//CalibSetting initialisation
+		fCalibSetting.insert( CalibItem( "NAcq", 10 ) );
 		fCalibSetting.insert( CalibItem( "EnableTestPulse", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "SkipVplusTuning", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "TestPulsePotentiometer", 0xF1 ) );
@@ -451,10 +453,13 @@ namespace ICCalib{
 
 				int cNevent(0);	
 				const Event *cEvent = fHwController->GetNextEvent();
+				//std::cout << "Event = " << cEvent << std::endl;
 				while( cEvent ){
 					cNevent++;
 					//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
-					//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
+				//	const FeEvent *cFeEvent = cEvent->GetFeEvent( 0 );
+				//	const CbcEvent *cCbcEvent = cFeEvent->GetCbcEvent( 0 );
+				//	std::cout << "DATASTRING : " << cCbcEvent->DataHexString() << std::endl; 
 					fAnalyser->Analyse( cEvent, cFillDataStream );	
 					cFillDataStream = false;
 					cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
@@ -479,7 +484,7 @@ namespace ICCalib{
 
 			unsigned int cNChannels = fTestGroupMap->GetActivatedGroup()->size() * fNFe * fNCbc;
 #ifdef __CBCDAQ_DEV__
-			std::cout << "SetData is done. # of hits = " << cNHits << std::endl;
+			std::cout << "Analysis for this Acquisition is done. # of hits = " << cNHits << std::endl;
 			//std::cout << cNChannels << std::endl;
 			//std::cout << cNoneZero << std::endl;
 #endif
@@ -583,6 +588,6 @@ fDataStreamHistMap.insert( std::pair<Int_t, TH1F *>( cId, cHist ) );
 }
 }
 }
-	 */
+*/
 }
 

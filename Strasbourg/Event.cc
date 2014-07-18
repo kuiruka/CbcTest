@@ -30,9 +30,12 @@ namespace Strasbourg {
 	const UInt_t Event::OFFSET_TDC = 5 * 32 + WIDTH_FE_EVENT;
 	const UInt_t Event::WIDTH_TDC = 32;
 
-	void Event::AddFe( UInt_t pFE ){ 
-		AddCbc( pFE, 0 );
-		AddCbc( pFE, 1 );
+	void Event::AddFe( UInt_t pFE, bool pDummy ){ 
+
+		if( pDummy == 0 ){ 
+			AddCbc( pFE, 0 );
+			AddCbc( pFE, 1 );
+		}
 		fSize32 += ( 2 * 9 ); 
 	}
 	void Event::AddCbc( UInt_t pFE, UInt_t pCBC ){ 

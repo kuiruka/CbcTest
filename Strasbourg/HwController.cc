@@ -91,10 +91,12 @@ namespace Strasbourg{
 		fCbcRegSetting.Reset( fNFe, fNCbc );
 		fCbcRegUpdateList.Reset( fNFe );	
 
+		fData->Clear();
 		//Initialising Data object
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 			fData->AddFe( cFe );
 		}
+		if( fNFe == 1 ) fData->AddFe( 1, true );
 		fData->Initialise( fNeventPerAcq );
 		fPacketSize = fData->GetEventSize32();
 	}

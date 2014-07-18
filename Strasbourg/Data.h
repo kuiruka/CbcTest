@@ -33,8 +33,9 @@ namespace Strasbourg {
 			const Event *GetNextEvent();
 			std::string HexString()const; //printout hex serial data
 
+			void Clear(){ fEvent.Clear(); }
 			void Initialise( UInt_t pNevents ); //pNevents : # of events in one acquisition. Memory is allocated to fBuf for pNevents. 
-			void AddFe( UInt_t pFe ){ fEvent.AddFe( pFe ); } //Add one FE with id pFe with two CBC.
+			void AddFe( UInt_t pFe, bool pDummy = false ){ fEvent.AddFe( pFe, pDummy ); } //Add one FE with id pFe with two CBC.
 			UInt_t GetEventSize32(){ return fEvent.Size32(); }
 			void Set( void *Data ); 
 
@@ -44,6 +45,7 @@ namespace Strasbourg {
 			void AddCbc( UInt_t pFe, UInt_t pCbc ){ fEvent.AddCbc( pFe, pCbc ); }
 			void CopyBuffer( Data &pD );
 			const char * GetBuffer( UInt_t &pBufSize )const{ pBufSize = fBufSize; return fBuf; }
+			UInt_t GetBufSize()const{ return fBufSize; }
 		private:
 			char *fBuf;
 			Event fEvent;

@@ -45,7 +45,7 @@ namespace Strasbourg {
 		if( fBuf ) free( fBuf );
 		fBuf = (char *)malloc( fBufSize );
 
-		fEvent.Clear(); 
+//		fEvent.Clear(); 
 #ifdef __CBCDAQ_DEV__
 		std::cout << "Data::Initialise done." << std::endl;
 #endif
