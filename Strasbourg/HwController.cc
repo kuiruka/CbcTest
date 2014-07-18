@@ -58,7 +58,7 @@ namespace Strasbourg{
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A", 400 );
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 200 );
 			AddGlibSetting( "COMMISSIONNING_MODE_RQ", 1 );
-			AddGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU", 1 );
+//			AddGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU", 1 );
 			AddGlibSetting( "cbc_stubdata_latency_adjust_fe1", 1 );
 			AddGlibSetting( "cbc_stubdata_latency_adjust_fe2", 1 );
 			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE", true );
