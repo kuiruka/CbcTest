@@ -31,6 +31,8 @@ namespace CbcDaq{
 	UInt_t gMainFrameWidth=1400;
 	UInt_t gMainFrameHeight=1000;
 	UInt_t gNumberEntryId = 0;
+	UInt_t gDaqMainConfigFrameNumberEntryId = 0;
+	UInt_t gCbcRegFramesNumberEntryId = 0;
 	TGLayoutHints *gLHVexpand = new TGLayoutHints( kLHintsExpandX | kLHintsExpandY, 1,1,1,1);
 	TGLayoutHints *gLHexpand = new TGLayoutHints( kLHintsExpandX | kLHintsCenterY, 1,1,1,1);	
 	TGLayoutHints *gLHexpandTop = new TGLayoutHints( kLHintsExpandX | kLHintsTop, 1,1,1,1);	

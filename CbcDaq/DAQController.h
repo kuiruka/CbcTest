@@ -6,6 +6,7 @@
 #include <TString.h>
 #include <map>
 #include "Cbc/CbcRegInfo.h"
+#include "Cbc/TestGroup.h"
 #include "Analyser.h"
 
 class TPad;
@@ -26,7 +27,7 @@ namespace Strasbourg{
 }
 using namespace Cbc;
 using namespace Strasbourg;
-
+using namespace Analysers;
 
 namespace CbcDaq{
 
@@ -89,6 +90,7 @@ namespace CbcDaq{
 			virtual void ReConfigureCbc( UInt_t pFe, UInt_t pCbc );
 			virtual void SaveCbcRegInfo( UInt_t pFe, UInt_t pCbc );
 			virtual void SaveCbcRegInfo( const char *pNewDir = 0 );
+			void ActivateGroup( UInt_t pGroupId );
 
 		protected:
 			virtual void initialiseSetting();
@@ -115,6 +117,11 @@ namespace CbcDaq{
 			unsigned int                    fNeventPerAcq;
 			bool                            fNegativeLogicCBC;
 			bool                            fStop;
+			std::ofstream                   fLogFile;
+
+			TestGroupMap                         *fTestPulseGroupMap;
+			TestGroupMap                         *fAnalyserGroupMap;
+			Int_t                                fCurrentTestPulseGroup;
 	};
 }
 #endif

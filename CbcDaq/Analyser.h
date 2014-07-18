@@ -19,10 +19,15 @@ class TPad;
 
 namespace CbcDaq{
 	
+	class GUIFrame;
+}
+using namespace CbcDaq;
+
+namespace Analysers{
+
 	class HistGroup;
 	typedef std::map<Int_t, HistGroup*> HistGroupMap;
 
-	class GUIFrame;
 
 	class Analyser {
 
@@ -41,6 +46,7 @@ namespace CbcDaq{
 			virtual void DrawText();
 			virtual void FinishRun(){}
 			virtual void SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
+			virtual TString Dump(){ return TString();}
 			virtual void SetTextView( TGTextView *pTextView ){ fTextView = pTextView; }
 			void ShowDataStream( Bool_t pShow ){ fShowDataStream = pShow; }
 			Bool_t ShowDataStream(){ return fShowDataStream; }
@@ -63,8 +69,9 @@ namespace CbcDaq{
 	class HistGroup {
 		friend class Analyser;
 		public:
-		HistGroup( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId );
+		HistGroup(){}
 		~HistGroup();
+		void SetHistograms( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId );
 		protected:
 		std::pair<TH1F *, TPad *> fDataStream;
 	};

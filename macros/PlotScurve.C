@@ -27,11 +27,11 @@ void PlotScurve( Char_t *fname, UInt_t pBeId = 0, UInt_t pFeId = 0, UInt_t pCbc 
 	}
 
 	double m = sum_m/254;
-	double em = sum_m2/254 - m*m;
+	double em = sqrt(sum_m2/254 - m*m);
 	TLatex *l = new TLatex( 124, 0.6, Form( "<mid-point> = %.2f#pm%.2f", m, em) );
 	l->Draw();
 	double w = sum_w/254;
-	double ew = sum_w2/254 - w*w;
+	double ew = sqrt(sum_w2/254 - w*w);
 	l = new TLatex( 124, 0.4, Form( "<width> = %.2f#pm%.2f", w, ew) );
 	l->Draw();
 

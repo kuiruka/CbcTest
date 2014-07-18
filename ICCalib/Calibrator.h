@@ -36,6 +36,8 @@
 #include <map>
 #include "Cbc/CbcRegInfo.h"
 #include "CbcDaq/DAQController.h"
+#include "Analysers/GUIData.h"
+//#include "TestGroup.h"
 
 class TPad;
 
@@ -44,18 +46,33 @@ namespace Strasbourg{
 	class Data;
 	class Event;
 }
+
+namespace Analysers{
+	class ScurveAnalyser;
+	class CalibrationChannelData;
+	class CalibrationCbcData;
+	typedef DataContainer<CalibrationChannelData, CalibrationCbcData> CalibrationResult; 
+}
+namespace ICCalib{
+	typedef std::pair< std::string, UInt_t > CalibItem;
+	typedef std::map< std::string, UInt_t > CalibSetting; 
+}
+
+namespace Cbc{
+	template <class T> class _TestGroup;
+	template <class T> class _TestGroupMap;
+	typedef _TestGroup<UInt_t>                    TestGroup;
+	typedef _TestGroupMap<UInt_t>                 TestGroupMap;
+	typedef _TestGroup<Analysers::Channel<Analysers::CalibrationChannelData> >   CalibrationTestGroup;
+	typedef _TestGroupMap<Analysers::Channel<Analysers::CalibrationChannelData> > CalibrationTestGroupMap;
+}
+
 using namespace Cbc;
 using namespace Strasbourg;
 using namespace CbcDaq;
+using namespace Analysers;
 
 namespace ICCalib{
-
-	class ScurveAnalyser;
-	class CalibrationResult;
-	class TestGroupMap;
-
-	typedef std::pair< std::string, UInt_t > CalibItem;
-	typedef std::map< std::string, UInt_t > CalibSetting; 
 
 	class Calibrator: public DAQController {
 
@@ -75,14 +92,14 @@ namespace ICCalib{
 			const CalibSetting &GetCalibSetting()const{ return fCalibSetting; }
 			UInt_t GetCalibSetting( const char *pNode ) const { return fCalibSetting.find(pNode )->second; }
 			const TestGroupMap *GetTestPulseGroupMap()const{ return fTestPulseGroupMap; }
-			const TestGroupMap *GetTestGroupMap()const{ return fTestGroupMap; }
+			const CalibrationTestGroupMap *GetTestGroupMap()const{ return fTestGroupMap; }
 			const std::vector<UInt_t> &GetGroupList()const{ return fGroupList; }
 			UInt_t GetCurrentTestPulseGroup()const{ return fCurrentTestPulseGroup; }
 			const CalibrationResult *GetCalibrationResult()const;
 
 			void SetVplusVsVCth0GraphDisplayPad( UInt_t pFeId, TPad *pPad );
 			void SetScurveHistogramDisplayPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );
-			void ReadSettingFile( const char *pFname );
+			void ReadSettingFile( const char *pFname ); //Called by DAQController::Initialise()
 
 			//functions used internally for a moment.
 			Int_t GetDataStreamHistId( UInt_t pFeId, UInt_t pCbcId );
@@ -90,7 +107,6 @@ namespace ICCalib{
 			void CalibrateOffsets();
 
 			void ConfigureVplusScan( UInt_t pVplus );
-			void ActivateGroup( UInt_t pGroupId );
 			void ConfigureCbcOffset( Int_t pTargetOffsetBit, UInt_t &pMinVCth, UInt_t &pMaxVCth );
 
 			void VCthScanForVplusCalibration( UInt_t pVplus ); 
@@ -103,17 +119,15 @@ namespace ICCalib{
 			void SetCalibratedOffsets();
 
 		private:
-			void initialiseSetting();
+			void initialiseSetting(); //Called by DAQController::Initialise()
 
 			CalibSetting                    fCalibSetting;
 
-			ScurveAnalyser                  *fScurveAnalyser;
-			TestGroupMap                    *fTestPulseGroupMap;
-			TestGroupMap                    *fTestGroupMap;
+			ScurveAnalyser                       *fScurveAnalyser;
+			CalibrationTestGroupMap              *fTestGroupMap;
 
 			std::vector<UInt_t>             fGroupList;
-			Int_t                           fCurrentTestPulseGroup;
-			
+
 			UInt_t                          fNonTestGroupOffset;
 			UInt_t							fNAcq;
 	};

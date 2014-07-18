@@ -1,6 +1,5 @@
 #include "GUICalibHistoFrame.h"
 #include "CbcDaq/GUI.h"
-#include "CalibrationResult.h"
 #include <TRootEmbeddedCanvas.h>
 #include <TCanvas.h>
 #include <TGFrame.h>

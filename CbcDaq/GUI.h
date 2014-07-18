@@ -17,6 +17,8 @@ namespace CbcDaq{
 	extern UInt_t gMainFrameWidth;
 	extern UInt_t gMainFrameHeight;
 	extern UInt_t gNumberEntryId;
+	extern UInt_t gDaqMainConfigFrameNumberEntryId;
+	extern UInt_t gCbcRegFramesNumberEntryId;
 	extern TGLayoutHints *gLHVexpand;	
 	extern TGLayoutHints *gLHexpand; 
 	extern TGLayoutHints *gLHexpandTop; 

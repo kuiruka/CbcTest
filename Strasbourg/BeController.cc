@@ -85,7 +85,7 @@ namespace Strasbourg{
 
 		GlibSetting::iterator cIt = fGlibSetting.begin();
 		for(; cIt != fGlibSetting.end(); cIt++ ){
-                        //std::cout << cIt->first << " " << cIt->second << std::endl;
+			//std::cout << cIt->first << " " << cIt->second << std::endl;
 			fBoard->getNode( cIt->first ).write( (uint32_t) cIt->second );
 		}
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.SPURIOUS_FRAME").write(0);
@@ -201,8 +201,8 @@ namespace Strasbourg{
 		}
 #endif
 		//Read SRAM
-                //std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
-                //Block size = 42 * ( packet # + 1 )
+		//std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
+		//Block size = 42 * ( packet # + 1 )
 		uhal::ValVector<uint32_t> cData = fBoard->getNode(fStrSram).readBlock(cBlockSize);
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -215,7 +215,7 @@ namespace Strasbourg{
 		fBoard->dispatch();//Mandatory or else sramX_full remains to 1
 		fBoard->getNode(fStrReadout).write(1);
 		fBoard->dispatch();
-                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
+		//                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
 
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -282,7 +282,7 @@ namespace Strasbourg{
 		fNTotalAcq++;
 	}
 	void BeController::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq ){
-                
+
 		boost::posix_time::milliseconds cPause(200);
 
 		unsigned int cSize( pVecReq.size() );
@@ -293,16 +293,16 @@ namespace Strasbourg{
 			while( i < cSize ){
 				unsigned int j = i + fI2cSramSize < cSize ? i + fI2cSramSize : cSize;
 				std::vector<uint32_t> cVecReq ( cIt + i, cIt + j );
-		//		std::cout << i << "\t" << j << "\t" << cVecReq.size() << std::endl;
-		//		std::vector<uint32_t>::iterator cItRead0 = cVecReq.begin();
-		//		for(; cItRead0 != cVecReq.end(); cItRead0++ ){
-		//			DecodeRegInfo( *cItRead0, c, p, a, w );
-		//	//		if( p == 0 )std::cout << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
-		//		}
+				//		std::cout << i << "\t" << j << "\t" << cVecReq.size() << std::endl;
+				//		std::vector<uint32_t>::iterator cItRead0 = cVecReq.begin();
+				//		for(; cItRead0 != cVecReq.end(); cItRead0++ ){
+				//			DecodeRegInfo( *cItRead0, c, p, a, w );
+				//	//		if( p == 0 )std::cout << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
+				//		}
 				try{
 					WriteCbcRegValues( pFe, cVecReq );
 					ReadCbcRegValues( pFe, cVecReq );
-//					boost::this_thread::sleep(cPause);
+					//					boost::this_thread::sleep(cPause);
 				}
 				catch( Exception &e ){
 					throw e;
@@ -491,7 +491,7 @@ namespace Strasbourg{
 		//}
 		uhal::ValVector<uint32_t> cData = fBoard->getNode(fStrSram).readBlock( pVecReq.size() );
 		fBoard->dispatch();
-                if( cData.size() > 255 ) std::cout << "Reading I2C readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
+		if( cData.size() > 255 ) std::cout << "Reading I2C readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
 		fBoard->getNode(fStrSramUserLogic).write(1);
 		fBoard->getNode("cbc_i2c_cmd_rq").write(0);
 		fBoard->dispatch();

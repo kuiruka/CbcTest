@@ -10,9 +10,14 @@
 
 int main( int argc, char *argv[] ){
 
+	TString cSettingFile( "settings/CbcCalibElectron.txt" );
+	if( argc >= 2 ){
+		cSettingFile = argv[1];
+	}
+
 	TApplication theApp( "App", &argc, argv );
 
-	ICCalib::Calibrator *cDaq = new ICCalib::Calibrator( "settings/CbcCalibElectron.txt" );
+	ICCalib::Calibrator *cDaq = new ICCalib::Calibrator( cSettingFile );
 
 	cDaq->Initialise();
 
