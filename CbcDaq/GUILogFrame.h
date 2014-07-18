@@ -19,6 +19,7 @@ class LogFrame : public TGTextView{
 	private:
 		TGCompositeFrame *fMotherFrame;
 		GUIFrame *fGUIFrame;
+		std::string                     fLogFileName;
 };
 }
 
