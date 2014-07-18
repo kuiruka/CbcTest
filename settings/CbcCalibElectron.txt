@@ -19,8 +19,8 @@ GlibReg_user_wb_ttc_fmc_regs.pc_commands2.clock_shift           :          0
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC    :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_sTTS   :          0
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.polarity_tlu          :          0
-CbcConfig_FE0CBC0 : settings/FE0CBC0_sensor.txt
-CbcConfig_FE0CBC1 : settings/FE0CBC1_sensor.txt
+CbcConfig_FE0CBC0 : settings/FE0CBC0.txt
+CbcConfig_FE0CBC1 : settings/FE0CBC1.txt
 Calib_InitialOffset :  0x00
 Calib_TargetOffset  :  0x50
 Calib_TargetVCth    :  0x78
