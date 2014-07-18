@@ -1,7 +1,10 @@
-CbcTest
+WARNING
 =======
 
-Most stable version for the current 2CBC2 setup found in branch "CbcTestForIPbus2.2". Includes firmware versions for both polarities. 
+Most stable version for the current 2CBC2/virtual machine setup found in branch "CbcTestForIPbus2.2". Includes firmware versions for both polarities.
+
+CbcTest
+=======
 
 Please check the folder doc/ for more info.
 
