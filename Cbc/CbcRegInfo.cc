@@ -9,7 +9,7 @@ namespace Cbc{
 
 		fReadValue = pReadValue; 
 
-		std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
+//		std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 		if( fReadValue != fWrittenValue ){ 
 			std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 			if( fPage == 0 && fAddress == 0 ){

@@ -46,6 +46,7 @@ namespace Analysers{
 			virtual void DrawText();
 			virtual void FinishRun(){}
 			virtual void SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
+			virtual TString Dump(){ return TString();}
 			virtual void SetTextView( TGTextView *pTextView ){ fTextView = pTextView; }
 			void ShowDataStream( Bool_t pShow ){ fShowDataStream = pShow; }
 			Bool_t ShowDataStream(){ return fShowDataStream; }

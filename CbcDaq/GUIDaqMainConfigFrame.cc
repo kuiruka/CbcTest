@@ -3,6 +3,7 @@
 #include "DAQController.h"
 #include "GUIFrame.h"
 #include "TGNumberEntry.h"
+#include "TGLabel.h"
 
 namespace CbcDaq{
 
@@ -72,9 +73,24 @@ namespace CbcDaq{
 		cIt = cGlibSetting.find("CBC_expected");
 		AddGlibSettingItem( cIt->first.c_str(), cIt->second, ++cRowId, cGlibSettingFrame );
 
+		cIt = cGlibSetting.find( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET" );
+		AddGlibSettingItem( cIt->first.c_str(), cIt->second, ++cRowId, cGlibSettingFrame );
+
+		cIt = cGlibSetting.find( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" );
+		AddGlibSettingItem( cIt->first.c_str(), cIt->second, ++cRowId, cGlibSettingFrame );
+
+		cIt = cGlibSetting.find( "COMMISSIONNING_MODE_DELAY_AFTER_L1A" );
+		AddGlibSettingItem( cIt->first.c_str(), cIt->second, ++cRowId, cGlibSettingFrame );
+
 		cIt = cGlibSetting.begin();
 		for( ; cIt != cGlibSetting.end(); cIt++ ){
-			if( cIt->first == "FE_expected" || cIt->first == "CBC_expected" ) {
+			if( cIt->first    == "FE_expected" 
+					|| cIt->first == "CBC_expected"
+					|| cIt->first == "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET"
+					|| cIt->first == "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" 
+					|| cIt->first == "COMMISSIONNING_MODE_DELAY_AFTER_L1A"
+			  ) {
+
 				continue;
 			}
 			AddGlibSettingItem( cIt->first.c_str(), cIt->second, ++cRowId, cGlibSettingFrame );
@@ -191,8 +207,8 @@ namespace CbcDaq{
 	}
 
 	RunConfigurationFrame::RunConfigurationFrame( TGCompositeFrame *pFrame, GUIFrame *pGUIFrame ):
-		TGCompositeFrame( pFrame, gMainFrameWidth/3, gMainFrameHeight ),
-		fMotherFrame( pFrame ), fGUIFrame( pGUIFrame ), fFrame(0){
+		TGVerticalFrame( pFrame, gMainFrameWidth/3, gMainFrameHeight ),
+		fMotherFrame( pFrame ), fGUIFrame( pGUIFrame ), fFrame(0), fInputLogGroupFrame(0), fInputLogFrame(0){
 
 			fMotherFrame->AddFrame( this, gLHVexpand );
 			RenewFrame();
@@ -209,6 +225,15 @@ namespace CbcDaq{
 		fFrame = new TGGroupFrame( this, "Run Configuration", kVerticalFrame ); 
 		AddFrame( fFrame, gLHexpandTop );
 
+		if( fInputLogGroupFrame ){
+			fInputLogFrame->Clear();
+		}
+		else{
+			fInputLogGroupFrame = new TGGroupFrame( this, "Log for this run", kVerticalFrame ); 
+			AddFrame( fInputLogGroupFrame, gLHVexpand );
+			fInputLogFrame = new TGTextEdit( fInputLogGroupFrame );
+			fInputLogGroupFrame->AddFrame( fInputLogFrame, gLHVexpand );
+		}
 		TGCompositeFrame *cFrame = new TGCompositeFrame( fFrame, gMainFrameWidth/2, gMainFrameHeight );
 		fFrame->AddFrame( cFrame, gLHVexpand );
 

@@ -3,6 +3,7 @@
 
 #include <TGFrame.h>
 #include <TGTextEntry.h>
+#include <TGTextEdit.h>
 
 class TGNumberEntry;
 
@@ -57,12 +58,13 @@ namespace CbcDaq{
 			CbcRegFileNameEntries           fCbcRegFileNameEntries;
 	};
 
-	class RunConfigurationFrame : public TGCompositeFrame{
+	class RunConfigurationFrame : public TGVerticalFrame{
 
 		public:
 			RunConfigurationFrame( TGCompositeFrame *pFrame, GUIFrame *pGUIFrame );
 			virtual ~RunConfigurationFrame(){}
 			void RenewFrame();
+			TGTextEdit *GetInputLogFrame(){ return fInputLogFrame; }
 			void SetColors( ULong_t pColor ); 
 			void AddRunSettingItem( const char *pName, UInt_t pValue, UInt_t pRowId, TGCompositeFrame *pFrame );
 			const RunSettingEntries &GetRunSettingEntries()const{ return fRunSettingEntries; }
@@ -71,7 +73,9 @@ namespace CbcDaq{
 			TGCompositeFrame                *fMotherFrame;
 			GUIFrame                        *fGUIFrame;
 			TGGroupFrame                    *fFrame;
-			RunSettingEntries              fRunSettingEntries;
+			RunSettingEntries               fRunSettingEntries;
+			TGGroupFrame                    *fInputLogGroupFrame;
+			TGTextEdit                      *fInputLogFrame;
 	};
 
 	class DaqMainConfigurationFrame : public TGHorizontalFrame {
@@ -82,6 +86,7 @@ namespace CbcDaq{
 			void RenewGlibMainConfigurationFrame();
 			void RenewCbcRegFileNameFrame(); 
 			void RenewRunConfigurationFrame();
+			TGTextEdit *GetInputLogFrame(){ return fRunConfigFrame->GetInputLogFrame(); } 
 			void SetGlibConfigColors( ULong_t pColor ); 
 			void SetRunConfigColors( ULong_t pColor ); 
 			void SetCbcRegFileNameColors( ULong_t pColor );

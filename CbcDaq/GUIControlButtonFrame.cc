@@ -201,7 +201,8 @@ namespace CbcDaq{
 				gClient->GetColorByName( "gray", cColor );
 				if( fProcessButtons.size() == 1 ){
 					fProcessButtons[0]->SetBackgroundColor( cColor );
-					fProcessButtons[0]->SetState( kButtonUp );
+//					fProcessButtons[0]->SetState( kButtonUp );
+					fProcessButtons[0]->SetState( kButtonDisabled );
 					gClient->NeedRedraw( fProcessButtons[0] );
 				}
 				fExitButton->SetState( kButtonDisabled ); 

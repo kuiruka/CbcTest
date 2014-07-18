@@ -45,18 +45,25 @@ namespace Analysers{
 					const char *pOutputDir,
 					GUIFrame *pGUIFrame = 0 );
 			virtual ~ErrorAnalyser();
-			void  Initialise();
+			void   Initialise();
 			void   Configure(){;}
-			void ConfigureRun();
-			void SetL1APointer( UInt_t pValue ){ fL1APointer = pValue; }
-			void ResetHist();
-			UInt_t   Analyse( const Event *pEvent, bool pFillDataStream = true );
-			void DrawHists();
-			void DrawText();
-			void SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
+			void   ConfigureRun();
+			void   SetL1APointer   ( UInt_t pValue )        { fL1APointer = pValue; }
+			void   SetNclockFRtoL1A( UInt_t pNclockFRtoL1A ){ fNclockFRtoL1A = pNclockFRtoL1A; }
+			void   SetNclock1Cycle ( UInt_t pNclock1Cycle  ){ fNclock1Cycle  = pNclock1Cycle;  }
+			void   SetBeamIntensity( UInt_t pBeamIntensity ){ fBeamIntensity = pBeamIntensity;  }
+			void   ResetHist();
+			UInt_t Analyse( const Event *pEvent, bool pFillDataStream = true );
+			void   DrawHists();
+			TString Dump();
+			void   DrawText();
+			void   SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
 
 		private:
 			UInt_t                      fL1APointer;
+			UInt_t                      fNclockFRtoL1A;
+			UInt_t                      fNclock1Cycle;
+			UInt_t                      fBeamIntensity;
 			ErrorAnalyserResult         fResult;
 	};
 

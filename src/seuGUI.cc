@@ -12,19 +12,19 @@ using namespace CbcDaq;
 
 int main( int argc, char *argv[] ){
 
-	TString cSettingFile( "settings/CbcCalibElectron.txt" );
+	TString cSettingFile( "settings/CbcSEUPipelineTestElectron.txt" );
 	if( argc > 1 ){
 		cSettingFile = argv[1];
 	}
 
 	TApplication theApp( "App", &argc, argv );
 
-	std::string cAnalyserName = "Analyser";
+	std::string cAnalyserName = "ErrorAnalyser";
 	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), cSettingFile );
 
 	cDaq->Initialise();
 
-	GUIFrame cGUIFrame( gClient->GetRoot(), gMainFrameWidth, gMainFrameHeight, "CbcDaqAnalysis", cDaq );
+	GUIFrame cGUIFrame( gClient->GetRoot(), gMainFrameWidth, gMainFrameHeight, "CbcDaqErrorAnalysis", cDaq );
 
 	cGUIFrame.AddFrames();
 

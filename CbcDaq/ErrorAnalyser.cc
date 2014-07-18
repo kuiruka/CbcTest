@@ -217,11 +217,10 @@ namespace Analysers{
 			}
 		}
 	}
-	void ErrorAnalyser::DrawText(){
+	TString ErrorAnalyser::Dump(){
 
-		if( !fGUIFrame ) return;
+		TString cStr;
 
-		fTextView->Clear();
 		ErrorAnalyserResult::iterator cItFe = fResult.begin();
 		for( ; cItFe != fResult.end(); cItFe++ ){
 
@@ -234,7 +233,10 @@ namespace Analysers{
 				ErrorAnalyserCbcInfo &cCbcInfo = cItCbc->second;
 				ErrorHistGroup &cErrorHistGroup = cCbcInfo.GetData();
 
-				fTextView->AddText( new TGText( Form( "FE%uCBC%u\n", cFeId, cCbcId )  ) );
+				cStr += Form( "==================================================================================================================\n" );
+				cStr += Form( "FE%uCBC%u\n", cFeId, cCbcId );
+				cStr += Form( "                                                                               %8s %8s %8s %8s\n", "00", "01", "10", "11" );
+				cStr += Form( "------------------------------------------------------------------------------------------------------------------\n" );
 
 				UInt_t cNe00 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(1); 
 				UInt_t cNe01 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(2); 
@@ -242,23 +244,51 @@ namespace Analysers{
 				UInt_t cNe11 = (UInt_t) cErrorHistGroup.fError.first->GetBinContent(4); 
 				UInt_t cN    = (UInt_t) cErrorHistGroup.fData.first->GetBinContent( cErrorHistGroup.fData.first->GetNbinsX() + 1 );
 
-				Float_t cRe00 = cNe00 / cN;
-				Float_t cRe01 = cNe01 / cN;
-				Float_t cRe10 = cNe10 / cN;
-				Float_t cRe11 = cNe11 / cN;
+				cStr += Form( "#    of ERROR                                                                : %8u %8u %8u %8u\n", cNe00, cNe01, cNe10, cNe11 ); 	
 
-				fTextView->AddText( new TGText( Form( "#    of ERROR 00 01 10 11: %8u %8u %8u %8u", cNe00, cNe01, cNe10, cNe11 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "# of ERROR 01 : %5u", cNe01 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "# of ERROR 10 : %5u", cNe10 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "# of ERROR 11 : %5u", cNe11 ) ) ); 	
+				Float_t cP00 = cNe00 / cN;
+				Float_t cP01 = cNe01 / cN;
+				Float_t cP10 = cNe10 / cN;
+				Float_t cP11 = cNe11 / cN;
 
-				fTextView->AddText( new TGText( Form( "Rate of ERROR 00 01 10 11: %5f %5f %5f %5f", cRe00, cRe01, cRe10, cRe11 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "Rate of ERROR 01 : %5f", cRe01 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "Rate of ERROR 10 : %5f", cRe10 ) ) ); 	
-//				fTextView->AddText( new TGText( Form( "Rate of ERROR 11 : %5f", cRe11 ) ) ); 	
-				fTextView->AddText( new TGText( Form( "Expected pipeline address : %8u", cErrorHistGroup.fExpectedPipelineAddress ) ) ); 
+				cStr += Form( "%%    of ERROR                                                                : %8.3f %8.3f %8.3f %8.3f\n", cP00, cP01, cP10, cP11 ); 	
+
+				Float_t cTime = fNclockFRtoL1A * 25. * cN; 
+				Float_t cRe00 = cNe00 / cTime;
+				Float_t cRe01 = cNe01 / cTime;
+				Float_t cRe10 = cNe10 / cTime;
+				Float_t cRe11 = cNe11 / cTime;
+
+				cStr += Form( "Rate of ERROR 1E-9/sec (Live time : FAST RESET to L1A          %8.1f sec) : %8.3f %8.3f %8.3f %8.3f\n", cTime*1e-9, cRe00, cRe01, cRe10, cRe11 ); 	
+
+				cTime = fNclock1Cycle * 25. * cN; 
+				cRe00 = cNe00 / cTime;
+				cRe01 = cNe01 / cTime;
+				cRe10 = cNe10 / cTime;
+				cRe11 = cNe11 / cTime;
+
+				cStr += Form( "Rate of ERROR 1E-9/sec (Live time : FAST RESET to FAST RESET)  %8.1f sec) : %8.3f %8.3f %8.3f %8.3f\n", cTime*1e-9, cRe00, cRe01, cRe10, cRe11 ); 	
+
+				double cTimeIntensity = cTime * (double)fBeamIntensity;
+				cRe00 = cNe00 / cTimeIntensity;
+				cRe01 = cNe01 / cTimeIntensity;
+				cRe10 = cNe10 / cTimeIntensity;
+				cRe11 = cNe11 / cTimeIntensity;
+				cStr += Form( "Rate of ERROR 1E-9/(sec * intensity unit)                                    : %8.3f %8.3f %8.3f %8.3f\n", cRe00, cRe01, cRe10, cRe11 ); 	
+
+				cStr += Form( "------------------------------------------------------------------------------------------------------------------\n" );
+				cStr += Form( "Expected pipeline address                                                    :                            %8u\n", cErrorHistGroup.fExpectedPipelineAddress ); 
 			}
+			cStr += Form( "==================================================================================================================\n" );
 		}
+		return cStr;
+	}
+	void ErrorAnalyser::DrawText(){
+
+		if( !fGUIFrame ) return;
+
+		fTextView->Clear();
+		fTextView->LoadBuffer( Dump().Data() );
 	}
 
 	void ErrorHistGroup::SetHistograms( UInt_t pBeId, UInt_t pFeId, UInt_t pCbcId ){
