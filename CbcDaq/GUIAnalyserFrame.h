@@ -11,6 +11,9 @@ namespace CbcDaq{
 	class AnalyserHistFrame;
 
 	class AnalyserFrame : public TGCompositeFrame {
+
+		public:
+		static const double fTextFrameHeight;
 		public:
 			AnalyserFrame( TGCompositeFrame *pFrame, GUIFrame *pGUIFrame );
 			virtual ~AnalyserFrame(){}

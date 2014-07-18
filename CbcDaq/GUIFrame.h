@@ -68,6 +68,7 @@ namespace CbcDaq{
 			virtual void ShowDataStream();
 			virtual void UpdateCbcRegFrame( std::vector<const CbcRegItem *> pList );
 			virtual void SetCbcRegFileName( UInt_t pFeId, UInt_t pCbcId, const char *pName );
+			virtual TGTextEdit *GetInputLogFrame(){ return fDaqMainConfigFrame->GetInputLogFrame(); } 
 			DAQController *GetDAQController(){ return fDAQController; }
 			ClassDef( GUIFrame, 0 );
 		protected:

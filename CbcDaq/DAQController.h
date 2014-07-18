@@ -27,7 +27,7 @@ namespace Strasbourg{
 }
 using namespace Cbc;
 using namespace Strasbourg;
-
+using namespace Analysers;
 
 namespace CbcDaq{
 
@@ -117,6 +117,7 @@ namespace CbcDaq{
 			unsigned int                    fNeventPerAcq;
 			bool                            fNegativeLogicCBC;
 			bool                            fStop;
+			std::ofstream                   fLogFile;
 
 			TestGroupMap                         *fTestPulseGroupMap;
 			TestGroupMap                         *fAnalyserGroupMap;

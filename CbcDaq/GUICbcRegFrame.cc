@@ -43,8 +43,9 @@ namespace CbcDaq {
 			fLabelValue->ChangeOptions( fLabelValue->GetOptions() | kFixedWidth );
 			fLabelValue->Resize( 22, 20 );
 
-			fNumberEntry = new TGNumberEntry( this, pCbcRegItem->WrittenValue(), 2, ++gNumberEntryId, 
+			fNumberEntry = new TGNumberEntry( this, pCbcRegItem->WrittenValue(), 2, ++gCbcRegFramesNumberEntryId, 
 					TGNumberFormat::kNESHex, TGNumberFormat::kNEANonNegative, TGNumberFormat::kNELLimitMinMax, 0, 0xFF  );
+//			std::cout << pCbcRegItem->Page() << ", " << pCbcRegItem->Address() << ", " << gCbcRegFramesNumberEntryId << std::endl;
 			fNumberEntry->Connect( "ValueSet(Long_t)", "CbcDaq::CbcRegWidget", this, "AddUpdateItem()" );
 			Bool_t cWriteFailed = fCbcRegItem->WriteFailed();
 			if( cWriteFailed ) {
@@ -149,7 +150,8 @@ namespace CbcDaq {
 		TGTab( pFrame, gMainFrameWidth, gMainFrameHeight ),
 		fMotherFrame( pFrame ),
 		fGUIFrame( pGUIFrame ),
-		fCbcRegFrames( pCbcRegFrames ){
+		fCbcRegFrames( pCbcRegFrames ),
+		fConfigureFailed( false ){
 
 			fMotherFrame->AddFrame( this, gLHVexpand );
 
@@ -169,6 +171,9 @@ namespace CbcDaq {
 				UInt_t cPCount(0);
 				for( UInt_t i=0; i<pCRL.size(); i++ ){
 					UInt_t cItemPage = pCRL[i]->Page();	
+					if( pCRL[i]->WriteFailed() ){
+						fConfigureFailed = true;
+					}
 					if( cItemPage != cPage ) continue; 
 					UInt_t cWidth( 370 );
 					if( cPage == 1 ) cWidth = 100; 
@@ -195,7 +200,10 @@ namespace CbcDaq {
 		fTabFrame(0),
 		fCommandFrame(0),
 		fCbcRegUpdateButton(0),
-		fCbcRegUpdateResetButton(0){
+		fCbcRegUpdateResetButton(0),
+		fConfigureFailed( false ){
+
+			gCbcRegFramesNumberEntryId = gDaqMainConfigFrameNumberEntryId;
 
 			fMotherFrame->AddFrame( this, gLHexpandTop );
 
@@ -210,10 +218,13 @@ namespace CbcDaq {
 			fCbcRegUpdateResetButton->Connect( "Clicked()", "CbcDaq::CbcRegFrames", this, "ResetCbcRegUpdateList()" );
 			fCommandFrame->AddFrame( fCbcRegUpdateResetButton, new TGLayoutHints( kLHintsCenterX, 5, 5, 3, 4 ) );
 
+			gNumberEntryId = gCbcRegFramesNumberEntryId;
 		}
 
 	void CbcRegFrames::RenewCbcRegFrames(){
 
+		gCbcRegFramesNumberEntryId = gDaqMainConfigFrameNumberEntryId;
+		fConfigureFailed = false;
 		if( fTabFrame ){
 			RemoveFrame( fTabFrame );
 			fTabFrame->DestroyWindow();
@@ -245,9 +256,9 @@ namespace CbcDaq {
 				TGVerticalFrame *cCbcVFrame = new TGVerticalFrame( cCbcFrame, gMainFrameWidth, gMainFrameHeight );
 				cCbcFrame->AddFrame( cCbcVFrame, gLHVexpand );
 
-
 				new CbcRegRWFileCommandFrame( cCbcVFrame, cCRL, fGUIFrame );
-				new CbcRegFrame( cCRL, cCbcVFrame, fGUIFrame, this ); 
+				CbcRegFrame *cRegFrame = new CbcRegFrame( cCRL, cCbcVFrame, fGUIFrame, this ); 
+				if( cRegFrame->ConfigureFailed() ) fConfigureFailed = true; 
 
 				//			cCbcFrame->MapSubwindows();
 				//			cCbcFrame->Layout();
@@ -261,6 +272,7 @@ namespace CbcDaq {
 		Layout();
 		fMotherFrame->MapSubwindows();
 		fMotherFrame->Layout();
+		gNumberEntryId = gCbcRegFramesNumberEntryId;
 	}
 
 	void CbcRegFrames::AddCbcRegUpdateItem( const CbcRegItem *pCbcRegItem, UInt_t cValue ){

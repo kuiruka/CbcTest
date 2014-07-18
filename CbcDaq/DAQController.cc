@@ -2,7 +2,7 @@
 #include <boost/format.hpp>
 #include <boost/date_time.hpp>
 #include <boost/thread.hpp>
-#include <time.h>
+#include <ctime>
 #include <iostream>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -83,11 +83,13 @@ namespace CbcDaq{
 	}
 	void DAQController::initialiseSetting(){
 
+		fRunSetting.insert( RunItem( "1)RunNumber", 1 ) );
+		fRunSetting.insert( RunItem( "2)BeamIntensity", 0 ) );
+		fRunSetting.insert( RunItem( "3)Nevents", 0 ) );
+		fRunSetting.insert( RunItem( "4)SaveData", 0 ) );
 		fRunSetting.insert( RunItem( "EnableTestPulse", 0 ) );
-		fRunSetting.insert( RunItem( "TestPulsePotentiometer", 0xF1 ) );
 		fRunSetting.insert( RunItem( "TestGroup", 0 ) );
-		fRunSetting.insert( RunItem( "Nevents", 0 ) );
-		fRunSetting.insert( RunItem( "SaveData", 0 ) );
+		fRunSetting.insert( RunItem( "TestPulsePotentiometer", 0xF1 ) );
 	}
 	void DAQController::Initialise(){
 
@@ -145,7 +147,7 @@ namespace CbcDaq{
 			UInt_t cExpectedCBC = fHwController->GetGlibSetting( "CBC_expected" );	
 			fNCbc = cExpectedCBC == 1 ? 1 : 2;	
 			fNegativeLogicCBC = (bool)fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC" );
-			fNeventPerAcq = fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" );
+			fNeventPerAcq     =       fHwController->GetGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" );
 
 			TString msg;
 			const GlibSetting &cGlibSetting = GetGlibSetting();	
@@ -195,19 +197,23 @@ namespace CbcDaq{
 
 		void DAQController::ConfigureAnalyser(){
 
-			fOutputDir = Form( "BE%01uNeg%d", fBeId, fNegativeLogicCBC );
-			system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
-
 			delete fAnalyser;
 			
 			if( fAnalyserName == "Analyser" ){
 
-				fAnalyser = new Analyser( fBeId, fNFe, fNCbc, 
-						&( fHwController->GetCbcRegSetting() ),
-						fNegativeLogicCBC, fOutputDir.c_str(), fGUIFrame ); 
+			fOutputDir = Form( "BE%01uNeg%d", fBeId, fNegativeLogicCBC );
+			system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
+
+			fAnalyser = new Analyser( fBeId, fNFe, fNCbc, 
+					&( fHwController->GetCbcRegSetting() ),
+					fNegativeLogicCBC, fOutputDir.c_str(), fGUIFrame ); 
 
 			}
 			if( fAnalyserName == "ErrorAnalyser" ){
+
+
+				fOutputDir = Form( "SEUTestBE%01uNeg%d", fBeId, fNegativeLogicCBC );
+				system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 				fAnalyser = new ErrorAnalyser( fBeId, fNFe, fNCbc, 
 						&( fHwController->GetCbcRegSetting() ),
@@ -215,21 +221,46 @@ namespace CbcDaq{
 			}
 			fAnalyser->Initialise();
 
+
 			Emit( "Message( const char * )", Form( "%s Configured.", fAnalyserName.Data() ) ); 
 
 			return;
 		}
 		void DAQController::ConfigureRun(){
 
+			time_t timer;
+			struct tm *t_st;
+			time(&timer);
+			t_st = localtime( &timer );
+
+			int cRunNumber = fRunSetting.find( "1)RunNumber" )->second;
+			TString cStrLogFileName = Form( "LogRun%06d-%02d%02d%02d%02d%02d.txt", cRunNumber, t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
+			fLogFile.open( (fOutputDir + "/" + cStrLogFileName.Data() ).c_str() );
+
 			TString msg;
+			const GlibSetting &cGlibSetting = GetGlibSetting();	
+			GlibSetting::const_iterator cItG = cGlibSetting.begin();
+			for( ; cItG != cGlibSetting.end(); cItG++ ){
+				msg = Form( "\tGlibReg_%-70s : %10d", cItG->first.c_str(), cItG->second );
+				fLogFile << msg << std::endl; 
+			}
+			for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+					const std::string &cFname =	fHwController->GetCbcRegSettingFileName( cFe, cCbc );
+					msg = Form( "\tCbcConfig_FE%d_CBC_%d : %s", cFe, cCbc, cFname.c_str() );
+					fLogFile << msg << std::endl;
+				}
+			}
 			RunSetting::const_iterator cItC = fRunSetting.begin();
 			for( ; cItC != fRunSetting.end(); cItC++ ){
-				msg = Form( "\tRun_%-30s : %010d", cItC->first.c_str(), cItC->second );
+				msg = Form( "\tRun_%-30s : %10d", cItC->first.c_str(), cItC->second );
 				Emit( "Message( const char * )", msg.Data() ); 
+				fLogFile << msg << std::endl;
 			}
 			UInt_t cEnableTestPulse = fRunSetting.find( "EnableTestPulse"        )->second;
 			UInt_t cTPPot           = fRunSetting.find( "TestPulsePotentiometer" )->second;
 			UInt_t cGroupId         = fRunSetting.find( "TestGroup"              )->second;
+
 			for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
 				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
 					fHwController->AddCbcRegUpdateItemsForEnableTestPulse( cFe, cCbc, cEnableTestPulse );
@@ -241,12 +272,42 @@ namespace CbcDaq{
 			}
 			UpdateCbcRegValues();
 
-			fAnalyser->ConfigureRun();
+			if( fAnalyserName == "ErrorAnalyser" ){
 
-			UInt_t cSaveData         = fRunSetting.find( "SaveData"              )->second;
+				unsigned int cTPDelay         = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET" );
+				unsigned int cL1ADelayAfterTP = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" );
+				unsigned int cFRDelayAfterL1A = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A"        );
+				unsigned int cStopClockSEU    = GetGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU"         );
+                unsigned int cBeamIntensity   = fRunSetting.find( "2)BeamIntensity" )->second;
+
+				unsigned int cL1APointer( cTPDelay - 2 );
+				unsigned int cNclockFRtoL1A = cTPDelay + cL1ADelayAfterTP; 
+				unsigned int cNclockCycle   = cNclockFRtoL1A + cFRDelayAfterL1A;
+
+				if( cStopClockSEU == 0 ){
+					cL1APointer += cL1ADelayAfterTP;
+				}
+				else{
+					cL1APointer += 3;
+				}
+				cL1APointer %= 256;
+				( (ErrorAnalyser *)fAnalyser )->SetL1APointer   ( cL1APointer    );
+				( (ErrorAnalyser *)fAnalyser )->SetNclockFRtoL1A( cNclockFRtoL1A );
+				( (ErrorAnalyser *)fAnalyser )->SetNclock1Cycle ( cNclockCycle   );
+				( (ErrorAnalyser *)fAnalyser )->SetBeamIntensity( cBeamIntensity );
+			}
+			fAnalyser->ConfigureRun();
+			Emit( "Message( const char * )", "Run Configured" );
+
+			UInt_t cSaveData         = fRunSetting.find( "4)SaveData"              )->second;
 			if( cSaveData ){
+
+				int cRunNumber = fRunSetting.find( "1)RunNumber" )->second;
+				TString cStrFileName = Form( "RawDataRun%06d-%02d%02d%02d%02d%02d.dat", cRunNumber, t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
+
 				delete fDataFile;
-				fDataFile = new std::ofstream( (fOutputDir + "/RawData.dat").c_str(), std::ofstream::binary );
+				fDataFile = new std::ofstream( (fOutputDir + "/" + cStrFileName.Data() ).c_str(), std::ofstream::binary );
+				fLogFile << "\tOutputFileName : " << cStrFileName << std::endl;
 			}
 		}
 
@@ -254,15 +315,22 @@ namespace CbcDaq{
 
 			fStop = false;
 			UInt_t cInitialNTotalAcq = fHwController->GetNumberOfTotalAcq();
-
-			struct timeval start;
-			gettimeofday( &start, 0 );
-
-			UInt_t cNevents = fRunSetting.find( "Nevents" )->second;
+			UInt_t cNevents = fRunSetting.find( "3)Nevents" )->second;
 			UInt_t cNthAcq = 0;
 			UInt_t cN(0);
 			usleep( 100 );
-			Emit( "Message( const char * )", "RunStart" );
+
+			//message and log for RunStart
+			time_t timer;
+			time(&timer);
+			TString cStrLog = Form( "\tRunStart       : %s", ctime( &timer ) );
+			Emit( "Message( const char * )", cStrLog.Data() );
+			fLogFile << cStrLog; 
+
+			//time
+			struct timeval start;
+			gettimeofday( &start, 0 );
+
 			while( !fStop ){
 
 				fHwController->StartAcquisition();
@@ -274,10 +342,6 @@ namespace CbcDaq{
 				const Event *cEvent = fHwController->GetNextEvent();
 				while( cEvent ){
 
-					if( cNevents != 0 && cN == cNevents ){
-						fStop = true;
-						break;
-					}
 					//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
 					//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
 					fAnalyser->Analyse( cEvent, cFillDataStream );	
@@ -285,6 +349,10 @@ namespace CbcDaq{
 
 					cFillDataStream = false;	
 					cN++; 
+					if( cNevents != 0 && cN == cNevents ){
+						fStop = true;
+						break;
+					}
 				}
 				fAnalyser->DrawHists();
 				fAnalyser->DrawText();
@@ -297,14 +365,42 @@ namespace CbcDaq{
 			long mtime = getTimeTook( start, 1 );
 			long min = (mtime/1000)/60;
 			long sec = (mtime/1000)%60;
-			TString msg = Form( "\tTime took for this calibration loop = %ld min %ld sec.", min, sec ); 
+			gettimeofday( &start, 0 );
+			cStrLog = Form( "\tRunTime        : %ld [msec]",  mtime ); 
+			Emit( "Message( const char * )", cStrLog.Data() );
+			fLogFile << cStrLog << std::endl; 
+
+			TString msg = Form( "\tTime took for this run = %ld min %ld sec.", min, sec ); 
 			Emit( "Message( const char * )", msg.Data() );
+			fLogFile << msg << std::endl;
 			Emit( "Message( const char * )", "RunEnd" );
 			UInt_t cFinalNTotalAcq = fHwController->GetNumberOfTotalAcq();
 			UInt_t cNAcq = cFinalNTotalAcq - cInitialNTotalAcq;
-			Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this calibration.", cNAcq, fNeventPerAcq ) );
+			msg = Form( "\tTotal %d acquisitions (%d events per acq.) are made for this run.", cNAcq, fNeventPerAcq );
+			Emit( "Message( const char * )", msg.Data() );
+			fLogFile << msg << std::endl;
+			msg = fAnalyser->Dump();
+			fLogFile << msg << std::endl;;
+			TObjArray *cStrings = msg.Tokenize( "\n" );
+			if( cStrings->GetEntriesFast()){
+				TIter iString(cStrings);
+				TObjString *os=0;
+				while( (os = (TObjString *) iString() ) ){
+
+					Emit( "Message( const char * )", os->GetString().Data() );
+				}
+			}
+
+			if( fGUIFrame ){
+				msg = fGUIFrame->GetInputLogFrame()->GetText()->AsString();
+				fLogFile << msg << std::endl;
+				Emit( "Message( const char * )", msg.Data() );
+			}
+			fLogFile.close();
 			fAnalyser->FinishRun();
-			fDataFile->close();
+			if( fDataFile )fDataFile->close();
+			int cThisRunNumber = fRunSetting.find( "1)RunNumber" )->second;
+			fRunSetting.find( "1)RunNumber" )->second = cThisRunNumber + 1;
 			return;
 		}
 
@@ -501,23 +597,23 @@ namespace CbcDaq{
 			Emit( "Message( const char * )", "Current CBC register values are saved." );
 		}
 
-	void DAQController::ActivateGroup( UInt_t pGroupId ){
+		void DAQController::ActivateGroup( UInt_t pGroupId ){
 
-		fTestPulseGroupMap->Activate( pGroupId );
+			fTestPulseGroupMap->Activate( pGroupId );
 
-		if( fCurrentTestPulseGroup != (Int_t)pGroupId ){
-			for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
-				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
-					fHwController->AddCbcRegUpdateItemsForNewTestPulseGroup( cFe, cCbc, pGroupId );
+			if( fCurrentTestPulseGroup != (Int_t)pGroupId ){
+				for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
+					for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+						fHwController->AddCbcRegUpdateItemsForNewTestPulseGroup( cFe, cCbc, pGroupId );
+					}
 				}
+				UpdateCbcRegValues();
+				fCurrentTestPulseGroup = pGroupId;
+				Emit( "Message( const char *)", Form( "Activated TestPulseGroup = %d", pGroupId ) );
 			}
-			UpdateCbcRegValues();
-			fCurrentTestPulseGroup = pGroupId;
-			Emit( "Message( const char *)", Form( "Activated TestPulseGroup = %d", pGroupId ) );
-		}
 #ifdef __CBCDAQ_DEV__
-		std::cout << "Activated group is " << pGroupId << std::endl; 
+			std::cout << "Activated group is " << pGroupId << std::endl; 
 #endif
-	}
+		}
 }
 
