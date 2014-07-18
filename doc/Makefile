@@ -1,11 +1,11 @@
 all: CbcCalibInst FirmwareHardware
 
-CbcCalibInst: CbcCalibInst_MR.tex
-	pdflatex -shell-escape $@ 
+CbcCalibInst: CbcCalibInst.tex
+	pdflatex -shell-escape $< 
 	bibtex   $@ 
-	pdflatex -shell-escape $@ 
-	pdflatex -shell-escape $@ 
-	pdflatex -shell-escape $@ 
+	pdflatex -shell-escape $< 
+	pdflatex -shell-escape $< 
+	pdflatex -shell-escape $< 
 
 FirmwareHardware: FirmwareHardware.tex
 	pdflatex -shell-escape $@ 
