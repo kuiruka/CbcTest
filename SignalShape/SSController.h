@@ -71,6 +71,7 @@ namespace SignalShape{
 
 			std::vector<UInt_t>                  fGroupList;
 			UInt_t                               fNonTestGroupOffset;
+			UInt_t						         fNAcq;
 	};
 
 }
