@@ -1,0 +1,28 @@
+GlibConfigurationFile : /opt/testing/trackerDAQ-3.2/CBCDAQ/GlibSupervisor/xml/connections.xml
+GlibBoardId           : board
+BeId				  : 0
+GlibReg_CBC_expected                                            :          3
+GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
+GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :         50
+GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_L1A                     :        400
+GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE              :        201
+GlibReg_COMMISSIONNING_MODE_RQ                                  :          1
+GlibReg_FE_expected                                             :          1
+GlibReg_cbc_stubdata_latency_adjust_fe1                         :          1
+GlibReg_cbc_stubdata_latency_adjust_fe2                         :          1
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE               :          1
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_GENE          :          1
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER :        100
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.INT_TRIGGER_FREQ       :          4
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.TRIGGER_SEL            :          0
+GlibReg_user_wb_ttc_fmc_regs.pc_commands2.clock_shift           :          0
+GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC    :          1
+GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_sTTS   :          0
+GlibReg_user_wb_ttc_fmc_regs.pc_commands2.polarity_tlu          :          0
+CbcConfig_FE0CBC0 : settings/FE0CBC0.txt
+CbcConfig_FE0CBC1 : settings/FE0CBC1.txt
+SS_TestPulsePotentiometer : 0xF3 
+SS_Ipre1                  : 0xF0
+SS_NAcq                   : 0x01
+#Analyser_Group0				:0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+Analyser_Group0				:0,2
