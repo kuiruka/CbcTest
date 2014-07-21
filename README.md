@@ -14,9 +14,11 @@ Should work in any of the newer versions of the VM.
 
 Known problem
 -------
-IPBus cannot deal with a big data to read at once with readBlock() function in VM v1.1.0
-One solution to this is to reduce the # of events to be read at once with
-GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER 
+There is a problem in SRAM interface. 
+- 128th word for readBlock() is always 0.  This does not affect data with the data format in the beamtest setup. 
+- Large data is not read from SRAM with readBlock() function in VM v1.1.0.  This seems to happen only for VM.
+  One solution to this is to reduce the # of events to be read at once with
+    GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER 
+  As small as 10 works.
 
-As small as 10 works.
 
