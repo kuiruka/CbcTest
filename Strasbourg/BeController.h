@@ -62,7 +62,7 @@ namespace Strasbourg{
 			void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite);
 			void addCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite);
 
-			std::string fName;
+			std::string fFirmwareType;
 			uhal::HwInterface *fBoard;
 
 			std::string fStrSram, fStrOtherSram, fStrSramUserLogic, fStrFull, fStrReadout;

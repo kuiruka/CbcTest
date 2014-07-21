@@ -52,12 +52,34 @@ namespace Strasbourg{
 		pVecReq.push_back(uCbc<<17 | uPage<<16 | uAddr<<8 | uWrite);
 	}
 
-	BeController::BeController( const char *pName ): 
+	BeController::BeController( const char *pFirmwareType ): 
 		HwController( "BeController" ),
-		fName( pName ),
+		fFirmwareType( pFirmwareType ),
 		fBoard(0), 
 		fDevFlag(DEV0){
 
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER", fNeventPerAcq );
+			AddGlibSetting( "FE_expected", 1 ); 
+			AddGlibSetting( "CBC_expected", 3 );
+			AddGlibSetting( "COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 );
+			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET", 50 );
+			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A", 400 );
+			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 200 );
+			AddGlibSetting( "COMMISSIONNING_MODE_RQ", 1 );
+			if( fFirmwareType == "SEUtest" ){
+				AddGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU", 1 );
+			}
+			AddGlibSetting( "cbc_stubdata_latency_adjust_fe1", 1 );
+			AddGlibSetting( "cbc_stubdata_latency_adjust_fe2", 1 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE", true );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_GENE", 1 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.INT_TRIGGER_FREQ", 4 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.TRIGGER_SEL", 0 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.clock_shift", 0 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC", 1 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.negative_logic_sTTS", 0 );
+			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands2.polarity_tlu", 0 );
+			//	AddGlibSetting( "user_wb_ttc_fmc_regs.cbc_acquisition.CBC_TRIGGER_ONE_SHOT", 0 );
 
 		}
 	BeController::~BeController(){

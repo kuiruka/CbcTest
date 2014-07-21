@@ -110,6 +110,9 @@ namespace CbcDaq{
 			if( fBoardId == "Emulator" ){
 				fHwController = new BeEmulator();
 			}
+			else if( fAnalyserName == "ErrorAnalyser" ){
+				fHwController = new BeController( "SEUtest" ); 
+			}
 			else{
 				fHwController = new BeController(); 
 			}
