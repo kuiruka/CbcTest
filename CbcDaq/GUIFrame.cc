@@ -168,9 +168,13 @@ namespace CbcDaq{
 		gClient->GetColorByName( "white", cColor );
 		fDaqMainConfigFrame->SetCbcRegFileNameColors( cColor );
 		fCbcRegFrames->RenewCbcRegFrames(); 	
-		if( fCbcRegFrames->ConfigureFailed() ) return;
 
-		fControlButtonFrame->SetButtonState( ControlButtonFrame::CbcConfigured );
+		if( fCbcRegFrames->ConfigureFailed() ){
+			fControlButtonFrame->SetButtonState( ControlButtonFrame::GlibConfigured );
+		}
+		else{
+			fControlButtonFrame->SetButtonState( ControlButtonFrame::CbcConfigured );
+		}
 
 	}
 	void GUIFrame::ConfigureAnalyser(){

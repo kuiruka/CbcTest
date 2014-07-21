@@ -34,7 +34,7 @@ namespace Strasbourg{
 	const std::string BeController::fStrI2cCommand = I2C_COMMAND;
 	const std::string BeController::fStrI2cReply = I2C_REPLY;
 	const uint32_t BeController::fI2cSlave = I2C_SLAVE;
-	const unsigned int BeController::fI2cSramSize = 64; 
+	const unsigned int BeController::fI2cSramSize = 50; 
 
 	void BeController::DecodeRegInfo( uint32_t vecReq, uint32_t &uCBC, uint32_t &uPage, uint32_t &uAddr, uint32_t &uWrite){
 		uint32_t cMask(0x00000000);
