@@ -171,6 +171,7 @@ namespace SignalShape{
 
 				int cNHits(0);
 				for( unsigned int i=0; i< fNAcq; i++ ){
+
 					fHwController->StartAcquisition();
 					fHwController->ReadDataInSRAM( cNthAcq, true );
 					fHwController->EndAcquisition( cNthAcq );
