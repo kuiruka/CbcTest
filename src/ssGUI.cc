@@ -10,7 +10,7 @@
 
 int main( int argc, char *argv[] ){
 
-	TString cSettingFile( "settings/CbcSignalShapeElectron.txt" );
+	TString cSettingFile( "settings/CbcSignalShapeElectronNoSensor.txt" );
 	if( argc >= 2 ){
 		cSettingFile = argv[1];
 	}

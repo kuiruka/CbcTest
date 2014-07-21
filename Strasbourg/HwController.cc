@@ -41,6 +41,7 @@ namespace Strasbourg{
 	HwController::HwController( const char *pName ):
 		fName( pName ),
 		fData(0),
+		fPacketSize(0),
 		fGlibSetting(), 
 		fCbcRegSetting(), 
 		fCbcRegUpdateList(),
@@ -90,12 +91,14 @@ namespace Strasbourg{
 		fCbcRegSetting.Reset( fNFe, fNCbc );
 		fCbcRegUpdateList.Reset( fNFe );	
 
+		fData->Clear();
 		//Initialising Data object
-		fData->Initialise( fNeventPerAcq );
-//		std::cout << "Bufsize = " << fData->GetBufSize() << std::endl;
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 			fData->AddFe( cFe );
 		}
+		if( fNFe == 1 ) fData->AddFe( 1, true );
+		fData->Initialise( fNeventPerAcq );
+		fPacketSize = fData->GetEventSize32();
 	}
 	void HwController::ConfigureCbc(){
 
@@ -143,7 +146,12 @@ namespace Strasbourg{
 			std::vector<uint32_t> &cSentVecReq = cIt->second;
 			std::vector<uint32_t> cReadVecReq = cSentVecReq;
 			if( cSentVecReq.size() == 0 ) continue;
-			WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq );
+			try{
+				WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq );
+			}
+			catch( Exception &e ){
+				throw e;
+			}
 			if( cSentVecReq.size() != cReadVecReq.size() ) {
 				std::cout << "CBC registers are not written correctly." << std::endl;
 			}

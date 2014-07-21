@@ -12,7 +12,8 @@ namespace SignalShape{
 	SSController::SSController( const char *pConfigFile ):
 		DAQController( "SignalShapeAnalyser", pConfigFile ),
 		fSSSetting(),
-		fNonTestGroupOffset(0xFF){
+		fNonTestGroupOffset(0xFF),
+		fNAcq(3){
 		}
 	SSController::~SSController(){
 
@@ -22,6 +23,7 @@ namespace SignalShape{
 	void SSController::initialiseSetting(){
 
 		fSSSetting.insert( SSItem( "TestPulsePotentiometer", 0xF3 ) );
+		fSSSetting.insert( SSItem( "NAcq",                   0x0a ) );
 		fSSSetting.insert( SSItem( "Ipre1", 0xF0 ) );
 	}
 	//main functions
@@ -59,15 +61,14 @@ namespace SignalShape{
 		fSignalShapeAnalyser = new SignalShapeAnalyser( fBeId, fNFe, fNCbc, 
 				fTestGroupMap, &(fHwController->GetCbcRegSetting()),
 				fNegativeLogicCBC, cSignalType.c_str(), fOutputDir.c_str(), fGUIFrame );
-//		std::cout << "Initialise() begin" << std::endl;
+		//		std::cout << "Initialise() begin" << std::endl;
 		fSignalShapeAnalyser->Initialise();
-//		std::cout << "Initialise() end" << std::endl;
+		//		std::cout << "Initialise() end" << std::endl;
 		fAnalyser = fSignalShapeAnalyser;
 		Emit( "Message( const char * )", "Calibration Configured." ); 
 	}
 	void SSController::Run(){
 
-		std::cout << "I am here" << std::endl;
 		fSignalShapeAnalyser->SetOffsets();
 		const char *cTriggerDelayString = "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE"; 
 		UInt_t cBaseDelay = fHwController->GetGlibSetting( cTriggerDelayString );
@@ -79,7 +80,7 @@ namespace SignalShape{
 			for( Int_t cPulseDelay=24; cPulseDelay>=0; cPulseDelay-=5 ){
 
 				uint32_t cVal = (uint32_t) (cBaseDelay + cTriggerDelay);
-				std::cout << "Val = " << cVal << std::endl;
+//				std::cout << "Val = " << cVal << std::endl;
 
 				uhal::HwInterface *cBoard = ( (BeController *)fHwController)->GetBoard();
 				cBoard->getNode( cTriggerDelayString ).write( cVal );
@@ -87,7 +88,7 @@ namespace SignalShape{
 
 				cCurrentTime = 25 - ( cPulseDelay + 1 ) + cTriggerDelay * 25;
 
-				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
+//				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
 
 				uint32_t cFe(0), cCbc(0);
 				for( cFe = 0; cFe < fNFe; cFe++ ){
@@ -105,7 +106,9 @@ namespace SignalShape{
 				for( ; cIt != fTestPulseGroupMap->end(); cIt++ ){
 
 					UInt_t cTestGroup = cIt->first;
-					if( cTestGroup != 0 ) continue;
+					if( fTestGroupMap->find( cTestGroup ) == fTestGroupMap->end() ) continue;
+					if( fTestGroupMap->find( cTestGroup )->second.size() == 0 ) continue;
+
 					ActivateGroup( cTestGroup );
 					fTestGroupMap->Activate( cTestGroup );
 
@@ -166,23 +169,26 @@ namespace SignalShape{
 				fHwController->AddCbcRegUpdateItemsForNewVCth( cVCth );
 				UpdateCbcRegValues();
 
-				fHwController->StartAcquisition();
-				fHwController->ReadDataInSRAM( cNthAcq, true );
-				fHwController->EndAcquisition( cNthAcq );
-
-				bool cFillDataStream( true );
-
 				int cNHits(0);
-				int cNevent(0);	
-				const Event *cEvent = fHwController->GetNextEvent();
-				while( cEvent ){
-					cNevent++;
-					//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
-					//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
-					fAnalyser->Analyse( cEvent, cFillDataStream );	
-					cFillDataStream = false;
-					cNHits += fSignalShapeAnalyser->FillHists( cVCth, cEvent );	
-					cEvent = fHwController->GetNextEvent();
+				for( unsigned int i=0; i< fNAcq; i++ ){
+
+					fHwController->StartAcquisition();
+					fHwController->ReadDataInSRAM( cNthAcq, true );
+					fHwController->EndAcquisition( cNthAcq );
+
+					bool cFillDataStream( true );
+
+					int cNevent(0);	
+					const Event *cEvent = fHwController->GetNextEvent();
+					while( cEvent ){
+						cNevent++;
+						//					std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
+						//			std::cout << "DATASTRING : " << cCbcEvent0->DataHexString() << std::endl; 
+						fAnalyser->Analyse( cEvent, cFillDataStream );	
+						cFillDataStream = false;
+						cNHits += fSignalShapeAnalyser->FillHists( cVCth, cEvent );	
+						cEvent = fHwController->GetNextEvent();
+					}
 				}
 				if( fGUIFrame ){
 					fSignalShapeAnalyser->Analyser::DrawHists();	
@@ -216,7 +222,7 @@ namespace SignalShape{
 				//std::cout << cAllOneCount << std::endl;
 				//std::cout << fNeventPerAcq << std::endl;
 #endif
-				if( cNHits == (int) ( fNeventPerAcq * cNChannels ) ) cAllOneCount++;	
+				if( cNHits == (int) ( fNAcq * fNeventPerAcq * cNChannels ) ) cAllOneCount++;	
 				if( cAllOneCount == 10 ) break;
 
 				cVCth += cStep;
@@ -297,7 +303,7 @@ namespace SignalShape{
 			   pMaxVCth = 0xFF > cTmp ? cTmp : 0xFF;
 			   }
 			   usleep( 10 );
-			 */
+			   */
 #ifdef __CBCDAQ_DEV__
 			std::cout << "cbc offset configuration completed." << std::endl;
 #endif

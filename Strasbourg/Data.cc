@@ -21,7 +21,7 @@ namespace Strasbourg {
 	}
 	const Event *Data::GetNextEvent(){
 		if( fCurrentEvent >= fNevents ) return 0; 
-		fEvent.SetEvent( &fBuf[ fCurrentEvent * Event::EVENT_SIZE_32 * 4 ] );
+		fEvent.SetEvent( &fBuf[ fCurrentEvent * fEvent.Size32() * 4 ] );
 		fCurrentEvent++;
 		return &fEvent;
 	}
@@ -32,8 +32,8 @@ namespace Strasbourg {
 
 		os <<std::hex;
 		for( UInt_t j=0; j<fNevents; j++){
-			for( UInt_t i=0; i<Event::EVENT_SIZE_32 * 4; i++ ) 
-				os <<std::uppercase<<std::setw(2)<<std::setfill('0') << (fBuf[ j * Event::EVENT_SIZE_32 * 4 + i ]&0xFF );
+			for( UInt_t i=0; i< fEvent.Size32() * 4; i++ ) 
+				os <<std::uppercase<<std::setw(2)<<std::setfill('0') << (fBuf[ j * fEvent.Size32() * 4 + i ]&0xFF );
 			os << std::endl;
 		}
 		return tmp.str();
@@ -41,11 +41,11 @@ namespace Strasbourg {
 	void Data::Initialise( UInt_t pNevents ){ 
 
 		fNevents = pNevents;
-		fBufSize = ( fNevents + 1 ) * Event::EVENT_SIZE_32 * 4;  
+		fBufSize = ( fNevents + 1 ) * fEvent.Size32() * 4;  
 		if( fBuf ) free( fBuf );
 		fBuf = (char *)malloc( fBufSize );
 
-		fEvent.Clear(); 
+//		fEvent.Clear(); 
 #ifdef __CBCDAQ_DEV__
 		std::cout << "Data::Initialise done." << std::endl;
 #endif

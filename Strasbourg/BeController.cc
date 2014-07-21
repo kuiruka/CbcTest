@@ -30,12 +30,11 @@ using namespace CbcDaq;
 namespace Strasbourg{
 
 
-	const unsigned int BeController::fPacketSize = Strasbourg::Event::EVENT_SIZE_32;//single event data size in 32 bits words
 	const std::string BeController::fStrI2cSettings = "user_wb_ttc_fmc_regs.cbc_reg_i2c_settings";
 	const std::string BeController::fStrI2cCommand = I2C_COMMAND;
 	const std::string BeController::fStrI2cReply = I2C_REPLY;
 	const uint32_t BeController::fI2cSlave = I2C_SLAVE;
-	const unsigned int BeController::fI2cSramSize = 128; 
+	const unsigned int BeController::fI2cSramSize = 50; 
 
 	void BeController::DecodeRegInfo( uint32_t vecReq, uint32_t &uCBC, uint32_t &uPage, uint32_t &uAddr, uint32_t &uWrite){
 		uint32_t cMask(0x00000000);
@@ -109,7 +108,8 @@ namespace Strasbourg{
 		fBoard->getNode("break_trigger").write(1);
 		fBoard->dispatch();
 
-		boost::this_thread::sleep( cPause * 3 );	
+	//	boost::this_thread::sleep( cPause * 3 );	
+		sleep(1);
 	}
 	void BeController::StartAcquisition(){
 
@@ -127,7 +127,7 @@ namespace Strasbourg{
 	}
 	void BeController::ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger ){
 
-		//std::cout << "ReadDataInSRAM" << std::endl;
+//		std::cout << "ReadDataInSRAM" << std::endl;
 
 #ifdef __CBCDAQ_DEV__
 		struct timeval cStartReadDataInSRAM, cStartBlockRead;
@@ -141,11 +141,13 @@ namespace Strasbourg{
 #endif
 		//Readout settings
 		boost::posix_time::milliseconds cWait(1);
+		//boost::posix_time::microseconds cWait(100);
 
 		uhal::ValWord<uint32_t> cVal;
 		uint32_t cNPackets= fNeventPerAcq+1;
 		uint32_t cBlockSize = cNPackets * fPacketSize;
 
+//		std::cout << "Wait for start acknowledge" << std::endl;
 		//Wait for start acknowledge
 		do{
 			cVal=fBoard->getNode("user_wb_ttc_fmc_regs.status_flags.CMD_START_VALID").read();
@@ -159,6 +161,7 @@ namespace Strasbourg{
 			std::cout << "BeController::ReadDataInSRAM()  Time took for the CMD_START_VALID flag to be set: " << std::dec << mtime << " ms." << std::endl;
 		}
 #endif
+//		std::cout << "FIFO goes to write_data state" << std::endl;
 		//FIFO goes to write_data state
 		//Select SRAM
 		SelectSramForDAQ( pNthAcq );
@@ -168,6 +171,7 @@ namespace Strasbourg{
 			gettimeofday(&start, 0);
 		}
 #endif
+//		std::cout << "Wait for the SRAM full condition." << std::endl;
 		//Wait for the SRAM full condition.
 		cVal = fBoard->getNode(fStrFull).read();
 		do{
@@ -181,6 +185,7 @@ namespace Strasbourg{
 			std::cout << "Time took for the data to be ready : " << std::dec << mtime << " ms." << std::endl;
 		}
 #endif
+//		std::cout << "break trigger" << std::endl;
 		//break trigger
 		if( pBreakTrigger ){
 			fBoard->getNode("break_trigger").write(1);
@@ -192,15 +197,16 @@ namespace Strasbourg{
 			gettimeofday( &fStartVeto, 0 );
 		}
 #endif
+//		std::cout << "read mode to SRAM" << std::endl;
 		//Set read mode to SRAM
 		fBoard->getNode(fStrSramUserLogic).write(0);
 		fBoard->dispatch();
-		//      boost::this_thread::sleep(wait);
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
 			gettimeofday( &cStartBlockRead, 0 );
 		}
 #endif
+//		std::cout << "Read SRAM" << std::endl;
 		//Read SRAM
 		//std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
 		//Block size = 42 * ( packet # + 1 )
@@ -223,6 +229,7 @@ namespace Strasbourg{
 			gettimeofday(&start, 0);
 		}
 #endif
+//		std::cout << "Wait for the non SRAM full condition" << std::endl;
 		//Wait for the non SRAM full condition starts,
 		do {
 			cVal = fBoard->getNode(fStrFull).read();
@@ -237,6 +244,7 @@ namespace Strasbourg{
 			std::cout << "Time took to the full flag to be 0 : " << std::dec << mtime << " us." << std::endl;
 		}
 #endif
+//		std::cout << "write readout 0" << std::endl;
 
 		fBoard->getNode(fStrReadout).write(0);// write readout 0
 		fBoard->dispatch();
@@ -255,7 +263,7 @@ namespace Strasbourg{
 		   cBuf[i*4+j] = cSwapped[j];
 		   }
 		   }
-		 */
+		   */
 
 		fData->Set( &cData );
 		return;

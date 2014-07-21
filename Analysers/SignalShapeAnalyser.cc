@@ -442,7 +442,6 @@ namespace Analysers{
 			UInt_t cFeId = fChannelList[i]->FeId();
 			UInt_t cCbcId = fChannelList[i]->CbcId();
 			UInt_t cChannel = fChannelList[i]->ChannelId();
-			std::cout << "SetOffsets  Channel = " << cChannel << std::endl;
 			UInt_t cOffset = fCbcRegMap->GetValue0( cFeId, cCbcId, 1, cChannel+1 );
 			//std::cout << "Fe " << cFeId << ", Cbc " << cCbcId << ", Offset " << cOffset << std::endl;
 			fChannelList[i]->GetData().SetOffset( cOffset );

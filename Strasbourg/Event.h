@@ -14,7 +14,7 @@ namespace Strasbourg {
 		   id of CbcEvent also should be the order of CBCEvents in data stream starting from 0
 		 */
 		public:
-			static const UInt_t EVENT_SIZE_32;
+//			static const UInt_t EVENT_SIZE_32;
 			static const UInt_t OFFSET_BUNCH; 
 			static const UInt_t WIDTH_BUNCH; 
 			static const UInt_t OFFSET_ORBIT; 
@@ -29,13 +29,14 @@ namespace Strasbourg {
 			static const UInt_t WIDTH_FE_EVENT;
 			static const UInt_t OFFSET_TDC;
 			static const UInt_t WIDTH_TDC;
-			Event(){}
-			Event(Event &pE): fBuf(0), fBunch(pE.fBunch), fOrbit(pE.fOrbit), fLumi(pE.fLumi), 
+			Event(): fSize32(6){}
+			Event(Event &pE): fBuf(0), fSize32(pE.fSize32), fBunch(pE.fBunch), fOrbit(pE.fOrbit), fLumi(pE.fLumi), 
 			fEventCount(pE.fEventCount), fEventCountCBC(pE.fEventCountCBC),fTDC(pE.fTDC){}
 			~Event(){}
 			void Clear(){ fEvent.clear(); }
-			void AddFe( UInt_t pFE ); 
+			void AddFe( UInt_t pFE, bool pDummy = false ); 
 			void AddCbc( UInt_t pFE, UInt_t pCBC ); 
+			UInt_t Size32()const{ return fSize32; }
 			int SetEvent( char *pEvent );
 			//user interface
 			const FeEvent *GetFeEvent( UInt_t pFE )const;
@@ -52,6 +53,7 @@ namespace Strasbourg {
 			FeEvent *findFeEvent( UInt_t pFE );
 
 			char *fBuf;
+			UInt_t fSize32;
 			FeEventMap fEvent;
 			UInt_t fBunch;
 			UInt_t fOrbit;
