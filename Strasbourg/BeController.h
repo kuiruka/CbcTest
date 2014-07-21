@@ -32,7 +32,7 @@ namespace Strasbourg{
 			enum DEVFLAG{ DEV0 };
 
 		public:
-			BeController();
+			BeController( const char *pName = "defalut" );
 			~BeController();
 
 			void ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId );
@@ -61,6 +61,8 @@ namespace Strasbourg{
 		private:
 			void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite);
 			void addCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite);
+
+			std::string fName;
 			uhal::HwInterface *fBoard;
 
 			std::string fStrSram, fStrOtherSram, fStrSramUserLogic, fStrFull, fStrReadout;

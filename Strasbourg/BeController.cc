@@ -52,8 +52,9 @@ namespace Strasbourg{
 		pVecReq.push_back(uCbc<<17 | uPage<<16 | uAddr<<8 | uWrite);
 	}
 
-	BeController::BeController(): 
+	BeController::BeController( const char *pName ): 
 		HwController( "BeController" ),
+		fName( pName ),
 		fBoard(0), 
 		fDevFlag(DEV0){
 
