@@ -43,6 +43,7 @@ namespace Strasbourg {
 			void AddCbc( UInt_t pFe, UInt_t pCbc ){ fEvent.AddCbc( pFe, pCbc ); }
 			void CopyBuffer( Data &pD );
 			const char * GetBuffer( UInt_t &pBufSize )const{ pBufSize = fBufSize; return fBuf; }
+			UInt_t GetBufSize()const{ return fBufSize; }
 		private:
 			char *fBuf;
 			Event fEvent;

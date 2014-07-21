@@ -92,6 +92,7 @@ namespace Strasbourg{
 
 		//Initialising Data object
 		fData->Initialise( fNeventPerAcq );
+//		std::cout << "Bufsize = " << fData->GetBufSize() << std::endl;
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 			fData->AddFe( cFe );
 		}
