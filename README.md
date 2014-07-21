@@ -1,7 +1,9 @@
 WARNING
 =======
 
-Most stable version for the current 2CBC2/virtual machine setup found in branch "CbcTestForIPbus2.2". Includes firmware versions for both polarities.
+Most stable version for the current 2CBC2/virtual machine setup found in branch "master". Includes firmware versions for both polarities.
+calibGUI and ssGUI are tested.
+SEUtest branch is merged, but seuGUI is not compatible with the beamtest firmware.
 
 CbcTest
 =======
@@ -14,7 +16,7 @@ Should work in any of the newer versions of the VM.
 
 Known problem
 -------
-There is a problem in SRAM interface. 
+There are problems in SRAM interface. 
 - 128th word for readBlock() is always 0.  This does not affect data with the data format in the beamtest setup. 
 - Large data is not read from SRAM with readBlock() function in VM v1.1.0.  This seems to happen only for VM.
   One solution to this is to reduce the # of events to be read at once with
