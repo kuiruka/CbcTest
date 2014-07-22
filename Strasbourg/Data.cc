@@ -74,6 +74,10 @@ namespace Strasbourg {
 	void Data::CopyBuffer( Data &pD ){
 		memcpy( fBuf, pD.fBuf, pD.fBufSize );
 	}
+	void Data::CopyBuffer( const char *pBuf ){
+		Reset();
+		memcpy( fBuf, pBuf, fBufSize );
+	}
 }
 
 

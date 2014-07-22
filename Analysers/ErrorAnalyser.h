@@ -6,7 +6,7 @@
 #include <set>
 #include <TString.h>
 #include "Analyser.h"
-#include "Analysers/DataContainer.h"
+#include "DataContainer.h"
 
 class TGTextView;
 
@@ -58,6 +58,7 @@ namespace Analysers{
 			TString Dump();
 			void   DrawText();
 			void   SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
+			void SaveSummaryHists( const char * pFileName );
 
 		private:
 			UInt_t                      fL1APointer;

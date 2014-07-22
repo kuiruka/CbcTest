@@ -1,6 +1,6 @@
 #include "CbcEvent.h"
 #include <iomanip>
-
+#include <iostream>
 namespace Strasbourg {
 	/*
 	   CbcEvent implementation
@@ -77,8 +77,8 @@ namespace Strasbourg {
 
 		UInt_t cFirstByteP = OFFSET_CBCDATA/8;
 		UInt_t cFirstBitP = OFFSET_CBCDATA%8;
-		UInt_t cLastByteP = (cFirstByteP+WIDTH_CBCDATA-1)/8;
-		UInt_t cLastBitP = (cFirstByteP+WIDTH_CBCDATA-1)%8;
+		UInt_t cLastByteP = (OFFSET_CBCDATA+WIDTH_CBCDATA-1)/8;
+		UInt_t cLastBitP = (OFFSET_CBCDATA+WIDTH_CBCDATA-1)%8;
 
 		UInt_t cMask(0);
 		UInt_t cMaskLastBit(0);
@@ -100,7 +100,7 @@ namespace Strasbourg {
 		cMaskWidth = cMaskLastBit+1;
 		cMask = ( 1 << ( 7 - cMaskLastBit ) );	
 		for( UInt_t i=0;i < cMaskWidth; i++ ) { cMask = cMask << 1; cMask |= 1; } 
-		os <<std::uppercase<<std::setw(2)<<std::setfill('0')<< (fBuf[cFirstByteP]&cMask);
+		os <<std::uppercase<<std::setw(2)<<std::setfill('0')<< (fBuf[cLastByteP]&cMask);
 		return tmp.str();
 	}
 	//function to get GLIB flag string

@@ -6,7 +6,7 @@
 #include <vector>
 #include <set>
 #include <TString.h>
-#include "CbcDaq/Analyser.h"
+#include "Analysers/Analyser.h"
 
 namespace Analysers{
 

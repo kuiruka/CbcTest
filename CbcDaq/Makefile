@@ -1,4 +1,4 @@
-Objs			= DAQController.o Analyser.o ErrorAnalyser.o
+Objs			= DAQController.o
 GUISourceFiles	= GUI.cc GUIConfigFrame.cc GUIDaqMainConfigFrame.cc GUILogFrame.cc GUICbcRegFrame.cc GUIControlButtonFrame.cc GUIAnalyserFrame.cc GUIFrame.cc  
 GUIObj			= GUIFrameDict.o
 CC              = gcc

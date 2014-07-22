@@ -17,7 +17,7 @@ ExternalObjects = $(LibraryPaths) -lpthread -lboost_thread -lboost_filesystem -l
 	$(CXX) $(DevFlags) $(CCFlags) $(UserCCFlags) $(CCDefines) $(IncludePaths) -c -o $@ $<
 
 
-all: calib vcthscan calibGUI daq daqGUI ssGUI seuGUI
+all: calib vcthscan calibGUI daq daqGUI ssGUI seuGUI dumpRawData
 
 calib: calib.cc  
 	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq -lICCalib 
@@ -45,6 +45,10 @@ ssGUI: ssGUI.cc
 
 seuGUI: seuGUI.cc  
 	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq 
+	mv $@ ../bin
+
+dumpRawData: dumpRawData.cc  
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) 
 	mv $@ ../bin
 
 clean:

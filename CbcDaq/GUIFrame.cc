@@ -182,7 +182,7 @@ namespace CbcDaq{
 		fDAQController->ConfigureAnalyser();
 
 		fAnalyserFrame->RenewFrame();
-
+		
 		fControlButtonFrame->SetButtonState( ControlButtonFrame::AnalyserConfigured );
 
 	}

@@ -8,7 +8,7 @@
 #include "GUIData.h"
 #include "Strasbourg/Data.h"
 #include "Cbc/TestGroup.h"
-#include "CbcDaq/Analyser.h"
+#include "Analysers/Analyser.h"
 
 
 namespace Analysers{

@@ -7,7 +7,7 @@
 #include <map>
 #include "Cbc/CbcRegInfo.h"
 #include "Cbc/TestGroup.h"
-#include "Analyser.h"
+#include "Analysers/Analyser.h"
 
 class TPad;
 class TGTextView;
@@ -122,6 +122,7 @@ namespace CbcDaq{
 			TestGroupMap                         *fTestPulseGroupMap;
 			TestGroupMap                         *fAnalyserGroupMap;
 			Int_t                                fCurrentTestPulseGroup;
+			TString                              fSummaryHistFileName;
 	};
 }
 #endif

@@ -80,7 +80,7 @@ namespace Analysers{
 				cHist->Reset();
 
 				unsigned int cTriggerLatency = fCbcRegMap->GetReadValue( cFeId, cCbcId, "TriggerLatency" );
-				std::cout << "cTriggerLatency : " << std::dec << cTriggerLatency << std::endl;
+//				std::cout << "cTriggerLatency : " << std::dec << cTriggerLatency << std::endl;
 				int cTmp = ( fL1APointer - cTriggerLatency ) % 256;
 				if( cTmp < 0 ) cTmp += 256; 
 				cData.fExpectedPipelineAddress = cTmp;
@@ -406,6 +406,35 @@ namespace Analysers{
 		htmp->GetYaxis()->CenterTitle();
 		cHist = (TH1F *) htmp;
 		fPipelineAddress3 = std::pair<TH1F *, TPad *>( cHist, 0 );
+	}
+	void ErrorAnalyser::SaveSummaryHists( const char * pFileName ){
+
+		TFile fout( Form( "%s/%s", fOutputDir.Data(), pFileName ), "UPDATE" );
+
+		ErrorAnalyserResult::iterator cItFe = fResult.begin();
+		for( ; cItFe != fResult.end(); cItFe++ ){
+
+			UInt_t cFeId = cItFe->first;
+			ErrorAnalyserFeInfo &cFeInfo = cItFe->second;
+			ErrorAnalyserFeInfo::iterator cItCbc = cFeInfo.begin();
+			for( ; cItCbc != cFeInfo.end(); cItCbc++ ){
+				UInt_t cCbcId = cItCbc->first;
+				ErrorHistGroup &cData =  fResult.GetCbcInfo( cFeId, cCbcId )->GetData();
+				TH1F *cHist       = cData.fData.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+				cHist       = cData.fError.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+				cHist       = cData.fPipelineAddress0.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+				cHist       = cData.fPipelineAddress1.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+				cHist       = cData.fPipelineAddress2.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+				cHist       = cData.fPipelineAddress3.first;
+				cHist->Write( cHist->GetName(), TObject::kOverwrite );
+			}
+		}
+		fout.Close();
 	}
 	ErrorHistGroup::~ErrorHistGroup(){
 		/*

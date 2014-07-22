@@ -83,8 +83,9 @@ namespace Strasbourg {
 		std::stringbuf tmp;
 		std::ostream os(&tmp);
 
+		std::cout << "Event::fSize32 = " << fSize32 << std::endl;
 		os <<std::hex;
-		for( UInt_t i=0; i< fSize32; i++){
+		for( UInt_t i=0; i< fSize32 * 4; i++){
 			os <<std::uppercase<<std::setw(2)<<std::setfill('0')<< (fBuf[i]&0xFF);
 		}
 		os << std::endl;

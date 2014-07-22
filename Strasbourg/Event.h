@@ -33,7 +33,7 @@ namespace Strasbourg {
 			Event(Event &pE): fBuf(0), fSize32(pE.fSize32), fBunch(pE.fBunch), fOrbit(pE.fOrbit), fLumi(pE.fLumi), 
 			fEventCount(pE.fEventCount), fEventCountCBC(pE.fEventCountCBC),fTDC(pE.fTDC){}
 			~Event(){}
-			void Clear(){ fEvent.clear(); }
+			void Clear(){ fEvent.clear(); fSize32 = 6; }
 			void AddFe( UInt_t pFE, bool pDummy = false ); 
 			void AddCbc( UInt_t pFE, UInt_t pCBC ); 
 			UInt_t Size32()const{ return fSize32; }

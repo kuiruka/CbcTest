@@ -21,7 +21,7 @@
 #include "Strasbourg/Data.h"
 #include "utils/Utilities.h"
 #include "utils/Exception.h"
-#include "ErrorAnalyser.h"
+#include "Analysers/ErrorAnalyser.h"
 #include "TCanvas.h"
 #include <TThread.h>
 #include <sstream>
@@ -310,8 +310,14 @@ namespace CbcDaq{
 
 				delete fDataFile;
 				fDataFile = new std::ofstream( (fOutputDir + "/" + cStrFileName.Data() ).c_str(), std::ofstream::binary );
-				fLogFile << "\tOutputFileName : " << cStrFileName << std::endl;
+				msg = Form( "\tOutputFileName      : %s", cStrFileName.Data() ); 
+				Emit( "Message( const char * )",  msg.Data() );
+				fLogFile << msg << std::endl;
 			}
+			fSummaryHistFileName = Form( "SummaryHistRun%06d-%02d%02d%02d%02d%02d.root", cRunNumber, t_st->tm_mon+1, t_st->tm_mday, t_st->tm_hour, t_st->tm_min, t_st->tm_sec );
+			msg = Form( "\tSumamryHistFileName : %s.", fSummaryHistFileName.Data() );
+			Emit( "Message( const char * )", msg.Data() );
+			fLogFile << msg << std::endl;
 		}
 
 		void DAQController::Run( ){
@@ -326,7 +332,7 @@ namespace CbcDaq{
 			//message and log for RunStart
 			time_t timer;
 			time(&timer);
-			TString cStrLog = Form( "\tRunStart       : %s", ctime( &timer ) );
+			TString cStrLog = Form( "\tRunStart            : %s", ctime( &timer ) );
 			Emit( "Message( const char * )", cStrLog.Data() );
 			fLogFile << cStrLog; 
 
@@ -362,17 +368,25 @@ namespace CbcDaq{
 				if( fDataFile ){
 					UInt_t cBufSize(0);
 					const char *cDataBuffer = fHwController->GetBuffer( cBufSize ); 
-					fDataFile->write( cDataBuffer, cBufSize );
+					/*
+					std::cout << cBufSize << std::endl;
+					for( UInt_t i=0; i< cBufSize; i++){
+						std::cout <<std::uppercase<<std::setw(2)<<std::setfill('0')<< (cDataBuffer[i]&0xFF);
+						if( ( i % (42*4) ) == 42*4-1 ) std::cout << std::endl;
+					}
+					std::cout << std::endl;
+					*/
+					fDataFile->write( cDataBuffer, cBufSize - 1 );
 				}
 			}
 			long mtime = getTimeTook( start, 1 );
 			long min = (mtime/1000)/60;
 			long sec = (mtime/1000)%60;
 			gettimeofday( &start, 0 );
-			cStrLog = Form( "\tRunTime        : %ld [msec]",  mtime ); 
+			//DAQ summary
+			cStrLog = Form( "\tRunTime             : %ld [msec]",  mtime ); 
 			Emit( "Message( const char * )", cStrLog.Data() );
 			fLogFile << cStrLog << std::endl; 
-
 			TString msg = Form( "\tTime took for this run = %ld min %ld sec.", min, sec ); 
 			Emit( "Message( const char * )", msg.Data() );
 			fLogFile << msg << std::endl;
@@ -382,8 +396,14 @@ namespace CbcDaq{
 			msg = Form( "\tTotal %d acquisitions (%d events per acq.) are made for this run.", cNAcq, fNeventPerAcq );
 			Emit( "Message( const char * )", msg.Data() );
 			fLogFile << msg << std::endl;
+
+			//Saving summary histograms
+			fAnalyser->SaveSummaryHists( fSummaryHistFileName.Data() );
+
+			//Dumping the summary
 			msg = fAnalyser->Dump();
 			fLogFile << msg << std::endl;;
+
 			TObjArray *cStrings = msg.Tokenize( "\n" );
 			if( cStrings->GetEntriesFast()){
 				TIter iString(cStrings);
