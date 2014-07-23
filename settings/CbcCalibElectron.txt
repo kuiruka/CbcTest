@@ -1,6 +1,7 @@
 GlibConfigurationFile : /opt/testing/trackerDAQ-3.2/CBCDAQ/GlibSupervisor/xml/connections.xml
 GlibBoardId           : board
 BeId				  : 0
+BeFirmwareType	      : default 
 GlibReg_CBC_expected                                            :          3
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :         50
@@ -12,7 +13,7 @@ GlibReg_cbc_stubdata_latency_adjust_fe1                         :          1
 GlibReg_cbc_stubdata_latency_adjust_fe2                         :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE               :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_GENE          :          1
-GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER :         10 
+GlibReg_user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER :         10
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.INT_TRIGGER_FREQ       :          4
 GlibReg_user_wb_ttc_fmc_regs.pc_commands.TRIGGER_SEL            :          0
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.clock_shift           :          0

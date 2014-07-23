@@ -56,15 +56,20 @@ namespace Strasbourg{
 	HwController::~HwController(){
 		delete fData;
 	}
-	void HwController::ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId ){
+	void HwController::ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId, const char *pBeFirmwareType ){
 
 		ConfigureGlib( pUhalConfigFileName, pBoardId );
 
 		//Setting internal members
 		fNFe = fGlibSetting.find( "FE_expected" )->second;
 		fNFe = fNFe == 1 ? 1 : 2;	
-		unsigned int cExpectedCbc = fGlibSetting.find( "CBC_expected" )->second;	
-		fNCbc = cExpectedCbc == 1 ? 1 : 2;	
+		if( strcmp( pBeFirmwareType, "BE_8CBC_v0" ) == 0 ){
+			fNCbc = 8;
+		}
+		else{
+			unsigned int cExpectedCbc = fGlibSetting.find( "CBC_expected" )->second;	
+			fNCbc = cExpectedCbc == 1 ? 1 : 2;	
+		}
 		fNeventPerAcq = fGlibSetting.find( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" )->second;
 
 		//Preparing CBC register setting and update list map
@@ -74,15 +79,16 @@ namespace Strasbourg{
 		fData->Clear();
 		//Initialising Data object
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
-			fData->AddFe( cFe );
+			fData->AddFe( cFe, fNCbc );
+			std::cout << "I am here" << std::endl;
 		}
-		if( fNFe == 1 ) fData->AddFe( 1, true );
+		if( fNFe == 1 && fNCbc != 8 ) fData->AddFe( 1, fNCbc, true );
 		fData->Initialise( fNeventPerAcq );
 		fPacketSize = fData->GetEventSize32();
 	}
 	void HwController::ConfigureCbc(){
 
-//		CbcHardReset();
+		//		CbcHardReset();
 		fCbcRegSetting.ClearRegisters();	
 		fCbcRegUpdateList.ClearList();	
 
@@ -167,7 +173,7 @@ namespace Strasbourg{
 	void HwController::AddCbcRegUpdateItem( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pVal ){
 
 		fCbcRegSetting.SetWrittenValue( pFe, pCbc, pPage, pAddr, pVal );
-//		std::cout << pVal << std::endl;
+		//		std::cout << pVal << std::endl;
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
 		if( cIt == fCbcRegUpdateList.end() ){
 			std::cerr << "Inconsistent FE id " << pFe << std::endl;
@@ -335,7 +341,7 @@ namespace Strasbourg{
 	}
 
 	std::vector< const CbcRegItem *> HwController::setReadValueToCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
-                
+
 		std::vector<const CbcRegItem *> cRegList(0);
 		for( unsigned int i=0; i < pVecReq.size(); i++ ){
 			unsigned int cCbc(0), cPage(0), cAddr(0), cVal(0);

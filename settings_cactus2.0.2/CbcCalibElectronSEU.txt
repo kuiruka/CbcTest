@@ -1,13 +1,14 @@
-GlibConfigurationFile : /opt/testing/trackerDAQ-3.2/CBCDAQ/GlibSupervisor/xml/connections.xml
+GlibConfigurationFile : settings_cactus2.0.2/connections_SEU.xml
 GlibBoardId           : board
 BeId				  : 0
-BeFirmwareType	      : default 
-GlibReg_CBC_expected                                            :          2
+BeFirmwareType	      : SEUtest 
+GlibReg_CBC_expected                                            :          1
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :         50
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_L1A                     :        400
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE              :        201
 GlibReg_COMMISSIONNING_MODE_RQ                                  :          1
+GlibReg_COMMISSIONNING_MODE_STOP_CLOCK_SEU                      :          0
 GlibReg_FE_expected                                             :          1
 GlibReg_cbc_stubdata_latency_adjust_fe1                         :          1
 GlibReg_cbc_stubdata_latency_adjust_fe2                         :          1

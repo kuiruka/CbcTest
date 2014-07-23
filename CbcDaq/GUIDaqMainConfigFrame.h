@@ -38,6 +38,7 @@ namespace CbcDaq{
 			TGVerticalFrame *fFrame;
 			TGTextEntry                     *fTextEntryUhalConfigFile;
 			TGTextEntry						*fTextEntryBoardId;
+			TGTextEntry						*fTextEntryBoardFirmwareType;
 			GlibSettingEntries              fGlibSettingEntries;
 	};
 

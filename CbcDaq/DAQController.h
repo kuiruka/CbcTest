@@ -71,6 +71,7 @@ namespace CbcDaq{
 			virtual const std::string &GetConfigurationFileName()const{ return fConfigurationFileName; }
 			virtual const std::string &GetUhalConfigFileName()const{ return fUhalConfigFileName; }
 			virtual const std::string &GetBoardId()const{ return fBoardId; }
+			virtual const std::string &GetBoardFirmwareType()const{ return fBeFirmwareType; }
 			virtual const GlibSetting &GetGlibSetting()const;
 			virtual UInt_t GetGlibSetting( const char * pName )const;
 			virtual const CbcRegMap &GetCbcRegSetting()const;
@@ -102,6 +103,7 @@ namespace CbcDaq{
 			Configuration                   fConfiguration;
 			std::string                     fUhalConfigFileName;
 			std::string                     fBoardId;
+			std::string                     fBeFirmwareType;
 			CbcConfigFileMap                fCbcConfigFileMap;
 			std::string                     fOutputDir;
 			std::ofstream                   *fDataFile;

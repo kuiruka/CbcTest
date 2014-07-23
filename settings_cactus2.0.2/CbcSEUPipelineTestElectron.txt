@@ -1,5 +1,6 @@
 GlibConfigurationFile : settings_cactus2.0.2/connections_SEU.xml
 GlibBoardId           : board
+GlibBeFirmwareType : SEUtest 
 BeId				  : 0
 GlibReg_CBC_expected                                            :          1
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
@@ -7,6 +8,7 @@ GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :        255
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_L1A                     :        280  
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE              :   26000000
 GlibReg_COMMISSIONNING_MODE_RQ                                  :          1
+GlibReg_COMMISSIONNING_MODE_STOP_CLOCK_SEU                      :          1
 GlibReg_FE_expected                                             :          1
 GlibReg_cbc_stubdata_latency_adjust_fe1                         :          1
 GlibReg_cbc_stubdata_latency_adjust_fe2                         :          1

@@ -60,7 +60,7 @@ namespace Strasbourg{
 
 			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER", fNeventPerAcq );
 			AddGlibSetting( "FE_expected", 1 ); 
-			AddGlibSetting( "CBC_expected", 3 );
+			AddGlibSetting( "CBC_expected"       , 3 );
 			AddGlibSetting( "COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID", 1 );
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET", 50 );
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A", 400 );

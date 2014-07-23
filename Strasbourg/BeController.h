@@ -43,6 +43,7 @@ namespace Strasbourg{
 			void CbcHardReset();
 			void CbcFastReset();
 			uhal::HwInterface *GetBoard(){ return fBoard; }
+			std::string GetFirmwareType(){ return fFirmwareType; }
 
 			//functions used internally for a moment.
 			void SelectSramForI2C( unsigned int pFe );
