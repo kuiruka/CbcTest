@@ -40,7 +40,7 @@ namespace Strasbourg{
 			virtual void CbcHardReset()=0;
 			virtual void CbcFastReset()=0;
 
-			void ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId );
+			void ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId, const char *pBeFirmwareType = "default" );
 			void ConfigureCbc();
 
 			const std::string & Name()const{ return fName; }

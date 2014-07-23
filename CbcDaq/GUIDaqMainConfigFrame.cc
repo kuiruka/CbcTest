@@ -56,6 +56,16 @@ namespace CbcDaq{
 		fTextEntryBoardId->Resize( 500, 25 );
 		fTextEntryBoardId->Connect( "TextChanged(const char *)", "CbcDaq::GUITextEntry", fTextEntryBoardId, "SetChangedBackgroundColor()" );
 
+		TGLabel *label2 = new TGLabel( cUhalFrame, "Board firmware type "  );
+		cUhalFrame->AddFrame( label2, new TGTableLayoutHints(0,1,1,2, kLHintsLeft | kLHintsCenterY ) );
+		label2->SetTextJustify( kTextLeft );
+
+		fTextEntryBoardFirmwareType = new GUITextEntry( cUhalFrame );
+		fTextEntryBoardFirmwareType->SetText( fGUIFrame->GetDAQController()->GetBoardFirmwareType().c_str() );
+		cUhalFrame->AddFrame( fTextEntryBoardFirmwareType, new TGTableLayoutHints(1,2,1,2, kLHintsLeft | kLHintsCenterY ) );
+		fTextEntryBoardFirmwareType->Resize( 500, 25 );
+		fTextEntryBoardFirmwareType->Connect( "TextChanged(const char *)", "CbcDaq::GUITextEntry", fTextEntryBoardFirmwareType, "SetChangedBackgroundColor()" );
+
 		//GLIB register setting frame
 		TGCompositeFrame *cGlibSettingFrame = new TGCompositeFrame( fFrame, gMainFrameWidth/2, gMainFrameHeight );
 		fFrame->AddFrame( cGlibSettingFrame, gLHVexpand );
@@ -111,6 +121,8 @@ namespace CbcDaq{
 		gClient->NeedRedraw( fTextEntryUhalConfigFile );
 		fTextEntryBoardId->SetBackgroundColor( pColor );
 		gClient->NeedRedraw( fTextEntryBoardId );
+//		fTextEntryBoardFirmwareType->SetBackgroundColor( pColor );
+//		gClient->NeedRedraw( fTextEntryBoardFirmwareType );
 		GlibSettingEntries::const_iterator cIt = fGlibSettingEntries.begin();
 		for( ; cIt != fGlibSettingEntries.end(); cIt++ ){
 			cIt->second->GetNumberEntry()->SetBackgroundColor( pColor );

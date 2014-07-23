@@ -1,8 +1,8 @@
 GlibConfigurationFile : /opt/testing/trackerDAQ-3.2/CBCDAQ/GlibSupervisor/xml/connections.xml
 GlibBoardId           : board
 BeId				  : 0
-BeFirmwareType	      : default 
-GlibReg_CBC_expected                                            :          2
+BeFirmwareType	      : BE_8CBC_v0 
+GlibReg_CBC_expected                                            :          8
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :         50
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_L1A                     :        400

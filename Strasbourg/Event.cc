@@ -30,13 +30,20 @@ namespace Strasbourg {
 	const UInt_t Event::OFFSET_TDC = 5 * 32 + WIDTH_FE_EVENT;
 	const UInt_t Event::WIDTH_TDC = 32;
 
-	void Event::AddFe( UInt_t pFE, bool pDummy ){ 
+	void Event::AddFe( UInt_t pFE, UInt_t pNcbc, bool pDummy ){ 
 
 		if( pDummy == 0 ){ 
-			AddCbc( pFE, 0 );
-			AddCbc( pFE, 1 );
+			if( pNcbc != 8 ){
+				AddCbc( pFE, 0 );
+				AddCbc( pFE, 1 );
+			}
+			else{
+				for( int i=0; i<pNcbc; i++ ){
+					AddCbc( pFE, i );
+				}
+			}
 		}
-		fSize32 += ( 2 * 9 ); 
+		fSize32 += ( pNcbc * 9 ); 
 	}
 	void Event::AddCbc( UInt_t pFE, UInt_t pCBC ){ 
 		FeEvent *cFeEvent = findFeEvent( pFE );
@@ -45,6 +52,7 @@ namespace Strasbourg {
 			cFeEvent = &(fEvent.find(pFE)->second);
 		}
 		cFeEvent->AddCbc( pCBC );
+		fSize32 += 9;
 	}
 	int Event::SetEvent( char *pEvent ){
 		fBuf = pEvent;
