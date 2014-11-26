@@ -458,10 +458,10 @@ namespace Strasbourg{
 
 #ifdef __CBCDAQ_DEV__
 		static long min(0), sec(0);	
-		struct timeval start0, end;
+		static struct timeval start0, end;
 		long seconds(0), useconds(0);
 
-		if( fDevFlag == DEV0 ){
+		if( fDevFlag == DEV0 & sec == 0 & min == 0 ){
 			gettimeofday(&start0, 0);
 		}
 #endif
@@ -486,10 +486,10 @@ namespace Strasbourg{
 
 #ifdef __CBCDAQ_DEV__
 		static long min(0), sec(0);	
-		struct timeval start0, end;
+		static struct timeval start0, end;
 		long seconds(0), useconds(0);
 
-		if( fDevFlag == DEV0 ){
+		if( fDevFlag == DEV0 & sec == 0 & min == 0 ){
 			gettimeofday(&start0, 0);
 		}
 #endif

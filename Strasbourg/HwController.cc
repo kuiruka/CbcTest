@@ -48,7 +48,9 @@ namespace Strasbourg{
 		fNFe(0), 
 		fNCbc(0), 
 		fNeventPerAcq(100),
-		fNTotalAcq(0){
+		fNTotalAcq(0),
+		fNCbcI2cWritePage1(0),
+		fNCbcI2cWritePage2(0){
 
 			fData = new Strasbourg::Data();
 		}
@@ -66,6 +68,8 @@ namespace Strasbourg{
 		unsigned int cExpectedCbc = fGlibSetting.find( "CBC_expected" )->second;	
 		fNCbc = cExpectedCbc == 1 ? 1 : 2;	
 		fNeventPerAcq = fGlibSetting.find( "user_wb_ttc_fmc_regs.pc_commands.CBC_DATA_PACKET_NUMBER" )->second;
+		fNCbcI2cWritePage1 = 0;
+		fNCbcI2cWritePage2 = 0;
 
 		//Preparing CBC register setting and update list map
 		fCbcRegSetting.Reset( fNFe, fNCbc );
@@ -118,9 +122,9 @@ namespace Strasbourg{
 	std::vector<const CbcRegItem *> HwController::UpdateCbcRegValues(){
 
 		std::vector<const CbcRegItem *> cRegList(0);
-
+		
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.begin();
-
+		
 		for( ; cIt != fCbcRegUpdateList.end(); cIt++ ){
 			unsigned int cFe = cIt->first;
 			std::vector<uint32_t> &cSentVecReq = cIt->second;
@@ -138,6 +142,13 @@ namespace Strasbourg{
 			std::vector<const CbcRegItem *> cThisList = setReadValueToCbcRegSettings( cFe, cReadVecReq );	
 			cRegList.insert( cRegList.end(), cThisList.begin(), cThisList.end() ); 
 			cSentVecReq.clear();
+		}
+		std::vector<const CbcRegItem *>::const_iterator cRLIt = cRegList.begin();
+		for(; cRLIt != cRegList.end(); cRLIt++ ){
+			const CbcRegItem *cRegItem = *cRLIt;
+			const UInt_t cPage = cRegItem->Page();
+			if( cPage == 0 ) fNCbcI2cWritePage1++;
+			else if( cPage == 1 ) fNCbcI2cWritePage2++;
 		}
 		return cRegList;
 	}
@@ -341,7 +352,7 @@ namespace Strasbourg{
 			unsigned int cCbc(0), cPage(0), cAddr(0), cVal(0);
 			decodeRegInfo( pVecReq[i], cCbc, cPage, cAddr, cVal ); 
 #ifdef __CBCDAQ_DEV__
-			if( cRAddr == 0x0B ) std::cout << "Cbc register configuration : " << pFe << " " << cCbc << " " << cPage << " " << cAddr << " " << cVal << std::endl;
+			if( cAddr == 0x0B ) std::cout << "Cbc register configuration : " << pFe << " " << cCbc << " " << cPage << " " << cAddr << " " << cVal << std::endl;
 #endif
 			cRegList.push_back( setReadValueToCbcRegSetting( pFe, cCbc, cPage, cAddr, cVal ) );
 		}

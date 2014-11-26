@@ -67,6 +67,9 @@ namespace Strasbourg{
 			void SaveCbcRegInfo( unsigned int pFe, unsigned int pCbc );
 			void SaveCbcRegInfo( const char *newdir = 0 );
 
+			unsigned int NCbcI2cWritePage1()const{ return fNCbcI2cWritePage1; }
+			unsigned int NCbcI2cWritePage2()const{ return fNCbcI2cWritePage2; }
+
 		protected:
 			Data *getData()const{ return fData; }
 			virtual void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite)=0;
@@ -88,6 +91,9 @@ namespace Strasbourg{
 			unsigned int fNCbc;
 			unsigned int fNeventPerAcq;
 			unsigned int fNTotalAcq;
+
+			unsigned int fNCbcI2cWritePage1;
+			unsigned int fNCbcI2cWritePage2;
 	};
 }
 

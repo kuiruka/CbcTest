@@ -75,6 +75,7 @@ namespace ICCalib{
 		UInt_t cTargetVCth      = fCalibSetting.find( "TargetVCth"             )->second;
 		UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse"        )->second;
 		UInt_t cTPPot           = fCalibSetting.find( "TestPulsePotentiometer" )->second;
+		fNAcq                   = fCalibSetting.find( "NAcq"                   )->second;
 
 		for( UInt_t cFe = 0; cFe < fNFe; cFe++ ){
 			for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
@@ -154,6 +155,10 @@ namespace ICCalib{
 		UInt_t cFinalNTotalAcq = fHwController->GetNumberOfTotalAcq();
 		UInt_t cNAcq = cFinalNTotalAcq - cInitialNTotalAcq;
 		Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this calibration.", cNAcq, fNeventPerAcq ) );
+		UInt_t cNCbcI2cWritePage1 = fHwController->NCbcI2cWritePage1();
+		Emit( "Message( const char * )", Form( "Total %d I2C page 1 register write are made for this calibration.", cNCbcI2cWritePage1 ) );
+		UInt_t cNCbcI2cWritePage2 = fHwController->NCbcI2cWritePage2();
+		Emit( "Message( const char * )", Form( "Total %d I2C page 2 register write are made for this calibration.", cNCbcI2cWritePage2 ) );
 
 		return;
 	}
