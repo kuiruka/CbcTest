@@ -5,7 +5,7 @@ namespace Strasbourg {
 
 	BeEmulator::BeEmulator(): HwController( "BeEmulator" ){}
 	BeEmulator::~BeEmulator(){}
-	void BeEmulator::ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId ){
+	void BeEmulator::ConfigureGlib( const char *pUhalConfigFileName ){
 
 		Emit( "Message( const char * )", Form( "\tBeEmulator::ConfigureGlib()" ) );
 	}

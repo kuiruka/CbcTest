@@ -88,7 +88,7 @@ namespace SignalShape{
 
 				cCurrentTime = 25 - ( cPulseDelay + 1 ) + cTriggerDelay * 25;
 
-//				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
+				std::cout << "CurrentTime = " << cCurrentTime << std::endl;
 
 				uint32_t cFe(0), cCbc(0);
 				for( cFe = 0; cFe < fNFe; cFe++ ){

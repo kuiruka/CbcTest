@@ -507,13 +507,14 @@ namespace Analysers{
 
 						UInt_t cVplus = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0B );
 						UInt_t cPage(0x00), cAddr(0x0F);
-						UInt_t cTPEnable = fCbcRegMap->GetReadValue( cFeId, cCbcId, cPage, cAddr );
+						UInt_t tmp = fCbcRegMap->GetReadValue( cFeId, cCbcId, cPage, cAddr );
 						UInt_t cMask = 1 << 6;
-						cTPEnable &= cMask;
+						tmp &= cMask;
+						UInt_t cTPEnable = tmp == 0 ? 0 : 1;
 						UInt_t cTPPot = fCbcRegMap->GetReadValue( cFeId, cCbcId, 0, 0x0D );
-						cRegInfo = Form( "Vplus%02XTP%02XPot%02X", cVplus, cTPEnable, cTPPot );
+						cRegInfo = Form( "Vplus%02XTPEnable%dPot%02X", cVplus, cTPEnable, cTPPot );
 					}
-					cPad->Print( Form( "%s/%sFE%uCBC%uTestGroup%d%s.eps", fOutputDir.Data(), getScanId().Data(), cFeId, cCbcId, cGroupId, cRegInfo.Data() ) );
+					cPad->Print( Form( "%s/%s_FE%uCBC%uTestGroup%d%s.eps", fOutputDir.Data(), getScanId().Data(), cFeId, cCbcId, cGroupId, cRegInfo.Data() ) );
 				}
 			}
 		}
@@ -694,7 +695,12 @@ namespace Analysers{
 		}
 		else if( fScanType == SINGLEVCTHSCAN ){
 
-			cType = Form( "SingleScan" );
+			UInt_t tmp = fCbcRegMap->GetReadValue( 0, 0, 0, 0x0F );
+			UInt_t cMask = 1 << 6;
+			tmp &= cMask;
+			UInt_t cTPEnable = tmp == 0 ? 0 : 1;
+			UInt_t cTPPot = fCbcRegMap->GetReadValue( 0, 0, 0, 0x0D );
+			cType = Form( "SingleScanTPEnable%dTPPot%02X", cTPEnable, cTPPot );
 		}
 		return cType;
 	}

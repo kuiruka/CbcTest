@@ -35,7 +35,7 @@ namespace Strasbourg{
 			BeController( const char *pName = "defalut" );
 			~BeController();
 
-			void ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId );
+			void ConfigureGlib( const char *pUhalConfigFileName );
 			void StartAcquisition();
 			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger );
 			void EndAcquisition( unsigned int pNthAcq );
@@ -62,7 +62,7 @@ namespace Strasbourg{
 			void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite);
 			void addCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite);
 
-			std::string fFirmwareType;
+			std::string        fBoardId;
 			uhal::HwInterface *fBoard;
 
 			std::string fStrSram, fStrOtherSram, fStrSramUserLogic, fStrFull, fStrReadout;

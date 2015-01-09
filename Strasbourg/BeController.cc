@@ -52,9 +52,9 @@ namespace Strasbourg{
 		pVecReq.push_back(uCbc<<17 | uPage<<16 | uAddr<<8 | uWrite);
 	}
 
-	BeController::BeController( const char *pFirmwareType ): 
+	BeController::BeController( const char *pBoardId ): 
 		HwController( "BeController" ),
-		fFirmwareType( pFirmwareType ),
+		fBoardId(pBoardId), 
 		fBoard(0), 
 		fDevFlag(DEV0){
 
@@ -66,9 +66,11 @@ namespace Strasbourg{
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A", 400 );
 			AddGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE", 200 );
 			AddGlibSetting( "COMMISSIONNING_MODE_RQ", 1 );
-			if( fFirmwareType == "SEUtest" ){
+	
+			if( fBoardId == "boardSEU" ){
 				AddGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU", 1 );
 			}
+			
 			AddGlibSetting( "cbc_stubdata_latency_adjust_fe1", 1 );
 			AddGlibSetting( "cbc_stubdata_latency_adjust_fe2", 1 );
 			AddGlibSetting( "user_wb_ttc_fmc_regs.pc_commands.ACQ_MODE", true );
@@ -85,7 +87,7 @@ namespace Strasbourg{
 	BeController::~BeController(){
 		delete fBoard;
 	}
-	void BeController::ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId ){
+	void BeController::ConfigureGlib( const char *pUhalConfigFileName ){
 
 #ifdef __CBCDAQ_DEV__
 		uhal::setLogLevelTo( uhal::Error() );
@@ -94,7 +96,7 @@ namespace Strasbourg{
 #endif
 		uhal::ConnectionManager cm( pUhalConfigFileName );
 		delete fBoard;
-		fBoard = new uhal::HwInterface( cm.getDevice( pBoardId ) );
+		fBoard = new uhal::HwInterface( cm.getDevice( fBoardId ) );
 
 		boost::posix_time::milliseconds cPause(200);
 
@@ -108,7 +110,7 @@ namespace Strasbourg{
 
 		GlibSetting::iterator cIt = fGlibSetting.begin();
 		for(; cIt != fGlibSetting.end(); cIt++ ){
-			//std::cout << cIt->first << " " << cIt->second << std::endl;
+//			std::cout << cIt->first << " " << cIt->second << std::endl;
 			fBoard->getNode( cIt->first ).write( (uint32_t) cIt->second );
 		}
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.SPURIOUS_FRAME").write(0);

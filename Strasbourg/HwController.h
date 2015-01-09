@@ -32,7 +32,7 @@ namespace Strasbourg{
 			HwController( const char *pName );
 			virtual ~HwController();
 
-			virtual void ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId )=0;
+			virtual void ConfigureGlib( const char *pUhalConfigFileName )=0;
 			virtual void StartAcquisition()=0;
 			virtual void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger )=0;
 			virtual void EndAcquisition( unsigned int pNthAcq )=0;
@@ -40,7 +40,7 @@ namespace Strasbourg{
 			virtual void CbcHardReset()=0;
 			virtual void CbcFastReset()=0;
 
-			void ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId );
+			void ConfigureGlibController( const char *pUhalConfigFileName );
 			void ConfigureCbc();
 
 			const std::string & Name()const{ return fName; }
@@ -78,8 +78,6 @@ namespace Strasbourg{
 			std::vector<const CbcRegItem *> setReadValueToCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pReadVecReq );	
 			const CbcRegItem * setReadValueToCbcRegSetting( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pValue ); 
 
-			std::string fName;
-
 			Data *fData;
 			unsigned int fPacketSize;
 
@@ -87,6 +85,7 @@ namespace Strasbourg{
 			CbcRegMap fCbcRegSetting;
 			CbcRegUpdateMap fCbcRegUpdateList; 
 
+			std::string  fName;
 			unsigned int fNFe;
 			unsigned int fNCbc;
 			unsigned int fNeventPerAcq;

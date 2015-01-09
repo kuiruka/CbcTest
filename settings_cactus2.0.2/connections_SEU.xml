@@ -2,5 +2,5 @@
 
 <connections>
 	<connection id="localhost" uri="ipbusudp-2.0://127.000.000.001:50001" address_table="file:///home/xtaldaq/kdaq/CbcTest/settings_cactus2.0.2/address_table_SEU.xml" />
-	<connection id="board" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file:///home/xtaldaq/kdaq/CbcTest/settings_cactus2.0.2/address_table_SEU.xml" />
+	<connection id="boardSEU" uri="ipbusudp-2.0://192.168.000.175:50001" address_table="file:///home/xtaldaq/kdaq/CbcTest/settings_cactus2.0.2/address_table_SEU.xml" />
 </connections>

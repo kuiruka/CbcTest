@@ -1,5 +1,5 @@
 GlibConfigurationFile : settings/connections_SEU.xml
-GlibBoardId           : board
+GlibBoardId           : boardSEU
 BeId				  : 0
 GlibReg_CBC_expected                                            :          1
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1

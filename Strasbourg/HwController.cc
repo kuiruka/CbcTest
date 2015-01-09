@@ -58,9 +58,9 @@ namespace Strasbourg{
 	HwController::~HwController(){
 		delete fData;
 	}
-	void HwController::ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId ){
+	void HwController::ConfigureGlibController( const char *pUhalConfigFileName ){
 
-		ConfigureGlib( pUhalConfigFileName, pBoardId );
+		ConfigureGlib( pUhalConfigFileName );
 
 		//Setting internal members
 		fNFe = fGlibSetting.find( "FE_expected" )->second;

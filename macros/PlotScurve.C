@@ -24,6 +24,7 @@ void PlotScurve( Char_t *fname, UInt_t pBeId = 0, UInt_t pFeId = 0, UInt_t pCbc 
 		w = func->GetParameter( 1 );
 		sum_w += w;
 		sum_w2 += w * w;
+		printf( "Channel%03d\t0x%02X\n", i, m );
 	}
 
 	double m = sum_m/254;
@@ -34,5 +35,10 @@ void PlotScurve( Char_t *fname, UInt_t pBeId = 0, UInt_t pFeId = 0, UInt_t pCbc 
 	double ew = sqrt(sum_w2/254 - w*w);
 	l = new TLatex( 124, 0.4, Form( "<width> = %.2f#pm%.2f", w, ew) );
 	l->Draw();
+
+	TString name( fname );
+	TString tmp = Form( "_BE%02d_FE%02d_CBC%02d.png", pBeId, pFeId, pCbc );	
+	name.ReplaceAll( ".root", tmp );
+	gPad->Print( name );
 
 }

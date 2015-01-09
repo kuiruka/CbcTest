@@ -17,7 +17,7 @@ namespace Strasbourg{
 			BeEmulator();
 			~BeEmulator();
 
-			void ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId );
+			void ConfigureGlib( const char *pUhalConfigFileName );
 			void StartAcquisition();
 			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger );
 			void EndAcquisition( unsigned int pNthAcq );

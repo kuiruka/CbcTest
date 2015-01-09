@@ -36,8 +36,7 @@ namespace ICCalib{
 		fScurveAnalyser(0),
 		fTestGroupMap(0),
 		fGroupList(),
-		fNonTestGroupOffset(0xFF),
-		fNAcq(3)
+		fNonTestGroupOffset(0xFF)
 	{
 	}
 
@@ -489,8 +488,9 @@ namespace ICCalib{
 
 			unsigned int cNChannels = fTestGroupMap->GetActivatedGroup()->size() * fNFe * fNCbc;
 #ifdef __CBCDAQ_DEV__
+			std::cout << fTestGroupMap->GetActivatedGroup()->size() << std::endl;
+			std::cout << cNChannels << std::endl;
 			std::cout << "Analysis for this Acquisition is done. # of hits = " << cNHits << std::endl;
-			//std::cout << cNChannels << std::endl;
 			//std::cout << cNoneZero << std::endl;
 #endif
 			if( cNoneZero == false && cNHits != 0 ) {
@@ -500,6 +500,7 @@ namespace ICCalib{
 				continue;
 			}
 #ifdef __CBCDAQ_DEV__
+			std::cout << fNAcq << std::endl;
 			//std::cout << cStep << std::endl;
 			//std::cout << cAllOneCount << std::endl;
 			//std::cout << fNeventPerAcq << std::endl;

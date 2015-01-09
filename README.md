@@ -10,6 +10,9 @@ CbcTest
 
 Please check the folder doc/ for more info.
 
+Caution : channel id in Analyser which dump the histograms and the number shown as Channel??? in the setting file FE?CBC?.txt are different.
+			Former starts from 0, later starts from 1.
+
 Tested in the beamtest virtual machine for two versions with single GLIB, single old FMC, one and two CBC2 chips.
 
 Should work in any of the newer versions of the VM.

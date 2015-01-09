@@ -48,7 +48,7 @@ namespace CbcDaq{
 		fBeId(0),
 		fNFe(1),
 		fNCbc(2),
-		fNAcq(0),
+		fNAcq(3),
 		fNeventPerAcq(100),//# of events in one data taking
 		fNegativeLogicCBC(true),
 		fStop(false),
@@ -110,11 +110,8 @@ namespace CbcDaq{
 			if( fBoardId == "Emulator" ){
 				fHwController = new BeEmulator();
 			}
-			else if( fAnalyserName == "ErrorAnalyser" ){
-				fHwController = new BeController( "SEUtest" ); 
-			}
 			else{
-				fHwController = new BeController(); 
+				fHwController = new BeController( fBoardId.c_str() ); 
 			}
 			//Configuration file settings are set to HwController.
 			Configuration::iterator cIt = fConfiguration.begin();
@@ -140,7 +137,7 @@ namespace CbcDaq{
 
 			std::string prefix( "file://" );
 			try{
-				fHwController->ConfigureGlibController( ( prefix + fUhalConfigFileName ).c_str(), fBoardId.c_str() );
+				fHwController->ConfigureGlibController( ( prefix + fUhalConfigFileName ).c_str() );
 			}
 			catch( ... ){
 				throw std::string( "ERROR: HwController::ConfigureGlib() failed." );
@@ -280,7 +277,10 @@ namespace CbcDaq{
 				unsigned int cTPDelay         = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET" );
 				unsigned int cL1ADelayAfterTP = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_TEST_PULSE" );
 				unsigned int cFRDelayAfterL1A = GetGlibSetting( "COMMISSIONNING_MODE_DELAY_AFTER_L1A"        );
-				unsigned int cStopClockSEU    = GetGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU"         );
+				unsigned int cStopClockSEU    = (0);
+				if( fBoardId == "boardSEU" ){
+					cStopClockSEU = GetGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU"         );
+				}
                 unsigned int cBeamIntensity   = fRunSetting.find( "2)BeamIntensity" )->second;
 
 				unsigned int cL1APointer( cTPDelay - 2 );
