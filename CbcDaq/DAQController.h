@@ -45,7 +45,7 @@ namespace CbcDaq{
 			static UInt_t NBe;
 
 		public:
-			DAQController( const char *pAnalyserName, const char *pConfigFile = 0 );
+			DAQController( const char *pConfigFile = 0 );
 			virtual ~DAQController();
 
 			//main functions
@@ -63,7 +63,7 @@ namespace CbcDaq{
 			virtual void SetGlibSetting( const char *pName, UInt_t pValue );
 			virtual void SetCbcRegSettingFileName( UInt_t pFeId, UInt_t pCbcId, std::string pName ); 
 			virtual void AddCbcRegUpdateItem( const CbcRegItem *pCbcRegItem, UInt_t pValue );
-			virtual void UpdateCbcRegValues();
+			virtual void UpdateCbcRegValues( bool pWrite = true );
 			virtual std::vector<const CbcRegItem *> ResetCbcRegUpdateList();
 			virtual void SetRunSetting( const char *pName, UInt_t pValue ){ fRunSetting.find( pName )->second = pValue; }
 
@@ -87,15 +87,16 @@ namespace CbcDaq{
 			virtual void Stop(){ fStop = true; }
 			virtual void CbcHardReset();
 			virtual void ShowDataStream( bool pShowData ){ fAnalyser->ShowDataStream( pShowData ); }
+			virtual void ReConfigureCbc();
 			virtual void ReConfigureCbc( UInt_t pFe, UInt_t pCbc );
 			virtual void SaveCbcRegInfo( UInt_t pFe, UInt_t pCbc );
 			virtual void SaveCbcRegInfo( const char *pNewDir = 0 );
+			virtual void ReadCbcRegisters();
 			void ActivateGroup( UInt_t pGroupId );
 
 		protected:
 			virtual void initialiseSetting();
 
-			TString 						fAnalyserName;
 			GUIFrame                        *fGUIFrame;
 
 			std::string                     fConfigurationFileName;
@@ -122,7 +123,6 @@ namespace CbcDaq{
 			TestGroupMap                         *fTestPulseGroupMap;
 			TestGroupMap                         *fAnalyserGroupMap;
 			Int_t                                fCurrentTestPulseGroup;
-			TString                              fSummaryHistFileName;
 	};
 }
 #endif

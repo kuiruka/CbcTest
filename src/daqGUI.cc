@@ -19,8 +19,7 @@ int main( int argc, char *argv[] ){
 
 	TApplication theApp( "App", &argc, argv );
 
-	std::string cAnalyserName = "Analyser";
-	DAQController *cDaq = new DAQController( cAnalyserName.c_str(), cSettingFile );
+	DAQController *cDaq = new DAQController( cSettingFile );
 
 	cDaq->Initialise();
 

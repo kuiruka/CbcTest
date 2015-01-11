@@ -44,7 +44,7 @@ ssGUI: ssGUI.cc
 	mv $@ ../bin
 
 seuGUI: seuGUI.cc  
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq 
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq -lSEUTest
 	mv $@ ../bin
 
 dumpRawData: dumpRawData.cc  

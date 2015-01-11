@@ -32,8 +32,7 @@ int main( int argc, char *argv[] ){
 			cConfigFileName = std::string( argv[2] );
 		}
 	}
-	std::string cAnalyserName = "ErrorAnalyser";
-	CbcDaq::DAQController cDaq( cAnalyserName.c_str(), cConfigFileName.c_str() );
+	CbcDaq::DAQController cDaq( cConfigFileName.c_str() );
 
 	TQObject::Connect( &cDaq, "Message( const char * )", 0, 0, "PrintLog( const char * )" ); 
 

@@ -1,6 +1,7 @@
 #ifndef __CBCREGINFO_H__
 #define __CBCREGINFO_H__
 #include <TROOT.h>
+#include <TString.h>
 #include <map>
 #include <vector>
 #include <iostream>
@@ -29,6 +30,8 @@ namespace Cbc{
 			UInt_t ReadValue()const{ return fReadValue; }       //Read value
 			UInt_t WrittenValue()const{ return fWrittenValue; }   //Written value
 			Bool_t WriteFailed()const{ return fWriteFailed; }
+			TString Dump()const;
+			UInt_t NumberOfWrongBits()const;
 
 			void SetFeId( UInt_t pFe ){ fFeId = pFe; }
 			void SetCbcId( UInt_t pCbc ){ fCbcId = pCbc; }

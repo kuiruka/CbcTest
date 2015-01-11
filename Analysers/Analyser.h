@@ -40,15 +40,14 @@ namespace Analysers{
 			virtual ~Analyser();
 			virtual void Initialise();
 			virtual void   Configure(){;}
-			virtual void ConfigureRun(){}
-			virtual UInt_t   Analyse(const Event *pEvent, bool pFillDataStream = true );
+			virtual void Reset(){}
+			virtual UInt_t   Analyse(const Event *pEvent, bool pFillDataStream = true, int pErrorType = -1 );
 			virtual void DrawHists();
 			virtual void DrawText();
 			virtual void FinishRun(){}
 			virtual void SetHistPad( UInt_t pFeId, UInt_t pCbcId, TPad *pPad );	
 			virtual TString Dump(){ return TString();}
 			virtual void SetTextView( TGTextView *pTextView ){ fTextView = pTextView; }
-			virtual void SaveSummaryHists( const char * pFileName ){}
 			void ShowDataStream( Bool_t pShow ){ fShowDataStream = pShow; }
 			Bool_t ShowDataStream(){ return fShowDataStream; }
 
