@@ -1,7 +1,7 @@
 GlibConfigurationFile : /opt/testing/trackerDAQ-3.2/CBCDAQ/GlibSupervisor/xml/connections.xml
 GlibBoardId           : board
 BeId				  : 0
-GlibReg_CBC_expected                                            :          3
+GlibReg_CBC_expected                                            :          1
 GlibReg_COMMISSIONNING_MODE_CBC_TEST_PULSE_VALID                :          1
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_FAST_RESET              :         50
 GlibReg_COMMISSIONNING_MODE_DELAY_AFTER_L1A                     :        400
@@ -20,12 +20,8 @@ GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_CBC    :          1
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.negative_logic_sTTS   :          0
 GlibReg_user_wb_ttc_fmc_regs.pc_commands2.polarity_tlu          :          0
 CbcConfig_FE0CBC0 : settings/FE0CBC0.txt
-CbcConfig_FE0CBC1 : settings/FE0CBC1.txt
-Calib_InitialOffset :  0x00
-Calib_TargetOffset  :  0x50
-Calib_TargetVCth    :  0x78
-Calib_VplusMax.     :  0x90
-Calib_VplusMin.     :  0x60
-Calib_VplusStep     :  0x10
-Calib_EnableTestPulse: 0x01
-Calib_NAcq           : 0x01
+SS_TestPulsePotentiometer : 0xF3 
+SS_Ipre1                  : 0xF0
+SS_NAcq                   : 0x01
+#Analyser_Group0				:0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+Analyser_Group0				:0,2

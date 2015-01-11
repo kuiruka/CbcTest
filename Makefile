@@ -1,4 +1,4 @@
-all: utils Cbc Strasbourg Analysers ICCalib SignalShape SEUTest CbcDaq src doc 
+all: utils Cbc Strasbourg Analysers ICCalib SignalShape SEUTest RadTest CbcDaq src doc 
 
 utils::
 	+(cd $@; make)
@@ -13,6 +13,8 @@ ICCalib::
 SignalShape::
 	+(cd $@; make)
 SEUTest::
+	+(cd $@; make)
+RadTest::
 	+(cd $@; make)
 CbcDaq::
 	+(cd $@; make)
@@ -30,6 +32,7 @@ clean:
 	(cd ICCalib; make clean)
 	(cd SignalShape; make clean)
 	(cd SEUTest; make clean)
+	(cd RadTest; make clean)
 	(cd CbcDaq; make clean)
 	(cd doc; make clean)
 	(rm -f lib/* bin/*)	

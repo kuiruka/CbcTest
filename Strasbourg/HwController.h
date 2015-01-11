@@ -24,6 +24,7 @@ namespace Strasbourg{
 			~CbcRegUpdateMap(){}
 			void Reset(unsigned int pNFe );
 			void ClearList();
+			int GetListSize();
 	};
 
 	class HwController {

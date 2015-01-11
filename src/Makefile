@@ -48,7 +48,7 @@ seuGUI: seuGUI.cc
 	mv $@ ../bin
 
 radtestGUI: radtestGUI.cc  
-	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq 
+	$(CXX) $(CCFlags) -o $@ $< $(IncludePaths) $(ExternalObjects) -lCbcDaq -lRadTest
 	mv $@ ../bin
 
 dumpRawData: dumpRawData.cc  

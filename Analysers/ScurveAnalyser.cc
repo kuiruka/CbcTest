@@ -281,7 +281,7 @@ namespace Analysers{
 		return cNhit;
 	}
 	void ScurveAnalyser::FitHists( UInt_t pMin, UInt_t pMax ){
-
+		
 		UInt_t cGroupId(0);
 		CalibrationTestGroup *cTestGroup = fGroupMap->GetActivatedGroup(cGroupId);
 		if( cTestGroup == 0 ) return;
@@ -294,9 +294,13 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
-				//cCbcInfo.GetDummyPad()->Clear();
-				fDummyHist->Draw();
+//				TPad *cPad = cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first );
+				TPad *cPad = cCbcInfo.GetData().GetDummyPad();
+				if( cPad ){
+					cPad->cd();
+					//cCbcInfo.GetDummyPad()->Clear();
+					fDummyHist->Draw();
+				}
 			}
 		}
 
@@ -349,9 +353,15 @@ namespace Analysers{
 			if( cObj ) delete cObj;
 			TF1 *f = new TF1( fname, MyErf, pMin, pMax, 2 ); 
 			f->SetParameters( cMid, cWidth );
+			if( fGUIFrame ){	
+			//			TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad( cFeId, cCbcId );
+				TPad *cPad = fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad();
+				if( cPad ){
+					cPad->cd();
+				}
+			}
 			//Option S is for TFitResultPtr
 			//TFitResultPtr cFitR = h->Fit( fname, "RSLQ0" ); 
-			fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad( cFeId, cCbcId )->cd();
 			TFitResultPtr cFitR = h->Fit( fname, "RSLQ", "same" ); 
 			//			TFitResultPtr cFitR = h->Fit( fname, "RSLQ" ); 
 			int cStatus = int( cFitR ); 
@@ -380,7 +390,9 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
+				//				TPad *cPad = cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first );
+				TPad *cPad = cCbcInfo.GetData().GetDummyPad();
+				if(cPad) cPad->Update();
 			}
 		}
 	}

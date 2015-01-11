@@ -83,7 +83,7 @@ namespace ICCalib{
 			}
 		}
 		UpdateCbcRegValues();
-		fOutputDir = Form( "BE%01uNeg%dOff%XVCth%X", fBeId, fNegativeLogicCBC, cTargetOffset, cTargetVCth );
+		if( fOutputDir == "" ) fOutputDir = Form( "BE%01uNeg%dOff%XVCth%X", fBeId, fNegativeLogicCBC, cTargetOffset, cTargetVCth );
 		system( Form( "mkdir -p %s", fOutputDir.c_str() ) );
 
 		delete fTestGroupMap;
@@ -189,7 +189,10 @@ namespace ICCalib{
 
 			if( fStop ) return;
 
+//			std::cout << "I am here" << std::endl;
+
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
+//			std::cout << "Fit done" << std::endl;
 			if( fGUIFrame ){
 				fScurveAnalyser->DrawHists();
 				fScurveAnalyser->PrintScurveHistogramDisplayPads();
@@ -461,9 +464,9 @@ namespace ICCalib{
 				while( cEvent ){
 					cNevent++;
 					//std::cout << "EventCount = " << cEvent->GetEventCount() << std::endl; 
-				//	const FeEvent *cFeEvent = cEvent->GetFeEvent( 0 );
-				//	const CbcEvent *cCbcEvent = cFeEvent->GetCbcEvent( 0 );
-				//	std::cout << "DATASTRING : " << cCbcEvent->DataHexString() << std::endl; 
+					//	const FeEvent *cFeEvent = cEvent->GetFeEvent( 0 );
+					//	const CbcEvent *cCbcEvent = cFeEvent->GetCbcEvent( 0 );
+					//	std::cout << "DATASTRING : " << cCbcEvent->DataHexString() << std::endl; 
 					fAnalyser->Analyse( cEvent, cFillDataStream );	
 					cFillDataStream = false;
 					cNHits += fScurveAnalyser->FillHists( cVCth, cEvent );	
@@ -594,6 +597,6 @@ fDataStreamHistMap.insert( std::pair<Int_t, TH1F *>( cId, cHist ) );
 }
 }
 }
-*/
+	 */
 }
 

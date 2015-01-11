@@ -136,7 +136,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->cd();
+				cCbcInfo.GetData().GetDummyPad()->cd();
 				//cCbcInfo.GetDummyPad()->Clear();
 				fDummyHist->Draw();
 			}
@@ -194,7 +194,7 @@ namespace Analysers{
 			f->SetParameters( cMid, cWidth );
 			//Option S is for TFitResultPtr
 			//TFitResultPtr cFitR = h->Fit( fname, "RSLQ0" ); 
-			fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad( cFeId, cCbcId )->cd();
+			fGUIData.GetCbcInfo( cFeId, cCbcId )->GetData().GetDummyPad()->cd();
 			TFitResultPtr cFitR = h->Fit( fname, "RSLQ", "same" ); 
 			//			TFitResultPtr cFitR = h->Fit( fname, "RSLQ" ); 
 			int cStatus = int( cFitR ); 
@@ -228,7 +228,7 @@ namespace Analysers{
 			for( ; cItGUICbc != cFeInfo.end(); cItGUICbc++ ){
 
 				GUICbcInfo &cCbcInfo = cItGUICbc->second;
-				cCbcInfo.GetData().GetDummyPad( cItGUIFe->first, cItGUICbc->first )->Update();
+				cCbcInfo.GetData().GetDummyPad()->Update();
 			}
 		}
 

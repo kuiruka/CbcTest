@@ -37,6 +37,13 @@ namespace Strasbourg{
 		CbcRegUpdateMap::iterator cIt = begin();
 		for( ; cIt != end(); cIt++ ) cIt->second.clear();
 	}
+	int CbcRegUpdateMap::GetListSize(){
+
+		int n(0);
+		CbcRegUpdateMap::iterator cIt = begin();
+		for( ; cIt != end(); cIt++ ) n += cIt->second.size();
+		return n;
+	}
 
 	HwController::HwController( const char *pName ):
 		fName( pName ),
@@ -88,7 +95,6 @@ namespace Strasbourg{
 
 //		CbcHardReset();
 		fCbcRegSetting.ClearRegisters();	
-//		fCbcRegUpdateList.ClearList();	
 
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 
@@ -97,18 +103,26 @@ namespace Strasbourg{
 				LoadCbcRegInfo( cFe, cCbc );
 			}
 		}
-		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues();
+		int cN = fCbcRegUpdateList.GetListSize();
 
-		unsigned int cNfailed(0);
-		for( unsigned int i=0; i < cList.size(); i++ ){
-			const CbcRegItem * cItem = cList[i];
-			if( cItem->WriteFailed() ){
-				cNfailed++;
-				AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
-				std::cout << "Write failed : " << cItem->Dump() << std::endl;
+		std::vector<const CbcRegItem *> cList(0);
+
+		while( cN != 0 ){
+			std::vector<const CbcRegItem *> cThisList = UpdateCbcRegValues();
+
+			unsigned int cNfailed(0);
+			for( unsigned int i=0; i < cThisList.size(); i++ ){
+				const CbcRegItem * cItem = cThisList[i];
+				if( cItem->WriteFailed() ){
+					cNfailed++;
+					AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
+					std::cout << "Write failed : " << cItem->Dump() << std::endl;
+					cThisList.erase(cThisList.begin()+i); i--;
+				}
 			}
+			cList.insert( cList.end(), cThisList.begin(), cThisList.end() );
+			cN = fCbcRegUpdateList.GetListSize();
 		}
-		if( cNfailed ) UpdateCbcRegValues();
 		return;
 	}
 	const Event *HwController::GetNextEvent()const{ return fData->GetNextEvent(); }
@@ -152,7 +166,7 @@ namespace Strasbourg{
 			}
 			std::vector<const CbcRegItem *> cThisList = setReadValueToCbcRegSettings( cFe, cReadVecReq );	
 			cRegList.insert( cRegList.end(), cThisList.begin(), cThisList.end() ); 
-			cSentVecReq.clear();
+			cSentVecReq.clear(); //UpdateList is cleared here.
 		}
 		std::vector<const CbcRegItem *>::const_iterator cRLIt = cRegList.begin();
 		for(; cRLIt != cRegList.end(); cRLIt++ ){
@@ -180,29 +194,30 @@ namespace Strasbourg{
 
 	std::vector<const CbcRegItem *> HwController::ReConfigureCbc( unsigned int pFe, unsigned int pCbc ){
 
-		//		fCbcRegUpdateList.ClearList();
 		LoadCbcRegInfo( pFe, pCbc );
+		int cN = fCbcRegUpdateList.GetListSize();
 
-		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues();
+		std::vector<const CbcRegItem *> cList(0);
 
-		unsigned int cNfailed(0);
-		for( unsigned int i=0; i < cList.size(); i++ ){
-			const CbcRegItem * cItem = cList[i];
-			if( cItem->WriteFailed() ){
-				cNfailed++;
-				AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
-				cList.erase(cList.begin()+i); i--;
+		while( cN != 0 ){
+			std::vector<const CbcRegItem *> cThisList = UpdateCbcRegValues();
+
+			unsigned int cNfailed(0);
+			for( unsigned int i=0; i < cThisList.size(); i++ ){
+				const CbcRegItem * cItem = cThisList[i];
+				if( cItem->WriteFailed() ){
+					cNfailed++;
+					AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
+					std::cout << "Write failed : " << cItem->Dump() << std::endl;
+					cThisList.erase(cThisList.begin()+i); i--;
+				}
 			}
-		}
-		if( cNfailed ) {
-			std::vector<const CbcRegItem *> c2ndList = UpdateCbcRegValues();
-			for( unsigned int i=0; i < c2ndList.size(); i++ ) cList.push_back( c2ndList[i] );
+			cList.insert( cList.end(), cThisList.begin(), cThisList.end() );
+			cN = fCbcRegUpdateList.GetListSize();
 		}
 		return cList;
 	}
 	std::vector<const CbcRegItem *> HwController::ReadCbcRegisters(){
-
-		//		fCbcRegUpdateList.ClearList();	
 
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 
@@ -224,7 +239,6 @@ namespace Strasbourg{
 	}
 	std::vector<const CbcRegItem *> HwController::ReadCbcRegisters( unsigned int pFe, unsigned int pCbc ){
 
-		//		fCbcRegUpdateList.ClearList();	
 		SetCbcRegUpdateListForRead( pFe, pCbc );
 
 		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues(false);
@@ -345,6 +359,7 @@ namespace Strasbourg{
 		}	
 		return cRegList;
 	}
+	//Read the setting file and fill the fCbcRegUpdateList.
 	void HwController::LoadCbcRegInfo( unsigned int pFe, unsigned int pCbc ){
 
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
@@ -455,5 +470,5 @@ namespace Strasbourg{
 		}
 		return cRegList;
 	}
-}
+	}
 

@@ -83,7 +83,7 @@ namespace ICCalib{
 			//main functions
 			void ConfigureAnalyser();
 			void Calibrate();
-			void VCthScanForAllGroups();  
+	 		void VCthScanForAllGroups();  
 
 			//functions for configuration on the fly
 			void SetCalibSetting( const char *pNode, UInt_t pValue ){ fCalibSetting.find( pNode )->second = pValue; }		

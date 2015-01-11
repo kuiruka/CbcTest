@@ -57,6 +57,8 @@ namespace CbcDaq{
 			virtual void ConfigureRun();
 			virtual void Run();
 
+			void SetOutputDir( const char *pOutputDir );
+
 			//functions for configuration on the fly
 			virtual void SetUhalConfigFileName( const char *pName ){ fUhalConfigFileName = pName; }
 			virtual void SetBoardId( const char *pId ){ fBoardId = pId; }
