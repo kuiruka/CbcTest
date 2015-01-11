@@ -5,13 +5,25 @@ using namespace CbcDaq;
 
 namespace Cbc{
 
+	TString CbcRegItem::Dump()const{
+		TString cStr = Form( "[FE]%02d[CBC]%02d[Name]%20s[Page]%02d[Address]%02X[WrittenValue]%02X[ReadValue]%02X[#ofWrongBits]%u", 
+		fFeId, fCbcId, fName.c_str(), fPage, fAddress, fWrittenValue, fReadValue, NumberOfWrongBits() );
+		return cStr;
+	}
+	UInt_t CbcRegItem::NumberOfWrongBits()const{
+		UInt_t cXor = fWrittenValue ^ fReadValue;
+		UInt_t cN(0);
+		for( UInt_t i=0; i < 8; i++ ){
+			cN += ( cXor >> i ) & 1;
+		}
+		return cN;
+	}
 	void CbcRegItem::SetReadValue( UInt_t pReadValue ){ 
 
 		fReadValue = pReadValue; 
 
-//		std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
+		//		std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 		if( fReadValue != fWrittenValue ){ 
-			std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 			if( fPage == 0 && fAddress == 0 ){
 				unsigned int cMask(0x00000000);
 				for( int i = 0; i < 7; i++ ) cMask |= (unsigned int) 1 << i;
@@ -21,6 +33,7 @@ namespace Cbc{
 				else fWriteFailed = false;
 			}
 			else{
+				std::cout << "Name = " << fName << " WrittenValue = " << fWrittenValue << " ReadValue = " << fReadValue << std::endl;
 				fWriteFailed = true;
 			}
 		}

@@ -34,11 +34,12 @@ namespace Strasbourg{
 
 			virtual void ConfigureGlib( const char *pUhalConfigFileName, const char *pBoardId )=0;
 			virtual void StartAcquisition()=0;
-			virtual void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger )=0;
+			virtual void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger, unsigned int pTimeOut = 1 )=0;
 			virtual void EndAcquisition( unsigned int pNthAcq )=0;
-			virtual void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq )=0;
+			virtual void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite = true )=0;
 			virtual void CbcHardReset()=0;
 			virtual void CbcFastReset()=0;
+			virtual void CbcI2cRefresh()=0;
 
 			void ConfigureGlibController( const char *pUhalConfigFileName, const char *pBoardId );
 			void ConfigureCbc();
@@ -51,9 +52,13 @@ namespace Strasbourg{
 			const std::string &GetCbcRegSettingFileName( unsigned int pFe, unsigned int pCbc )const; 
 			const CbcRegMap &GetCbcRegSetting()const{ return fCbcRegSetting; }
 			unsigned int GetNumberOfTotalAcq()const{ return fNTotalAcq; }
+			unsigned int GetNumberOfNoDataAcq()const{ return fNoDataAcq; }
 
-			std::vector<const CbcRegItem *> UpdateCbcRegValues();
+			std::vector<const CbcRegItem *> UpdateCbcRegValues( bool pWrite = true );
+			std::vector<const CbcRegItem *> ReConfigureCbc();
 			std::vector<const CbcRegItem *> ReConfigureCbc( unsigned int pFe, unsigned int pCbc );
+			std::vector<const CbcRegItem *> ReadCbcRegisters();
+			std::vector<const CbcRegItem *> ReadCbcRegisters( unsigned int pFe, unsigned int pCbc );
 			void AddGlibSetting( const char * pName, unsigned int pValue );
 			void SetGlibSetting( const char * pName, unsigned int pValue );
 			void SetCbcRegSettingFileName( unsigned int pFe, unsigned int pCbc, const std::string pName ); 
@@ -62,13 +67,14 @@ namespace Strasbourg{
 			void AddCbcRegUpdateItemsForNewTestPulseGroup( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseGroup );
 			void AddCbcRegUpdateItemsForNewTestPulseDelay( unsigned int pFe, unsigned int pCbc, unsigned int pTestPulseDelay );
 			void AddCbcRegUpdateItemsForNewVCth( unsigned int pVCth );
+			void SetCbcRegUpdateListForRead( unsigned int pFe, unsigned int pCbc );
 			std::vector<const CbcRegItem *> ResetCbcRegUpdateList();
 			void LoadCbcRegInfo( unsigned int pFe, unsigned int pCbc );
 			void SaveCbcRegInfo( unsigned int pFe, unsigned int pCbc );
 			void SaveCbcRegInfo( const char *newdir = 0 );
-
 			unsigned int NCbcI2cWritePage1()const{ return fNCbcI2cWritePage1; }
 			unsigned int NCbcI2cWritePage2()const{ return fNCbcI2cWritePage2; }
+
 
 		protected:
 			Data *getData()const{ return fData; }
@@ -91,9 +97,11 @@ namespace Strasbourg{
 			unsigned int fNCbc;
 			unsigned int fNeventPerAcq;
 			unsigned int fNTotalAcq;
+			unsigned int fNoDataAcq;
 
 			unsigned int fNCbcI2cWritePage1;
 			unsigned int fNCbcI2cWritePage2;
+
 	};
 }
 

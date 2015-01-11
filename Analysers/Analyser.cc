@@ -52,7 +52,7 @@ namespace Analysers{
 #endif
 	}
 
-	UInt_t Analyser::Analyse( const Event *pEvent, bool pFillDataStream ){
+	UInt_t Analyser::Analyse( const Event *pEvent, bool pFillDataStream, int pErrorType ){
 
 		if( !pFillDataStream || !fShowDataStream ) return 0;
 
@@ -134,6 +134,11 @@ namespace Analysers{
 		TH1F *cHist = new TH1F( cHname, 
 				Form( ";;Data stream BE: %u FE:%u CBC:%u", pBeId, pFeId, pCbcId ), 
 				CbcEvent::NSENSOR, -0.5, CbcEvent::NSENSOR-0.5 ); 
+
+		cHist->GetYaxis()->SetTitle( "DataStream" );
+		cHist->GetYaxis()->SetTitleOffset( 0.10 );
+		cHist->GetYaxis()->SetLabelSize( 0.10 );
+		cHist -> SetNdivisions( 101, "y" );
 
 		fDataStream = std::pair<TH1F *, TPad *>( cHist, 0 );
 	}

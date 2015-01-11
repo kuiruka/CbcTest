@@ -88,7 +88,7 @@ namespace Strasbourg{
 
 //		CbcHardReset();
 		fCbcRegSetting.ClearRegisters();	
-		fCbcRegUpdateList.ClearList();	
+//		fCbcRegUpdateList.ClearList();	
 
 		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
 
@@ -97,7 +97,18 @@ namespace Strasbourg{
 				LoadCbcRegInfo( cFe, cCbc );
 			}
 		}
-		UpdateCbcRegValues();
+		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues();
+
+		unsigned int cNfailed(0);
+		for( unsigned int i=0; i < cList.size(); i++ ){
+			const CbcRegItem * cItem = cList[i];
+			if( cItem->WriteFailed() ){
+				cNfailed++;
+				AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
+				std::cout << "Write failed : " << cItem->Dump() << std::endl;
+			}
+		}
+		if( cNfailed ) UpdateCbcRegValues();
 		return;
 	}
 	const Event *HwController::GetNextEvent()const{ return fData->GetNextEvent(); }
@@ -119,19 +130,19 @@ namespace Strasbourg{
 		if( cIt == cFeCbcRegMap->end() ) throw Exception( Form( "Invalid CBC : %d", pCbcId ) ); 
 		return cIt->second.GetFileName();
 	}
-	std::vector<const CbcRegItem *> HwController::UpdateCbcRegValues(){
+	std::vector<const CbcRegItem *> HwController::UpdateCbcRegValues( bool pWrite ){
 
 		std::vector<const CbcRegItem *> cRegList(0);
-		
+
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.begin();
-		
+
 		for( ; cIt != fCbcRegUpdateList.end(); cIt++ ){
 			unsigned int cFe = cIt->first;
 			std::vector<uint32_t> &cSentVecReq = cIt->second;
 			std::vector<uint32_t> cReadVecReq = cSentVecReq;
 			if( cSentVecReq.size() == 0 ) continue;
 			try{
-				WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq );
+				WriteAndReadbackCbcRegValues( (uint16_t)cFe, cReadVecReq, pWrite );
 			}
 			catch( Exception &e ){
 				throw e;
@@ -152,11 +163,80 @@ namespace Strasbourg{
 		}
 		return cRegList;
 	}
+	std::vector<const CbcRegItem *> HwController::ReConfigureCbc(){
+
+		std::vector<const CbcRegItem *> cList;
+		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
+
+			for( unsigned int cCbc=0; cCbc < fNCbc; cCbc++ ){
+				std::vector<const CbcRegItem *> cThisList = ReConfigureCbc( cFe, cCbc );
+				for( unsigned int i=0; i < cThisList.size(); i++ ){
+					cList.push_back( cThisList[i] );
+				}
+			}
+		}
+		return cList;
+	}
+
 	std::vector<const CbcRegItem *> HwController::ReConfigureCbc( unsigned int pFe, unsigned int pCbc ){
 
-		fCbcRegUpdateList.ClearList();
+		//		fCbcRegUpdateList.ClearList();
 		LoadCbcRegInfo( pFe, pCbc );
-		return UpdateCbcRegValues();
+
+		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues();
+
+		unsigned int cNfailed(0);
+		for( unsigned int i=0; i < cList.size(); i++ ){
+			const CbcRegItem * cItem = cList[i];
+			if( cItem->WriteFailed() ){
+				cNfailed++;
+				AddCbcRegUpdateItem( cItem->FeId(), cItem->CbcId(), cItem->Page(), cItem->Address(), cItem->WrittenValue() ); 	
+				cList.erase(cList.begin()+i); i--;
+			}
+		}
+		if( cNfailed ) {
+			std::vector<const CbcRegItem *> c2ndList = UpdateCbcRegValues();
+			for( unsigned int i=0; i < c2ndList.size(); i++ ) cList.push_back( c2ndList[i] );
+		}
+		return cList;
+	}
+	std::vector<const CbcRegItem *> HwController::ReadCbcRegisters(){
+
+		//		fCbcRegUpdateList.ClearList();	
+
+		for( unsigned int cFe=0; cFe < fNFe; cFe++ ){
+
+			for( unsigned int cCbc=0; cCbc < fNCbc; cCbc++ ){
+
+				SetCbcRegUpdateListForRead( cFe, cCbc );
+			}
+		}
+		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues(false);
+
+		for( unsigned int i=0; i < cList.size(); i++ ){
+			const CbcRegItem * cItem = cList[i];
+			if( ! cItem->WriteFailed() ){
+				cList.erase( cList.begin() + i );
+				i--;
+			}
+		}
+		return cList;
+	}
+	std::vector<const CbcRegItem *> HwController::ReadCbcRegisters( unsigned int pFe, unsigned int pCbc ){
+
+		//		fCbcRegUpdateList.ClearList();	
+		SetCbcRegUpdateListForRead( pFe, pCbc );
+
+		std::vector<const CbcRegItem *> cList = UpdateCbcRegValues(false);
+
+		for( unsigned int i=0; i < cList.size(); i++ ){
+			const CbcRegItem * cItem = cList[i];
+			if( ! cItem->WriteFailed() ){
+				cList.erase( cList.begin() + i );
+				i--;
+			}
+		}
+		return cList;
 	}
 	void HwController::AddGlibSetting( const char *pName, unsigned int pValue ){
 
@@ -178,7 +258,7 @@ namespace Strasbourg{
 	void HwController::AddCbcRegUpdateItem( unsigned int pFe, unsigned int pCbc, unsigned int pPage, unsigned int pAddr, unsigned int pVal ){
 
 		fCbcRegSetting.SetWrittenValue( pFe, pCbc, pPage, pAddr, pVal );
-//		std::cout << pVal << std::endl;
+		//		std::cout << pVal << std::endl;
 		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
 		if( cIt == fCbcRegUpdateList.end() ){
 			std::cerr << "Inconsistent FE id " << pFe << std::endl;
@@ -226,6 +306,23 @@ namespace Strasbourg{
 
 				AddCbcRegUpdateItem( cFe, cCbc, 0, cAddr, cValue );
 			}
+		}
+	}
+	void HwController::SetCbcRegUpdateListForRead( unsigned int pFe, unsigned int pCbc ){
+
+		CbcRegUpdateMap::iterator cIt = fCbcRegUpdateList.find(pFe);
+		if( cIt == fCbcRegUpdateList.end() ){
+			throw Exception( Form( "Inconsistent FE id = %d", pFe ) );
+		}
+
+		std::vector<uint32_t> &cVecReq = cIt->second;
+		const CbcRegList *cList = fCbcRegSetting.GetCbcRegList( pFe, pCbc );
+		unsigned int cPage(0), cAddr(0), cVal(0);
+		for( unsigned int i=0; i<cList->size(); i++ ){
+			cPage = cList->at(i)->Page();
+			cAddr = cList->at(i)->Address();
+			cVal = cList->at(i)->WrittenValue();
+			addCbcReg( cVecReq, pCbc, cPage, cAddr, cVal );
 		}
 	}
 	//clear the CbcRegUpdateList and get the list of corresponding CbcRegItem's (So that GUI can retrieve the original values) 
@@ -346,7 +443,7 @@ namespace Strasbourg{
 	}
 
 	std::vector< const CbcRegItem *> HwController::setReadValueToCbcRegSettings( unsigned int pFe, std::vector<uint32_t> &pVecReq ){	
-                
+
 		std::vector<const CbcRegItem *> cRegList(0);
 		for( unsigned int i=0; i < pVecReq.size(); i++ ){
 			unsigned int cCbc(0), cPage(0), cAddr(0), cVal(0);
