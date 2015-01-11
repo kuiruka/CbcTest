@@ -10,7 +10,7 @@
 namespace SignalShape{
 
 	SSController::SSController( const char *pConfigFile ):
-		DAQController( "SignalShapeAnalyser", pConfigFile ),
+		DAQController( pConfigFile ),
 		fSSSetting(),
 		fNonTestGroupOffset(0xFF),
 		fNAcq(3){

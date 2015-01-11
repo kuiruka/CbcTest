@@ -19,11 +19,13 @@ namespace Strasbourg{
 
 			void ConfigureGlib( const char *pUhalConfigFileName );
 			void StartAcquisition();
-			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger );
+			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger,
+			unsigned int pTimeOut );
 			void EndAcquisition( unsigned int pNthAcq );
-			void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq );
+			void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite );
 			void CbcHardReset();
 			void CbcFastReset();
+			void CbcI2cRefresh(){;}
 
 		private:
 			void decodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite);

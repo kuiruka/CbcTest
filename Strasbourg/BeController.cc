@@ -34,7 +34,7 @@ namespace Strasbourg{
 	const std::string BeController::fStrI2cCommand = I2C_COMMAND;
 	const std::string BeController::fStrI2cReply = I2C_REPLY;
 	const uint32_t BeController::fI2cSlave = I2C_SLAVE;
-	const unsigned int BeController::fI2cSramSize = 50; 
+	const unsigned int BeController::fI2cSramSize = 10; 
 
 	void BeController::DecodeRegInfo( uint32_t vecReq, uint32_t &uCBC, uint32_t &uPage, uint32_t &uAddr, uint32_t &uWrite){
 		uint32_t cMask(0x00000000);
@@ -69,6 +69,7 @@ namespace Strasbourg{
 	
 			if( fBoardId == "boardSEU" ){
 				AddGlibSetting( "COMMISSIONNING_MODE_STOP_CLOCK_SEU", 1 );
+				AddGlibSetting( "COMMISSIONNING_MODE_CBC_I2C_REFRESH_ENABLE", 0 );
 			}
 			
 			AddGlibSetting( "cbc_stubdata_latency_adjust_fe1", 1 );
@@ -100,6 +101,8 @@ namespace Strasbourg{
 
 		boost::posix_time::milliseconds cPause(200);
 
+//		fBoard->getNode("reset_from_user").write(0);
+		fBoard->getNode( "cbc_i2c_refresh" ).write(0);
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.PC_config_ok").write(1);
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.SRAM1_end_readout").write(0);
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.SRAM2_end_readout").write(0);
@@ -139,20 +142,34 @@ namespace Strasbourg{
 	void BeController::StartAcquisition(){
 
 #ifdef __CBCDAQ_DEV__
+		std::cout << "In StartAcquisition" << std::endl;
 		if( fDevFlag == DEV0 ){
 			long mtime = getTimeTook( fStartVeto, 1 );
 			std::cout << "Time took for the trigger veto to trigger enable: " << std::dec << mtime << " ms." << std::endl;
 		}
 #endif
+		boost::posix_time::microseconds cWait(1);
+
+		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.PC_config_ok").write(0);
+		fBoard->dispatch();
+		boost::this_thread::sleep(cWait);
 
 		fBoard->getNode("break_trigger").write(0);
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands.PC_config_ok").write(1);
 		fBoard->getNode("user_wb_ttc_fmc_regs.pc_commands2.force_BG0_start").write(1);
 		fBoard->dispatch();
-	}
-	void BeController::ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger ){
 
-//		std::cout << "ReadDataInSRAM" << std::endl;
+//		boost::this_thread::sleep(cWait);
+		boost::posix_time::microseconds cWait1(1000);
+		boost::this_thread::sleep(cWait1);
+//		fBoard->getNode("break_trigger").write(0);
+//		fBoard->dispatch();
+	}
+	void BeController::ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger, unsigned int pTimeOut ){
+
+		fNTotalAcq++;
+
+		boost::posix_time::milliseconds cTimeOut(pTimeOut);
 
 #ifdef __CBCDAQ_DEV__
 		struct timeval cStartReadDataInSRAM, cStartBlockRead;
@@ -165,20 +182,31 @@ namespace Strasbourg{
 		}
 #endif
 		//Readout settings
-		boost::posix_time::milliseconds cWait(1);
+		unsigned int cOneWait(1);
+		boost::posix_time::milliseconds cWait(cOneWait);
 		//boost::posix_time::microseconds cWait(100);
 
 		uhal::ValWord<uint32_t> cVal;
 		uint32_t cNPackets= fNeventPerAcq+1;
 		uint32_t cBlockSize = cNPackets * fPacketSize;
 
-//		std::cout << "Wait for start acknowledge" << std::endl;
-		//Wait for start acknowledge
+		//		std::cout << "Wait for start acknowledge" << std::endl;
+		//Wait for start acknowledge FIFO goes to write_data state.  FIFO
+		//stays there unless FIFO is 90% full.  If it is almost full, FIFO
+		//goes to BUSY and once FIFO is emptied, goes back to write_data.
+		//If PC_config_ok <= 0, FIFO is reset.
+		unsigned int cTotalWait(0);
+
 		do{
 			cVal=fBoard->getNode("user_wb_ttc_fmc_regs.status_flags.CMD_START_VALID").read();
 			fBoard->dispatch();
 			if (cVal==0)
 				boost::this_thread::sleep(cWait);
+			cTotalWait += cOneWait;
+			if( cTotalWait > pTimeOut ){
+				fNoDataAcq++;
+				throw Exception( Form( "CMD_START_VALID stays 0 (FIFO is not in the state : write_data )" ), FIFO_NOT_IN_WRITE_DATA );
+			}
 		} while ( cVal==0 );
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -186,7 +214,7 @@ namespace Strasbourg{
 			std::cout << "BeController::ReadDataInSRAM()  Time took for the CMD_START_VALID flag to be set: " << std::dec << mtime << " ms." << std::endl;
 		}
 #endif
-//		std::cout << "FIFO goes to write_data state" << std::endl;
+		//		std::cout << "FIFO goes to write_data state" << std::endl;
 		//FIFO goes to write_data state
 		//Select SRAM
 		SelectSramForDAQ( pNthAcq );
@@ -196,13 +224,22 @@ namespace Strasbourg{
 			gettimeofday(&start, 0);
 		}
 #endif
-//		std::cout << "Wait for the SRAM full condition." << std::endl;
+		//		std::cout << "Wait for the SRAM full condition." << std::endl;
 		//Wait for the SRAM full condition.
-		cVal = fBoard->getNode(fStrFull).read();
+		//		cVal = fBoard->getNode(fStrFull).read();
+		cTotalWait=0;
 		do{
 			boost::this_thread::sleep( cWait );	
 			cVal = fBoard->getNode(fStrFull).read();
 			fBoard->dispatch();
+			cTotalWait += cOneWait;
+			if( cTotalWait > pTimeOut ){
+#ifdef __CBCDAQ_DEV__
+				std::cout << "sram full timeout" << std::endl;
+#endif
+				fNoDataAcq++;
+				throw Exception( Form( "Enough DATA do not come to SRAM." ), SRAM_NOT_FULL );
+			}
 		} while (cVal==0);
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){
@@ -210,7 +247,7 @@ namespace Strasbourg{
 			std::cout << "Time took for the data to be ready : " << std::dec << mtime << " ms." << std::endl;
 		}
 #endif
-//		std::cout << "break trigger" << std::endl;
+		//		std::cout << "break trigger" << std::endl;
 		//break trigger
 		if( pBreakTrigger ){
 			fBoard->getNode("break_trigger").write(1);
@@ -222,7 +259,7 @@ namespace Strasbourg{
 			gettimeofday( &fStartVeto, 0 );
 		}
 #endif
-//		std::cout << "read mode to SRAM" << std::endl;
+		//		std::cout << "read mode to SRAM" << std::endl;
 		//Set read mode to SRAM
 		fBoard->getNode(fStrSramUserLogic).write(0);
 		fBoard->dispatch();
@@ -231,7 +268,7 @@ namespace Strasbourg{
 			gettimeofday( &cStartBlockRead, 0 );
 		}
 #endif
-//		std::cout << "Read SRAM" << std::endl;
+		//		std::cout << "Read SRAM" << std::endl;
 		//Read SRAM
 		//std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
 		//Block size = 42 * ( packet # + 1 )
@@ -244,7 +281,8 @@ namespace Strasbourg{
 #endif
 
 		fBoard->getNode(fStrSramUserLogic).write(1);
-		fBoard->dispatch();//Mandatory or else sramX_full remains to 1
+		fBoard->dispatch();
+		//Mandatory or else sramX_full remains to 1
 		fBoard->getNode(fStrReadout).write(1);
 		fBoard->dispatch();
 		//                if( cData.size() > 255 ) std::cout << "Reading Data readBlock() 256th value = " << std::hex << cData.at(255) << std::endl;
@@ -254,13 +292,19 @@ namespace Strasbourg{
 			gettimeofday(&start, 0);
 		}
 #endif
-//		std::cout << "Wait for the non SRAM full condition" << std::endl;
+		//		std::cout << "Wait for the non SRAM full condition" << std::endl;
 		//Wait for the non SRAM full condition starts,
+		cTotalWait=0;
 		do {
 			cVal = fBoard->getNode(fStrFull).read();
 			fBoard->dispatch();
 			if (cVal==1)
 				boost::this_thread::sleep(cWait);
+			cTotalWait += cOneWait;
+			if( cTotalWait > pTimeOut ){
+				fNoDataAcq++;
+				throw Exception( Form( "SRAM state does not go to NON_FULL." ), SRAM_NOT_NONFULL );
+			}
 		} while (cVal==1);
 		//Wait for the non SRAM full condition ends. 
 #ifdef __CBCDAQ_DEV__
@@ -269,7 +313,7 @@ namespace Strasbourg{
 			std::cout << "Time took to the full flag to be 0 : " << std::dec << mtime << " us." << std::endl;
 		}
 #endif
-//		std::cout << "write readout 0" << std::endl;
+		//		std::cout << "write readout 0" << std::endl;
 
 		fBoard->getNode(fStrReadout).write(0);// write readout 0
 		fBoard->dispatch();
@@ -288,12 +332,16 @@ namespace Strasbourg{
 		   cBuf[i*4+j] = cSwapped[j];
 		   }
 		   }
-		   */
+		 */
 
 		fData->Set( &cData );
 		return;
 	}
 	void BeController::EndAcquisition( unsigned int pNthAcq ){
+
+#ifdef __CBCDAQ_DEV__
+		std::cout << "In EndAcquisition" << std::endl;
+#endif
 
 		SelectSramForDAQ( pNthAcq );
 
@@ -313,28 +361,30 @@ namespace Strasbourg{
 
 		fBoard->getNode(fStrReadout).write(0);// write readout 0
 		fBoard->dispatch();
-		fNTotalAcq++;
 	}
-	void BeController::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq ){
+	void BeController::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite ){
 
 		boost::posix_time::milliseconds cPause(200);
 
 		unsigned int cSize( pVecReq.size() );
+		//		std::cout << "Size of vectior = " << cSize << std::endl;
 		if( cSize > fI2cSramSize ){
 			std::vector<uint32_t>::iterator cIt = pVecReq.begin();
 			unsigned int i(0);
-			//uint32_t c,p,a,w;
+			uint32_t c,p,a,w;
 			while( i < cSize ){
 				unsigned int j = i + fI2cSramSize < cSize ? i + fI2cSramSize : cSize;
 				std::vector<uint32_t> cVecReq ( cIt + i, cIt + j );
-				//		std::cout << i << "\t" << j << "\t" << cVecReq.size() << std::endl;
-				//		std::vector<uint32_t>::iterator cItRead0 = cVecReq.begin();
-				//		for(; cItRead0 != cVecReq.end(); cItRead0++ ){
-				//			DecodeRegInfo( *cItRead0, c, p, a, w );
-				//	//		if( p == 0 )std::cout << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
-				//		}
+				if( pWrite == 0 ){
+//					std::cout << i << "\t" << j << "\t" << cVecReq.size() << std::endl;
+					std::vector<uint32_t>::iterator cItRead0 = cVecReq.begin();
+					for(; cItRead0 != cVecReq.end(); cItRead0++ ){
+						DecodeRegInfo( *cItRead0, c, p, a, w );
+//						std::cout << "Writing : " << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
+					}
+				}
 				try{
-					WriteCbcRegValues( pFe, cVecReq );
+					if( pWrite ) WriteCbcRegValues( pFe, cVecReq );
 					ReadCbcRegValues( pFe, cVecReq );
 					//					boost::this_thread::sleep(cPause);
 				}
@@ -345,8 +395,10 @@ namespace Strasbourg{
 				std::vector<uint32_t>::iterator cItRead = cVecReq.begin();
 				for(; cItRead != cVecReq.end(); cItRead++ ){
 					*cItOrg = *cItRead;
-					//			DecodeRegInfo( *cItRead, c, p, a, w );
-					//	//		if( p == 0 )std::cout << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
+					if( pWrite == 0 ){
+						DecodeRegInfo( *cItRead, c, p, a, w );
+//						std::cout << "Read   : " << std::hex << c << " " << p << " " << a << " " << w << std::endl; 
+					}
 					cItOrg++;
 				}
 				i+=fI2cSramSize;
@@ -354,7 +406,7 @@ namespace Strasbourg{
 		}
 		else{
 			try{
-				WriteCbcRegValues( pFe, pVecReq );
+				if( pWrite )WriteCbcRegValues( pFe, pVecReq );
 				ReadCbcRegValues( pFe, pVecReq );
 			}
 			catch( Exception &e ){
@@ -366,17 +418,36 @@ namespace Strasbourg{
 
 		fBoard->getNode( "cbc_hard_reset" ).write(1);
 		fBoard->dispatch();
-		usleep(200000);
+		//		usleep(1);
+		//		sleep(10);
 		fBoard->getNode( "cbc_hard_reset" ).write(0);
 		fBoard->dispatch();
-		usleep(200000);
+		sleep(1);
+		/*
+		AddCbcRegUpdateItem( 0, 0, 0, 0, 0 );
+		UpdateCbcRegValues();
+		AddCbcRegUpdateItem( 0, 0, 0, 0, 0 );
+		UpdateCbcRegValues(false);
+		AddCbcRegUpdateItem( 0, 0, 0, 0, 0 );
+		UpdateCbcRegValues();
+		AddCbcRegUpdateItem( 0, 0, 0, 0, 0 );
+		UpdateCbcRegValues(false);
+		*/
 	}
 	void BeController::CbcFastReset(){
 
 		fBoard->getNode( "cbc_fast_reset" ).write(1);
 		fBoard->dispatch();
-		usleep(200000);
+		usleep(1);
 		fBoard->getNode( "cbc_fast_reset" ).write(0);
+		fBoard->dispatch();
+	}
+	void BeController::CbcI2cRefresh(){
+
+		fBoard->getNode( "cbc_i2c_refresh" ).write(1);
+		fBoard->dispatch();
+//		usleep(1);
+		fBoard->getNode( "cbc_i2c_refresh" ).write(0);
 		fBoard->dispatch();
 	}
 
@@ -460,10 +531,10 @@ namespace Strasbourg{
 
 #ifdef __CBCDAQ_DEV__
 		static long min(0), sec(0);	
-		static struct timeval start0, end;
+		struct timeval start0, end;
 		long seconds(0), useconds(0);
 
-		if( fDevFlag == DEV0 & sec == 0 & min == 0 ){
+		if( fDevFlag == DEV0 ){
 			gettimeofday(&start0, 0);
 		}
 #endif
@@ -488,10 +559,10 @@ namespace Strasbourg{
 
 #ifdef __CBCDAQ_DEV__
 		static long min(0), sec(0);	
-		static struct timeval start0, end;
+		struct timeval start0, end;
 		long seconds(0), useconds(0);
 
-		if( fDevFlag == DEV0 & sec == 0 & min == 0 ){
+		if( fDevFlag == DEV0 ){
 			gettimeofday(&start0, 0);
 		}
 #endif

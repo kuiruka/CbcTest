@@ -19,6 +19,9 @@ namespace Strasbourg{
 	class BeController : public HwController{
 
 		public:
+			enum ErrorTypes{ FIFO_NOT_IN_WRITE_DATA, SRAM_NOT_FULL, SRAM_NOT_NONFULL, OTHER_ERROR };
+
+		public:
 			static void DecodeRegInfo( uint32_t pVecReq, uint32_t &pCbcId, uint32_t &pPage, uint32_t &pAddr, uint32_t &pWrite);
 			static void AddCbcReg(std::vector<uint32_t>& pVecReq, uint32_t pCbcId, uint32_t pPage, uint32_t pAddr, uint32_t pWrite);
 
@@ -37,11 +40,13 @@ namespace Strasbourg{
 
 			void ConfigureGlib( const char *pUhalConfigFileName );
 			void StartAcquisition();
-			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger );
+			void ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger,
+			unsigned int pTimeOut );
 			void EndAcquisition( unsigned int pNthAcq );
-			void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq );
+			void WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite );
 			void CbcHardReset();
 			void CbcFastReset();
+			void CbcI2cRefresh();
 			uhal::HwInterface *GetBoard(){ return fBoard; }
 
 			//functions used internally for a moment.

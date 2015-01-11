@@ -12,14 +12,14 @@ namespace Strasbourg {
 	void BeEmulator::StartAcquisition(){
 //		Emit( "Message( const char * )", Form( "\tBeEmulator::StartAcquisition()" ) );
 	}
-	void BeEmulator::ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger ){
+	void BeEmulator::ReadDataInSRAM( unsigned int pNthAcq, bool pBreakTrigger, unsigned int pTimeOut ){
 //		Emit( "Message( const char * )", Form( "\tBeEmulator::ReadDataInSRAM()" ) );
 	}
 	void BeEmulator::EndAcquisition( unsigned int pNthAcq ){
 //		Emit( "Message( const char * )", Form( "\tBeEmulator::EndAcquisition()" ) );
 		fNTotalAcq++;
 	}
-	void BeEmulator::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq ){
+	void BeEmulator::WriteAndReadbackCbcRegValues( uint16_t pFe, std::vector<uint32_t>& pVecReq, bool pWrite ){
 	}
 	void BeEmulator::CbcHardReset(){
 		Emit( "Message( const char * )", Form( "\tBeEmulator::CbcRegHadReset()" ) );
