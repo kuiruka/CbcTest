@@ -51,16 +51,17 @@ int main( int argc, char *argv[] ){
 
 	cDaq.ConfigureGlib();
 
-/*
-	TString cCbcRegSettingFile = Form( "%s/FE0CBC0.txt", cOutputDir.c_str() );	
-	std::string cFile = cCbcRegSettingFile.Data();
-	cDaq.SetCbcRegSettingFileName( 0, 0, cFile ); 
-*/
 	cDaq.ConfigureCbc();
 
 	cDaq.ConfigureAnalyser();
 
 	cDaq.Calibrate();
+
+	TString cCbcRegSettingFile = Form( "%s/FE0CBC0.txt", cOutputDir.c_str() );	
+	std::string cFile( cCbcRegSettingFile.Data() );
+	cDaq.SetCbcRegSettingFileName( 0, 0, cFile ); 
+	std::cout << cFile << std::endl;
+	cDaq.ConfigureCbc();
 
 	cDaq.SetCalibSetting( "EnableTestPulse", 1 );
 	for( unsigned int i=0; i < NPOT; i++ ){
