@@ -104,8 +104,10 @@ namespace ICCalib{
 			//functions used internally for a moment.
 			Int_t GetDataStreamHistId( UInt_t pFeId, UInt_t pCbcId );
 			void FindVplus();
+			std::vector< std::vector<unsigned int > > FindVplusQuick( bool pStartFrom0 = true );
 			void CalibrateOffsets();
 
+			void ConfigureVplus( std::vector<std::vector< std::vector<unsigned int> > > &pVplus, unsigned int pGroupId );
 			void ConfigureVplusScan( UInt_t pVplus );
 			void ConfigureCbcOffset( Int_t pTargetOffsetBit, UInt_t &pMinVCth, UInt_t &pMaxVCth );
 
@@ -129,7 +131,7 @@ namespace ICCalib{
 			std::vector<UInt_t>             fGroupList;
 
 			UInt_t                          fNonTestGroupOffset;
-//			UInt_t							fNAcq;
+			//			UInt_t							fNAcq;
 	};
 }
 #endif

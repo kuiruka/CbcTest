@@ -50,6 +50,8 @@ namespace ICCalib{
 		fCalibSetting.insert( CalibItem( "NAcq", 10 ) );
 		fCalibSetting.insert( CalibItem( "EnableTestPulse", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "SkipVplusTuning", 0x00 ) );
+		fCalibSetting.insert( CalibItem( "QuickVplusTuning", 0x00 ) );
+		fCalibSetting.insert( CalibItem( "SkipOffsetTuning", 0x01 ) );
 		fCalibSetting.insert( CalibItem( "TestPulsePotentiometer", 0xF1 ) );
 		fCalibSetting.insert( CalibItem( "InitialOffset", 0x00 ) );
 		fCalibSetting.insert( CalibItem( "TargetOffset", 0x50 ) );
@@ -103,6 +105,8 @@ namespace ICCalib{
 
 		fStop = false;
 		UInt_t cInitialNTotalAcq = fHwController->GetNumberOfTotalAcq();
+		UInt_t cNCbcI2cWritePage1_INIT = fHwController->NCbcI2cWritePage1();
+		UInt_t cNCbcI2cWritePage2_INIT = fHwController->NCbcI2cWritePage2();
 
 		struct timeval start;
 		gettimeofday( &start, 0 );
@@ -121,21 +125,64 @@ namespace ICCalib{
 		UInt_t cSkipVplusTuning = fCalibSetting.find( "SkipVplusTuning" )->second;
 		if( !cSkipVplusTuning ){
 
-			FindVplus();
-			if( fStop ) return;
+			UInt_t cQuickVplusTuning = fCalibSetting.find( "QuickVplusTuning" )->second;
+			if( cQuickVplusTuning ){
+				std::vector< std::vector<unsigned int> > cVplus1 = FindVplusQuick(true);
+//				std::vector< std::vector<unsigned int> > cVplus2 = FindVplusQuick(false);
 
-			//Update Vplus
-			for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+				for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
 
-				for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+					for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
 
-					uint32_t cPage(0), cAddr(0x0B), cValue(0);
-					cValue = fScurveAnalyser->GetVplus( cFe, cCbc );
-					Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X.", cFe, cCbc, cValue ) );
-					fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cValue );
+						unsigned int cValue1 = cVplus1.at(cFe).at(cCbc);
+//						unsigned int cValue2 = cVplus2.at(cFe).at(cCbc);
+//						unsigned int cValue = ( ( cValue1 + cValue2 ) / 2.0 + 0.5 );
+						uint32_t cPage(0), cAddr(0x0B);
+//						Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X, %X, %X.", cFe, cCbc, cValue1, cValue2, cValue ) );
+						Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X.", cFe, cCbc, cValue1) );
+//						fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cValue );
+					}
 				}
+//				UpdateCbcRegValues();
+
 			}
-			UpdateCbcRegValues();
+			else{
+				FindVplus();
+				if( fStop ) return;
+
+				//Update Vplus
+				for( UInt_t cFe=0; cFe < fNFe; cFe++ ){
+
+					for( UInt_t cCbc=0; cCbc < fNCbc; cCbc++ ){
+
+						uint32_t cPage(0), cAddr(0x0B), cValue(0);
+						cValue = fScurveAnalyser->GetVplus( cFe, cCbc );
+						Emit( "Message( const char * )", Form( "\tVplus for FE %d CBC %d is %X.", cFe, cCbc, cValue ) );
+						fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cValue );
+					}
+				}
+				UpdateCbcRegValues();
+			}
+		}
+		long mtime_VPLUS = getTimeTook( start, 1 );
+		long min_VPLUS = (mtime_VPLUS/1000)/60;
+		long sec_VPLUS = (mtime_VPLUS/1000)%60;
+		UInt_t cFinalNTotalAcq_VPLUS = fHwController->GetNumberOfTotalAcq();
+		UInt_t cNAcq_VPLUS = cFinalNTotalAcq_VPLUS - cInitialNTotalAcq;
+		UInt_t cNCbcI2cWritePage1_VPLUS = fHwController->NCbcI2cWritePage1() - cNCbcI2cWritePage1_INIT;
+		UInt_t cNCbcI2cWritePage2_VPLUS = fHwController->NCbcI2cWritePage2() - cNCbcI2cWritePage2_INIT;
+		TString msg = Form( "\tTime took for VPLUS = %ld min %ld sec.", min_VPLUS, sec_VPLUS ); 
+		Emit( "Message( const char * )", msg.Data() );
+		Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for VPLUS scan.", 
+					cNAcq_VPLUS, fNeventPerAcq ) );
+		Emit( "Message( const char * )", Form( "Total %d I2C page 1 register write are made for VPLUS scan.", cNCbcI2cWritePage1_VPLUS ) );
+		Emit( "Message( const char * )", Form( "Total %d I2C page 2 register write are made for VPLUS scan.", cNCbcI2cWritePage2_VPLUS ) );
+		Emit( "Message( const char * )", Form( "Total # of readBlock() for VPLUS scan = %d.",  cFinalNTotalAcq_VPLUS ) );
+
+		UInt_t cSkipOffsetTuning = fCalibSetting.find( "SkipOffsetTuning" )->second;
+		if( cSkipOffsetTuning ){
+			Emit( "Message( const char * )", "FinishedCalibration" );
+			return; 
 		}
 
 		CalibrateOffsets();
@@ -148,16 +195,28 @@ namespace ICCalib{
 		long mtime = getTimeTook( start, 1 );
 		long min = (mtime/1000)/60;
 		long sec = (mtime/1000)%60;
-		TString msg = Form( "\tTime took for this calibration loop = %ld min %ld sec.", min, sec ); 
-		Emit( "Message( const char * )", msg.Data() );
-		Emit( "Message( const char * )", "FinishedCalibration" );
 		UInt_t cFinalNTotalAcq = fHwController->GetNumberOfTotalAcq();
 		UInt_t cNAcq = cFinalNTotalAcq - cInitialNTotalAcq;
-		Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this calibration.", cNAcq, fNeventPerAcq ) );
 		UInt_t cNCbcI2cWritePage1 = fHwController->NCbcI2cWritePage1();
-		Emit( "Message( const char * )", Form( "Total %d I2C page 1 register write are made for this calibration.", cNCbcI2cWritePage1 ) );
 		UInt_t cNCbcI2cWritePage2 = fHwController->NCbcI2cWritePage2();
+
+
+		msg = Form( "\tTime took for this offset scan = %ld min %ld sec.", min - min_VPLUS, sec - sec_VPLUS ); 
+		Emit( "Message( const char * )", msg.Data() );
+		Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this offset scan.", 
+					cNAcq - cNAcq_VPLUS, fNeventPerAcq ) );
+		Emit( "Message( const char * )", Form( "Total %d I2C page 1 register write are made for this offset scan.", 
+					cNCbcI2cWritePage1 - cNCbcI2cWritePage1_VPLUS) );
+		Emit( "Message( const char * )", Form( "Total %d I2C page 2 register write are made for this offset scan.", 
+					cNCbcI2cWritePage2 - cNCbcI2cWritePage2_VPLUS) );
+
+		msg = Form( "\tTime took for this calibration loop = %ld min %ld sec.", min, sec ); 
+		Emit( "Message( const char * )", msg.Data() );
+		Emit( "Message( const char * )", Form( "Total %d acquisitions (%d events per acq.) are made for this calibration.", cNAcq, fNeventPerAcq ) );
+		Emit( "Message( const char * )", Form( "Total %d I2C page 1 register write are made for this calibration.", cNCbcI2cWritePage1 ) );
 		Emit( "Message( const char * )", Form( "Total %d I2C page 2 register write are made for this calibration.", cNCbcI2cWritePage2 ) );
+
+		Emit( "Message( const char * )", "FinishedCalibration" );
 
 		return;
 	}
@@ -189,10 +248,7 @@ namespace ICCalib{
 
 			if( fStop ) return;
 
-//			std::cout << "I am here" << std::endl;
-
 			fScurveAnalyser->FitHists( cMinVCth, cMaxVCth );
-//			std::cout << "Fit done" << std::endl;
 			if( fGUIFrame ){
 				fScurveAnalyser->DrawHists();
 				fScurveAnalyser->PrintScurveHistogramDisplayPads();
@@ -247,6 +303,152 @@ namespace ICCalib{
 
 		return fNCbc * pFeId + pCbcId;
 
+	}
+	std::vector< std::vector<unsigned int > > Calibrator::FindVplusQuick( bool pStartFrom0 ){
+
+		unsigned int cInitVplus(0);
+		if( pStartFrom0 == false ) cInitVplus = 0xFF;
+
+		fScurveAnalyser->SetOffsets( fCalibSetting.find( "TargetOffset" )->second );
+		int cVCth = fCalibSetting.find( "TargetVCth"             )->second;
+		fHwController->AddCbcRegUpdateItemsForNewVCth( cVCth );
+		UpdateCbcRegValues();
+
+		std::vector< std::vector< std::vector<unsigned int> > > cVplus( fNFe );
+		for( unsigned int cFeId=0; cFeId < fNFe; cFeId++ ){
+			std::vector<std::vector<unsigned int> > cVplusCbc( fNCbc );
+			for( unsigned int cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+				std::vector<unsigned int> cVplusGroup( fTestGroupMap->size(), cInitVplus );
+				cVplusCbc.at(cCbcId) = cVplusGroup; 
+			}
+			cVplus.at(cFeId) = cVplusCbc;
+		}
+
+		for( UInt_t cTestGroupId=0; cTestGroupId<fTestGroupMap->size(); cTestGroupId++ ){
+
+			UInt_t cEnableTestPulse = fCalibSetting.find( "EnableTestPulse" )->second;
+			if( cEnableTestPulse ){
+				ActivateGroup( cTestGroupId );
+			}
+			fTestGroupMap->Activate( cTestGroupId );
+			UInt_t cMinVCth(0), cMaxVCth(0xFF);//this is just for ConfigureCbcOffset function. 
+			ConfigureCbcOffset( 8, cMinVCth, cMaxVCth );
+
+			CalibrationTestGroup *cTestGroup = fTestGroupMap->GetActivatedGroup();
+
+			//UInt_t cNthAcq = 0;
+			for( Int_t cTargetBit = 7; cTargetBit >= -1; cTargetBit-- ){
+
+/*
+				TString msg = Form( "\tVplus Target Bit : %d.", cTargetBit ); 
+				Emit( "Message( const char * )", msg.Data() );
+				*/
+
+				std::vector< std::vector<int> > cNhit( fNFe );
+				for( unsigned int i=0; i < fNFe; i++ ){
+					std::vector<int> cNhitCbc(fNCbc, 0 );
+					cNhit.at(i) = cNhitCbc; 
+				}
+
+				if( cTargetBit >= 0 ){
+					for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+
+						for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+
+							if( pStartFrom0 )
+								cVplus.at(cFeId).at(cCbcId).at(cTestGroupId) |=  1 << cTargetBit;
+							else
+								cVplus.at(cFeId).at(cCbcId).at(cTestGroupId) &=  ~( 1 << cTargetBit );
+
+						}
+					}
+				}
+				ConfigureVplus( cVplus, cTestGroupId );
+
+				unsigned int cNthAcq(0);
+				for( unsigned int i=0; i< fNAcq; i++ ){
+
+					fHwController->StartAcquisition();
+					fHwController->ReadDataInSRAM( cNthAcq, true );
+					fHwController->EndAcquisition( cNthAcq );
+
+					bool cFillDataStream( true );
+
+					int cNevent(0);	
+					const Event *cEvent = fHwController->GetNextEvent();
+
+					while( cEvent ){
+
+						for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+
+							const FeEvent *cFeEvent = cEvent->GetFeEvent(cFeId);	
+
+							for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+
+								const CbcEvent *cCbcEvent = cFeEvent->GetCbcEvent( cCbcId );
+
+								for( UInt_t cChannelId=0; cChannelId < CbcEvent::NSENSOR; cChannelId++ ){
+
+									if( ! cTestGroup->Has( cChannelId ) ) continue;
+
+									bool bit = cCbcEvent->DataBit( cChannelId );
+									if( bit ) cNhit.at(cFeId).at(cCbcId)++; 
+								}
+							}
+						}
+						cNevent++;
+						cFillDataStream = false;
+						cEvent = fHwController->GetNextEvent();
+					}//Event
+				}//Nacq
+				for( UInt_t cFeId = 0; cFeId < fNFe; cFeId++ ){
+
+					for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+
+						double Ntotal = ( cTestGroup->size() * fNAcq * fNeventPerAcq );
+						double cOcc = (double)cNhit.at(cFeId).at(cCbcId) / Ntotal;
+						double cOccError = sqrt( cOcc * ( 1 - cOcc ) / Ntotal ); 
+//						if( cTargetBit == -1 ){
+							TString msg = Form( "\tFE: %2d, CBC: %2d, Group Id : %d, Vplus : %2d, Occupancy : %1.3f+/-%1.3f.", 
+									cFeId, cCbcId, cTestGroupId, cVplus.at(cFeId).at(cCbcId).at(cTestGroupId), cOcc, cOccError ); 
+							Emit( "Message( const char * )", msg.Data() );
+//						}
+
+						if( cTargetBit >= 0 ){
+							if( pStartFrom0 & cOcc < 0.5 ){
+								cVplus.at(cFeId).at(cCbcId).at(cTestGroupId) &= ~( 1 << cTargetBit );
+							}
+							else if( !pStartFrom0 & cOcc > 0.5 ){
+								cVplus.at(cFeId).at(cCbcId).at(cTestGroupId) |= 1 << cTargetBit;
+							}
+						}
+					}
+				}
+				if( fStop ) break;
+			}//TargetBit
+		}//Group
+		std::vector< std::vector<unsigned int> > cVplusFinal( fNFe );
+		for( unsigned int cFeId=0; cFeId < fNFe; cFeId++ ){
+			std::vector<unsigned int> cVplusCbc( fNCbc );
+			for( unsigned int cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+				double s(0);
+				double v2(0);
+				for( UInt_t cTestGroupId=0; cTestGroupId<fTestGroupMap->size(); cTestGroupId++ ){
+					unsigned int value = cVplus.at(cFeId).at(cCbcId).at(cTestGroupId);
+					s += value;
+					v2 += ( value * value ); 
+				}
+				double mean = s / fTestGroupMap->size();
+				double err  = sqrt( v2 /fTestGroupMap->size() - mean*mean );
+				cVplusCbc.at(cCbcId) = (unsigned int) ( mean + 0.5 );
+				TString msg = Form( "\tFE: %2d, CBC: %2d, Vplus : %3.2f+/-%3.3f.", 
+						cFeId, cCbcId, mean, err ); 
+				Emit( "Message( const char * )", msg.Data() );
+			}
+			cVplusFinal.at(cFeId) = cVplusCbc;
+		}
+
+		return cVplusFinal;	
 	}
 	void Calibrator::FindVplus(){
 
@@ -304,6 +506,18 @@ namespace ICCalib{
 		return;
 	}
 
+	void Calibrator::ConfigureVplus( std::vector< std::vector< std::vector<unsigned int> > > &pVplus, unsigned int pGroupId ){
+
+		uint32_t cPage(0), cAddr(0x0B), cValue(0);
+		for( unsigned int cFeId=0; cFeId < fNFe; cFeId++ ){
+			for( UInt_t cCbcId=0; cCbcId < fNCbc; cCbcId++ ){
+				cValue = pVplus.at(cFeId).at(cCbcId).at(pGroupId);
+				fHwController->AddCbcRegUpdateItem( cFeId, cCbcId, cPage, cAddr, cValue );
+			}
+		}
+		UpdateCbcRegValues();
+		return;
+	}
 	void Calibrator::ConfigureVplusScan( UInt_t pVplus ){
 
 		uint32_t cPage(0), cAddr(0x0B), cValue(0);
@@ -342,12 +556,10 @@ namespace ICCalib{
 					if( cTestGroup->Has( cChannel ) ) cTestChannel = true;
 					if( !( cTestChannel || pOffsetTargetBit == 8 ) ) continue;
 
-					//					if( cTestChannel || ( pOffsetTargetBit == 8 && cEnableTestPulse == 1 ) ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
 					if( cTestChannel ) cVal = fScurveAnalyser->GetOffset( cFe, cCbc, cChannel ); 
 					else{ 
 						cVal = fNonTestGroupOffset;
 					}
-					//				std::cout << "OffsetCheck : CBC = " << cCbc << "[" << cChannel << "] " << cVal << std::endl;  
 					fHwController->AddCbcRegUpdateItem( cFe, cCbc, cPage, cAddr, cVal );
 				}
 			}
@@ -451,7 +663,7 @@ namespace ICCalib{
 			UpdateCbcRegValues();
 
 			int cNHits(0);
-			for( int i=0; i< fNAcq; i++ ){
+			for( unsigned int i=0; i< fNAcq; i++ ){
 				fHwController->StartAcquisition();
 				fHwController->ReadDataInSRAM( cNthAcq, true );
 				fHwController->EndAcquisition( cNthAcq );

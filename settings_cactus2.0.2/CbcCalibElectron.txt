@@ -29,3 +29,4 @@ Calib_VplusMin.     :  0x60
 Calib_VplusStep     :  0x10
 Calib_EnableTestPulse: 0x01
 Calib_NAcq           : 0x01
+Calib_QuickVplusTuning : 0x01

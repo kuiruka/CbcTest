@@ -75,6 +75,7 @@ namespace Strasbourg{
 			void SaveCbcRegInfo( const char *newdir = 0 );
 			unsigned int NCbcI2cWritePage1()const{ return fNCbcI2cWritePage1; }
 			unsigned int NCbcI2cWritePage2()const{ return fNCbcI2cWritePage2; }
+			unsigned int NreadBlock()const{ return fNreadBlock; }
 
 
 		protected:
@@ -92,6 +93,7 @@ namespace Strasbourg{
 			CbcRegMap fCbcRegSetting;
 			CbcRegUpdateMap fCbcRegUpdateList; 
 
+			unsigned int fNreadBlock;
 			std::string  fName;
 			unsigned int fNFe;
 			unsigned int fNCbc;

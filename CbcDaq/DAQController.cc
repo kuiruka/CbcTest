@@ -52,7 +52,8 @@ namespace CbcDaq{
 		fStop(false),
 		fTestPulseGroupMap(0),
 		fAnalyserGroupMap(0),
-		fCurrentTestPulseGroup(-1){
+		fCurrentTestPulseGroup(-1)
+	{
 		NBe++;
 
 		//TestPulseGroupMap initialisation.
@@ -70,7 +71,7 @@ namespace CbcDaq{
 			fTestPulseGroupMap->insert( std::pair< UInt_t, TestGroup >(ig, cTestGroup ) );
 		}
 		fAnalyserGroupMap = new TestGroupMap( *fTestPulseGroupMap );
-		}
+	}
 
 	DAQController::~DAQController(){
 

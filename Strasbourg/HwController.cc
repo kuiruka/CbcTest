@@ -46,6 +46,7 @@ namespace Strasbourg{
 	}
 
 	HwController::HwController( const char *pName ):
+		fNreadBlock(0),
 		fName( pName ),
 		fData(0),
 		fPacketSize(0),

@@ -272,6 +272,7 @@ namespace Strasbourg{
 		//Read SRAM
 		//std::cout << "BlockSize = " << std::dec << cBlockSize << std::endl;
 		//Block size = 42 * ( packet # + 1 )
+		fNreadBlock++;
 		uhal::ValVector<uint32_t> cData = fBoard->getNode(fStrSram).readBlock(cBlockSize);
 #ifdef __CBCDAQ_DEV__
 		if( fDevFlag == DEV0 ){

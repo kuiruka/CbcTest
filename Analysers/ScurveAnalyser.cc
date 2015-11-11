@@ -55,6 +55,7 @@ namespace Analysers{
 		for( ; cIt != fGroupMap->end(); cIt++ ){
 
 			CalibrationTestGroup &cTestGroup = cIt->second;
+
 			cTestGroup.ClearChannelList();
 		}
 		fResult.clear();
